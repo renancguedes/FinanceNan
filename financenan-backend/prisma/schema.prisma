@@ -1,0 +1,250 @@
+// FinanceNan — Prisma schema
+// Money is ALWAYS stored as integer cents (centavos). Never float.
+// Every user-owned table carries userId; all queries are scoped by it.
+
+generator client {
+  provider      = "prisma-client-js"
+  // "native" para dev local; "rhel-openssl-3.0.x" para o runtime da Vercel/AWS Lambda.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Conexão direta (sem pooler) usada por migrations/introspection.
+  // Em dev pode apontar para a mesma URL; em serverless (Neon/Supabase), use a URL direta.
+  directUrl = env("DIRECT_URL")
+}
+
+enum Theme {
+  light
+  dark
+}
+
+enum AccountType {
+  conta_bancaria
+  carteira_digital
+  dinheiro_fisico
+  investimento
+  outro
+}
+
+enum CategoryType {
+  receita
+  despesa
+  investimento
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  theme        Theme    @default(light)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  accounts       Account[]
+  creditCards    CreditCard[]
+  categories     Category[]
+  incomeSources  IncomeSource[]
+  planCategories PlanCategory[]
+  planItems      PlanItem[]
+  fixedExpenses  FixedExpense[]
+  incomes        Income[]
+  expenses       Expense[]
+  settings       Settings?
+  passwordResets PasswordReset[]
+
+  @@map("users")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_resets")
+}
+
+model Account {
+  id     String      @id @default(cuid())
+  userId String      @map("user_id")
+  nome   String
+  tipo   AccountType
+  saldo  Int         @default(0) // centavos
+  cor    String      @default("#4f6bd8")
+  ativo  Boolean     @default(true)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomes  Income[]
+  expenses Expense[]
+  fixedExpenses FixedExpense[] @relation("FixedExpenseDefaultAccount")
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model CreditCard {
+  id            String  @id @default(cuid())
+  userId        String  @map("user_id")
+  nome          String
+  bandeira      String
+  cor           String  @default("#7c5cbf")
+  diaFechamento Int     @map("dia_fechamento") // 1-31
+  diaVencimento Int     @map("dia_vencimento") // 1-31
+  ativo         Boolean @default(true)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses Expense[]
+
+  @@index([userId])
+  @@map("credit_cards")
+}
+
+model Category {
+  id     String       @id @default(cuid())
+  userId String       @map("user_id")
+  nome   String
+  tipo   CategoryType
+  icone  String       @default("tag")
+  cor    String       @default("#8a8f98")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fixedExpenses FixedExpense[]
+  incomes       Income[]
+  expenses      Expense[]
+
+  @@index([userId])
+  @@map("categories")
+}
+
+model IncomeSource {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+  nome   String
+  valor  Int    @default(0) // centavos
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("income_sources")
+}
+
+model PlanCategory {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+  nome   String
+  pct    Int    @default(0) // percentage (integer)
+  abs    Int    @default(0) // centavos
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items PlanItem[]
+
+  @@index([userId])
+  @@map("plan_categories")
+}
+
+model PlanItem {
+  id             String @id @default(cuid())
+  userId         String @map("user_id")
+  planCategoryId String @map("plan_category_id")
+  nome           String
+  valor          Int    @default(0) // centavos
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planCategory PlanCategory @relation(fields: [planCategoryId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([planCategoryId])
+  @@map("plan_items")
+}
+
+model FixedExpense {
+  id            String  @id @default(cuid())
+  userId        String  @map("user_id")
+  descricao     String
+  categoryId    String  @map("category_id")
+  valor         Int // centavos
+  diaVencimento Int     @map("dia_vencimento") // 1-31
+  contaPadraoId String? @map("conta_padrao_id")
+  observacoes   String?
+  ativo         Boolean @default(true)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  contaPadrao Account? @relation("FixedExpenseDefaultAccount", fields: [contaPadraoId], references: [id], onDelete: SetNull)
+  // status "pago" is DERIVED: paid in competência X iff an Expense with fixedExpenseId points here in X.
+  expenses Expense[]
+
+  @@index([userId])
+  @@map("fixed_expenses")
+}
+
+model Income {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  descricao   String
+  categoryId  String   @map("category_id")
+  accountId   String   @map("account_id")
+  data        DateTime @db.Date
+  valor       Int // centavos
+  observacoes String?
+  recorrente  Boolean  @default(false)
+  recebida    Boolean  @default(false)
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([data])
+  @@map("incomes")
+}
+
+model Expense {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  descricao      String
+  categoryId     String    @map("category_id")
+  accountId      String?   @map("account_id")      // exclusive with creditCardId
+  creditCardId   String?   @map("credit_card_id")  // exclusive with accountId
+  dataCompra     DateTime  @map("data_compra") @db.Date
+  dataVencimento DateTime? @map("data_vencimento") @db.Date // required when card
+  valor          Int // centavos
+  observacoes    String?
+  paga           Boolean   @default(false)
+  fixedExpenseId String?   @map("fixed_expense_id")
+  installmentGroupId String? @map("installment_group_id")
+  installmentN       Int?    @map("installment_n")
+  installmentTotal   Int?    @map("installment_total")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  account      Account?      @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  creditCard   CreditCard?   @relation(fields: [creditCardId], references: [id], onDelete: Restrict)
+  fixedExpense FixedExpense? @relation(fields: [fixedExpenseId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([dataCompra])
+  @@index([dataVencimento])
+  @@index([installmentGroupId])
+  @@index([fixedExpenseId])
+  @@map("expenses")
+}
+
+model Settings {
+  userId       String @id @map("user_id")
+  reservaMeses Int    @default(6) @map("reserva_meses") // 3 | 6 | 9 | 12
+  reservaAccountIds             String[] @map("reserva_account_ids")
+  patrimonioExcludedAccountIds  String[] @map("patrimonio_excluded_account_ids")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("settings")
+}

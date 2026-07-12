@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Sora:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0}
+body{font-family:'Manrope',sans-serif}
+*{box-sizing:border-box}
+input,select,textarea,button{font-family:inherit}
+a{color:oklch(0.45 0.10 300);text-decoration:none}
+a:hover{color:oklch(0.35 0.10 300);text-decoration:underline}
+[data-theme="light"]{
+  --bg:oklch(0.965 0.006 300);--surface:#ffffff;--surface2:oklch(0.975 0.005 300);
+  --text:oklch(0.22 0.02 300);--text2:oklch(0.50 0.02 300);--text3:oklch(0.65 0.015 300);
+  --border:oklch(0.91 0.012 300);--border2:oklch(0.86 0.015 300);
+  --accent:oklch(0.45 0.10 300);--on-accent:#fff;--accent-soft:oklch(0.95 0.025 300);
+  --green:oklch(0.50 0.11 160);--green-soft:oklch(0.95 0.04 160);
+  --red:oklch(0.52 0.15 20);--red-soft:oklch(0.96 0.03 20);
+  --amber:oklch(0.55 0.12 75);--amber-soft:oklch(0.96 0.05 90);
+  --shadow:0 1px 2px rgba(35,25,55,.05),0 10px 28px -14px rgba(35,25,55,.14);
+  --radius:14px;color-scheme:light;
+}
+[data-theme="dark"]{
+  --bg:oklch(0.165 0.014 300);--surface:oklch(0.215 0.017 300);--surface2:oklch(0.255 0.018 300);
+  --text:oklch(0.93 0.008 300);--text2:oklch(0.70 0.02 300);--text3:oklch(0.53 0.02 300);
+  --border:oklch(0.30 0.02 300);--border2:oklch(0.36 0.02 300);
+  --accent:oklch(0.74 0.09 300);--on-accent:oklch(0.18 0.04 300);--accent-soft:oklch(0.29 0.045 300);
+  --green:oklch(0.72 0.11 160);--green-soft:oklch(0.28 0.04 160);
+  --red:oklch(0.70 0.13 20);--red-soft:oklch(0.28 0.04 20);
+  --amber:oklch(0.75 0.11 80);--amber-soft:oklch(0.28 0.05 85);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.55);
+  --radius:14px;color-scheme:dark;
+}
+body *{transition:background-color .25s ease,border-color .25s ease,color .2s ease,box-shadow .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes growW{from{width:0}}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+
+<div ref="{{rootRef}}" data-theme="{{theme}}" style="min-height:100vh;background:var(--bg);color:var(--text);font-family:'Manrope',sans-serif;font-size:14px;line-height:1.5">
+
+<!-- ============ AUTH ============ -->
+<sc-if value="{{isAuth}}" hint-placeholder-val="{{true}}">
+<div style="min-height:100vh;display:flex;align-items:stretch">
+  <div style="flex:1.1;background:linear-gradient(160deg,oklch(0.30 0.07 300),oklch(0.20 0.05 300));color:#fff;display:flex;flex-direction:column;justify-content:center;padding:64px;position:relative;overflow:hidden">
+    <div style="position:absolute;width:340px;height:340px;border-radius:50%;background:oklch(0.45 0.10 300 / .35);top:-90px;right:-90px;animation:floaty 9s ease-in-out infinite"></div>
+    <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:oklch(0.55 0.10 300 / .22);bottom:-40px;left:-50px;animation:floaty 7s ease-in-out infinite 1s"></div>
+    <div style="position:relative;animation:fadeUp .6s ease">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+        <div style="width:44px;height:44px;border-radius:13px;background:oklch(0.74 0.09 300);color:oklch(0.18 0.04 300);display:flex;align-items:center;justify-content:center;font-family:Sora;font-weight:700;font-size:22px">F</div>
+        <div style="font-family:Sora;font-weight:600;font-size:22px;letter-spacing:-.02em">FinanceNan</div>
+      </div>
+      <h1 style="font-family:Sora;font-weight:600;font-size:38px;line-height:1.2;letter-spacing:-.02em;margin:0 0 16px;max-width:440px">Seu dinheiro, organizado com clareza.</h1>
+      <p style="font-size:16px;color:oklch(0.85 0.02 300);max-width:420px;margin:0 0 36px">Planejamento financeiro, orçamento por categorias e acompanhamento do seu patrimônio em um só lugar.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;max-width:380px">
+        <sc-for list="{{authBullets}}" as="b" hint-placeholder-count="3">
+          <div style="display:flex;gap:12px;align-items:center">
+            <div style="width:30px;height:30px;border-radius:9px;background:oklch(1 0 0 / .12);display:flex;align-items:center;justify-content:center;flex:none">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="oklch(0.80 0.08 300)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="{{b.icon}}"></path></svg>
+            </div>
+            <div style="font-size:14px;color:oklch(0.90 0.01 300)">{{b.t}}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px">
+    <div style="width:100%;max-width:400px;animation:fadeUp .5s ease .1s both">
+      <sc-if value="{{tabRecuperar}}" hint-placeholder-val="{{false}}">
+        <h2 style="font-family:Sora;font-weight:600;font-size:24px;margin:0 0 6px;letter-spacing:-.02em">Recuperar senha</h2>
+        <p style="color:var(--text2);margin:0 0 24px">Informe seu e-mail e enviaremos as instruções.</p>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">E-mail</label>
+        <input value="{{authEmail}}" onChange="{{onAuthEmail}}" placeholder="voce@email.com" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:14px;outline:none;margin-bottom:16px" style-focus="border-color:var(--accent)"/>
+        <button onClick="{{doRecuperar}}" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;cursor:pointer" style-hover="filter:brightness(1.1)">Enviar instruções</button>
+        <sc-if value="{{authMsg}}" hint-placeholder-val="{{false}}"><div style="margin-top:14px;padding:12px;border-radius:10px;background:var(--green-soft);color:var(--green);font-weight:600;font-size:13px;animation:fadeUp .3s ease">{{authMsg}}</div></sc-if>
+        <button onClick="{{setTabLogin}}" style="width:100%;margin-top:18px;background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:13px">← Voltar ao login</button>
+      </sc-if>
+      <sc-if value="{{tabMain}}" hint-placeholder-val="{{true}}">
+        <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:4px;gap:4px;margin-bottom:28px">
+          <button onClick="{{setTabLogin}}" style="flex:1;padding:10px;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:{{tabLoginBg}};color:{{tabLoginFg}};box-shadow:{{tabLoginSh}}">Entrar</button>
+          <button onClick="{{setTabCadastro}}" style="flex:1;padding:10px;border-radius:9px;border:none;cursor:pointer;font-weight:700;font-size:13px;background:{{tabCadBg}};color:{{tabCadFg}};box-shadow:{{tabCadSh}}">Criar conta</button>
+        </div>
+        <sc-if value="{{tabCadastro}}" hint-placeholder-val="{{false}}">
+          <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">Nome</label>
+          <input value="{{authName}}" onChange="{{onAuthName}}" placeholder="Seu nome" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:14px;outline:none;margin-bottom:14px" style-focus="border-color:var(--accent)"/>
+        </sc-if>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">E-mail</label>
+        <input value="{{authEmail}}" onChange="{{onAuthEmail}}" placeholder="voce@email.com" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:14px;outline:none;margin-bottom:14px" style-focus="border-color:var(--accent)"/>
+        <label style="font-size:12px;font-weight:700;color:var(--text2);display:block;margin-bottom:6px">Senha</label>
+        <input type="password" value="{{authPass}}" onChange="{{onAuthPass}}" placeholder="••••••••" style="width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:14px;outline:none;margin-bottom:8px" style-focus="border-color:var(--accent)"/>
+        <sc-if value="{{tabLogin}}" hint-placeholder-val="{{true}}">
+          <div style="text-align:right;margin-bottom:18px"><button onClick="{{setTabRecuperar}}" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:12px;padding:0">Esqueci minha senha</button></div>
+        </sc-if>
+        <sc-if value="{{authError}}" hint-placeholder-val="{{false}}"><div style="margin-bottom:14px;padding:12px;border-radius:10px;background:var(--red-soft);color:var(--red);font-weight:600;font-size:13px;animation:fadeUp .25s ease">{{authError}}</div></sc-if>
+        <button onClick="{{doAuthMain}}" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;cursor:pointer;margin-top:6px" style-hover="filter:brightness(1.1)">{{authMainLabel}}</button>
+        <div style="display:flex;align-items:center;gap:12px;margin:22px 0">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="font-size:12px;color:var(--text3);font-weight:600">ou</span>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+        <button onClick="{{doVisitante}}" style="width:100%;padding:13px;border-radius:12px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px" style-hover="border-color:var(--accent);color:var(--accent)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"></path></svg>
+          Entrar como visitante
+        </button>
+        <p style="text-align:center;font-size:12px;color:var(--text3);margin-top:14px">No modo visitante nada é salvo — perfeito para explorar.</p>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<!-- ============ APP ============ -->
+<sc-if value="{{isApp}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;min-height:100vh">
+
+  <!-- Sidebar -->
+  <aside style="width:{{sbWidth}};flex:none;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:18px 12px;position:sticky;top:0;height:100vh;transition:width .3s cubic-bezier(.4,0,.2,1);overflow:hidden">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 8px;margin-bottom:22px">
+      <div style="width:36px;height:36px;flex:none;border-radius:11px;background:var(--accent);color:var(--on-accent);display:flex;align-items:center;justify-content:center;font-family:Sora;font-weight:700;font-size:18px">F</div>
+      <sc-if value="{{sbOpen}}" hint-placeholder-val="{{true}}"><div style="font-family:Sora;font-weight:600;font-size:17px;letter-spacing:-.02em;white-space:nowrap">FinanceNan</div></sc-if>
+    </div>
+    <nav style="display:flex;flex-direction:column;gap:4px;flex:1">
+      <sc-for list="{{navItems}}" as="n" hint-placeholder-count="7">
+        <button onClick="{{n.go}}" title="{{n.label}}" style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;border:none;cursor:pointer;text-align:left;font-size:13.5px;font-weight:{{n.fw}};background:{{n.bg}};color:{{n.fg}};white-space:nowrap;width:100%" style-hover="background:var(--surface2)">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="{{n.icon}}"></path></svg>
+          <sc-if value="{{sbOpen}}"><span>{{n.label}}</span></sc-if>
+        </button>
+      </sc-for>
+    </nav>
+    <button onClick="{{toggleSidebar}}" style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;border:none;cursor:pointer;background:none;color:var(--text3);font-size:13px;font-weight:600" style-hover="background:var(--surface2);color:var(--text)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;transform:{{sbChevFlip}};transition:transform .3s"><path d="M15 6l-6 6 6 6"></path></svg>
+      <sc-if value="{{sbOpen}}"><span>Recolher</span></sc-if>
+    </button>
+  </aside>
+
+  <!-- Main -->
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+
+    <!-- Visitor banner -->
+    <sc-if value="{{isVisitor}}" hint-placeholder-val="{{false}}">
+      <div style="background:var(--amber-soft);color:var(--amber);padding:9px 24px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v4m0 4h.01"></path></svg>
+        Modo visitante — ambiente temporário, suas alterações não serão salvas.
+      </div>
+    </sc-if>
+
+    <!-- Header -->
+    <header style="display:flex;align-items:center;gap:16px;padding:16px 28px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20">
+      <h2 style="font-family:Sora;font-weight:600;font-size:19px;margin:0;letter-spacing:-.02em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{screenTitle}}</h2>
+      <div style="display:flex;align-items:center;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:3px">
+        <button onClick="{{compPrev}}" style="width:32px;height:32px;border:none;background:none;border-radius:9px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center" style-hover="background:var(--surface);color:var(--text)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+        </button>
+        <div style="font-weight:700;font-size:13px;min-width:118px;text-align:center;font-family:Sora">{{compLabel}}</div>
+        <button onClick="{{compNext}}" style="width:32px;height:32px;border:none;background:none;border-radius:9px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center" style-hover="background:var(--surface);color:var(--text)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+      </div>
+      <sc-if value="{{notCurrentComp}}" hint-placeholder-val="{{false}}">
+        <button onClick="{{compHoje}}" style="padding:8px 14px;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;animation:fadeIn .3s ease" style-hover="background:var(--accent);color:var(--on-accent)">Hoje</button>
+      </sc-if>
+      <button onClick="{{toggleTheme}}" title="Alternar tema" style="width:38px;height:38px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);border-color:var(--accent)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{themeIcon}}"></path></svg>
+      </button>
+      <div style="display:flex;align-items:center;gap:10px;padding-left:14px;border-left:1px solid var(--border)">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px">{{userInitial}}</div>
+        <div style="line-height:1.25">
+          <div style="font-weight:700;font-size:13px">{{userName}}</div>
+          <button onClick="{{sair}}" style="background:none;border:none;padding:0;color:var(--text3);font-size:11.5px;font-weight:600;cursor:pointer" style-hover="color:var(--red)">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main style="flex:1;padding:28px;max-width:1240px;width:100%;margin:0 auto">
+
+      <!-- Skeleton -->
+      <sc-if value="{{loading}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+            <div style="height:110px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);animation:pulse 1.2s ease infinite"></div>
+            <div style="height:110px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);animation:pulse 1.2s ease infinite .15s"></div>
+            <div style="height:110px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);animation:pulse 1.2s ease infinite .3s"></div>
+          </div>
+          <div style="height:260px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);animation:pulse 1.2s ease infinite .45s"></div>
+          <div style="height:180px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);animation:pulse 1.2s ease infinite .6s"></div>
+        </div>
+      </sc-if>
+
+      <!-- ===== DASHBOARD ===== -->
+      <sc-if value="{{showDash}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+            <sc-for list="{{dashCards}}" as="c" hint-placeholder-count="3">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow)">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                  <div style="width:32px;height:32px;border-radius:9px;background:{{c.iconBg}};color:{{c.iconFg}};display:flex;align-items:center;justify-content:center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{c.icon}}"></path></svg>
+                  </div>
+                  <div style="font-size:12.5px;font-weight:700;color:var(--text2)">{{c.label}}</div>
+                </div>
+                <div style="font-family:Sora;font-weight:600;font-size:26px;letter-spacing:-.02em;color:{{c.valueColor}}">{{c.value}}</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:4px">{{c.sub}}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:grid;grid-template-columns:5fr 4fr;gap:20px;align-items:stretch">
+            <!-- Reserva -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:18px">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div>
+                  <div style="font-family:Sora;font-weight:600;font-size:16px">Reserva de emergência</div>
+                  <div style="font-size:12.5px;color:var(--text2);margin-top:2px">Custo fixo mensal: <b>{{custoFixoFmt}}</b></div>
+                </div>
+                <div style="display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px">
+                  <sc-for list="{{reservaOpts}}" as="o" hint-placeholder-count="4">
+                    <button onClick="{{o.pick}}" style="padding:6px 11px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{o.bg}};color:{{o.fg}}">{{o.n}}m</button>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:10px">
+                <div style="font-family:Sora;font-weight:600;font-size:30px;letter-spacing:-.02em">{{reservaAtualFmt}}</div>
+                <div style="color:var(--text3);font-size:13px;padding-bottom:5px">de {{reservaMetaFmt}}</div>
+              </div>
+              <div>
+                <div style="height:10px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);overflow:hidden">
+                  <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),oklch(0.60 0.10 300));width:{{reservaPctW}};animation:growW .9s cubic-bezier(.3,.7,.3,1)"></div>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12.5px">
+                  <span style="font-weight:800;color:var(--accent)">{{reservaPctLabel}} concluído</span>
+                  <span style="color:var(--text2)">{{reservaFaltaMsg}}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fluxo de caixa -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);display:flex;flex-direction:column">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                <div style="font-family:Sora;font-weight:600;font-size:16px">Fluxo de caixa</div>
+                <div style="display:flex;gap:14px;font-size:11.5px;font-weight:700;color:var(--text2)">
+                  <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:3px;background:var(--green)"></span>Receitas</span>
+                  <span style="display:flex;align-items:center;gap:5px"><span style="width:9px;height:9px;border-radius:3px;background:var(--red)"></span>Despesas</span>
+                </div>
+              </div>
+              <div style="flex:1;display:flex;align-items:flex-end;gap:14px;min-height:150px;padding-top:12px">
+                <sc-for list="{{fluxo}}" as="m" hint-placeholder-count="6">
+                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end">
+                    <div style="display:flex;gap:4px;align-items:flex-end;width:100%;justify-content:center;flex:1" title="{{m.tip}}">
+                      <div style="width:38%;max-width:22px;height:{{m.recH}};border-radius:5px 5px 2px 2px;background:var(--green);transform-origin:bottom;animation:growBar .7s cubic-bezier(.3,.7,.3,1);opacity:{{m.op}}"></div>
+                      <div style="width:38%;max-width:22px;height:{{m.despH}};border-radius:5px 5px 2px 2px;background:var(--red);transform-origin:bottom;animation:growBar .7s cubic-bezier(.3,.7,.3,1) .08s backwards;opacity:{{m.op}}"></div>
+                    </div>
+                    <div style="font-size:11px;font-weight:{{m.fw}};color:{{m.fg}}">{{m.label}}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <!-- Últimos lançamentos -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)">
+            <div style="font-family:Sora;font-weight:600;font-size:16px;margin-bottom:14px">Lançamentos da competência</div>
+            <sc-if value="{{emptyLanc}}" hint-placeholder-val="{{false}}">
+              <div style="text-align:center;padding:28px;color:var(--text3);font-size:13px">Nenhum lançamento em {{compLabel}}.</div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ultimos}}" as="l" hint-placeholder-count="0">
+                <div style="display:flex;align-items:center;gap:14px;padding:11px 4px;border-bottom:1px solid var(--border)">
+                  <div style="width:32px;height:32px;flex:none;border-radius:9px;background:{{l.iconBg}};color:{{l.iconFg}};display:flex;align-items:center;justify-content:center">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{l.icon}}"></path></svg>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{l.desc}}</div>
+                    <div style="font-size:11.5px;color:var(--text3)">{{l.meta}}</div>
+                  </div>
+                  <div style="font-family:Sora;font-weight:600;font-size:14px;color:{{l.color}}">{{l.valor}}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== PLANEJAMENTO ===== -->
+      <sc-if value="{{showPlan}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:grid;grid-template-columns:2fr 3fr;gap:20px;align-items:start">
+            <!-- Fontes de renda -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+                <div style="font-family:Sora;font-weight:600;font-size:16px">Fontes de renda</div>
+                <button onClick="{{addFonte}}" style="width:30px;height:30px;border-radius:9px;border:1px dashed var(--border2);background:none;color:var(--accent);cursor:pointer;font-size:17px;line-height:1" style-hover="border-color:var(--accent);background:var(--accent-soft)">+</button>
+              </div>
+              <sc-if value="{{emptyFontes}}" hint-placeholder-val="{{false}}">
+                <div style="text-align:center;padding:22px 10px;color:var(--text3);font-size:13px">Cadastre suas fontes de renda para começar o planejamento.</div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <sc-for list="{{fontes}}" as="f" hint-placeholder-count="0">
+                  <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:11px;background:var(--surface2);border:1px solid var(--border)">
+                    <div style="flex:1;font-weight:700;font-size:13.5px">{{f.nome}}</div>
+                    <div style="font-family:Sora;font-weight:600;font-size:13.5px">{{f.valorFmt}}</div>
+                    <button onClick="{{f.edit}}" title="Editar" style="width:26px;height:26px;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                    <button onClick="{{f.del}}" title="Excluir" style="width:26px;height:26px;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+                <span style="font-size:13px;font-weight:700;color:var(--text2)">Renda mensal</span>
+                <span style="font-family:Sora;font-weight:600;font-size:20px;color:var(--accent)">{{rendaFmt}}</span>
+              </div>
+            </div>
+
+            <!-- Distribuição -->
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px">
+                <div style="font-family:Sora;font-weight:600;font-size:16px">Distribuição da renda</div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <div style="display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px">
+                    <button onClick="{{setModePct}}" style="padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{modePctBg}};color:{{modePctFg}}">Percentual</button>
+                    <button onClick="{{setModeAbs}}" style="padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{modeAbsBg}};color:{{modeAbsFg}}">Valor</button>
+                  </div>
+                  <button onClick="{{addCategoria}}" style="width:30px;height:30px;border-radius:9px;border:1px dashed var(--border2);background:none;color:var(--accent);cursor:pointer;font-size:17px;line-height:1" style-hover="border-color:var(--accent);background:var(--accent-soft)">+</button>
+                </div>
+              </div>
+              <div style="font-size:12.5px;font-weight:700;color:{{somaColor}};margin-bottom:14px">{{somaMsg}}</div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <sc-for list="{{cats}}" as="c" hint-placeholder-count="6">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                      <span style="width:10px;height:10px;border-radius:3px;background:{{c.cor}};flex:none"></span>
+                      <span style="flex:1;font-weight:700;font-size:13.5px">{{c.nome}}</span>
+                      <span style="font-family:Sora;font-weight:600;font-size:13px;color:var(--text2)">{{c.pctLabel}}</span>
+                      <span style="font-family:Sora;font-weight:600;font-size:13.5px;min-width:96px;text-align:right">{{c.valorFmt}}</span>
+                      <button onClick="{{c.edit}}" title="Renomear" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                      <button onClick="{{c.del}}" title="Excluir" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                    </div>
+                    <sc-if value="{{modePct}}" hint-placeholder-val="{{true}}">
+                      <input type="range" min="0" max="100" step="1" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;accent-color:{{c.cor}};height:22px;cursor:grab"/>
+                    </sc-if>
+                    <sc-if value="{{modeAbs}}" hint-placeholder-val="{{false}}">
+                      <input type="number" value="{{c.abs}}" onChange="{{c.setAbs}}" placeholder="R$ 0,00" style="width:160px;padding:8px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none" style-focus="border-color:var(--accent)"/>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <!-- Planejamento de gastos -->
+          <div>
+            <div style="font-family:Sora;font-weight:600;font-size:16px;margin:6px 0 14px">Planejamento de gastos por categoria</div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
+              <sc-for list="{{planCards}}" as="p" hint-placeholder-count="6">
+                <div style="background:var(--surface);border:1px solid {{p.borderC}};border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <span style="width:10px;height:10px;border-radius:3px;background:{{p.cor}}"></span>
+                    <span style="flex:1;font-weight:800;font-size:14px">{{p.nome}}</span>
+                    <span style="font-size:12px;color:var(--text2);font-weight:700">Orçamento: {{p.orcFmt}}</span>
+                  </div>
+                  <div style="height:7px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);overflow:hidden;margin-bottom:8px">
+                    <div style="height:100%;border-radius:99px;background:{{p.barColor}};width:{{p.barW}};transition:width .4s ease"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:12px">
+                    <span style="color:var(--text2)">Usado: <b>{{p.usadoFmt}}</b></span>
+                    <span style="font-weight:800;color:{{p.restColor}}">{{p.restMsg}}</span>
+                  </div>
+                  <sc-if value="{{p.over}}" hint-placeholder-val="{{false}}">
+                    <div style="display:flex;gap:8px;align-items:center;padding:9px 12px;border-radius:10px;background:var(--amber-soft);color:var(--amber);font-size:12px;font-weight:700;margin-bottom:12px;animation:fadeIn .3s ease">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 3 2 20h20L12 3zm0 7v4m0 3h.01"></path></svg>
+                      Planejamento excede o orçamento da categoria
+                    </div>
+                  </sc-if>
+                  <div style="display:flex;flex-direction:column;gap:6px">
+                    <sc-for list="{{p.itens}}" as="i" hint-placeholder-count="0">
+                      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:9px;background:var(--surface2)">
+                        <span style="flex:1;font-size:13px;font-weight:600">{{i.nome}}</span>
+                        <span style="font-family:Sora;font-size:12.5px;font-weight:600">{{i.valorFmt}}</span>
+                        <button onClick="{{i.edit}}" style="width:22px;height:22px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3)" style-hover="color:var(--accent)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                        <button onClick="{{i.del}}" style="width:22px;height:22px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3)" style-hover="color:var(--red)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                      </div>
+                    </sc-for>
+                    <button onClick="{{p.add}}" style="padding:9px;border-radius:9px;border:1px dashed var(--border2);background:none;color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent);background:var(--accent-soft)">+ Adicionar planejamento</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== GASTOS FIXOS ===== -->
+      <sc-if value="{{showFixos}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div style="color:var(--text2);font-size:13.5px">Total de gastos fixos ativos: <b style="font-family:Sora;color:var(--text)">{{custoFixoFmt}}</b> / mês</div>
+            <button onClick="{{addFixo}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="filter:brightness(1.1)">+ Novo gasto fixo</button>
+          </div>
+          <sc-if value="{{emptyFixos}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhum gasto fixo cadastrado</div>
+              <div style="font-size:13px">Cadastre despesas recorrentes como aluguel, energia e internet.</div>
+            </div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{fixosList}}" as="g" hint-placeholder-count="0">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap;opacity:{{g.op}}">
+                <div style="flex:1;min-width:180px">
+                  <div style="font-weight:800;font-size:14px">{{g.desc}}</div>
+                  <div style="font-size:12px;color:var(--text3)">{{g.meta}}</div>
+                </div>
+                <div style="font-family:Sora;font-weight:600;font-size:15px;min-width:100px;text-align:right">{{g.valorFmt}}</div>
+                <div style="padding:5px 12px;border-radius:99px;font-size:11.5px;font-weight:800;background:{{g.stBg}};color:{{g.stFg}};min-width:82px;text-align:center">{{g.stLabel}}</div>
+                <sc-if value="{{g.podePagar}}" hint-placeholder-val="{{false}}">
+                  <button onClick="{{g.pagar}}" style="padding:9px 16px;border-radius:10px;border:1px solid var(--green);background:var(--green-soft);color:var(--green);font-weight:800;font-size:12.5px;cursor:pointer" style-hover="background:var(--green);color:#fff">Pagar</button>
+                </sc-if>
+                <div style="display:flex;gap:4px">
+                  <button onClick="{{g.toggle}}" title="{{g.toggleTip}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{g.toggleIcon}}"></path></svg></button>
+                  <button onClick="{{g.edit}}" title="Editar" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                  <button onClick="{{g.del}}" title="Excluir" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <p style="font-size:12px;color:var(--text3);margin:0">Ao pagar, uma despesa é criada na competência atual. Se a despesa for excluída, o gasto volta para "Em aberto". A cada novo mês, todos retornam automaticamente para "Em aberto".</p>
+        </div>
+      </sc-if>
+
+      <!-- ===== RECEITAS ===== -->
+      <sc-if value="{{showRec}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{recFilters}}" as="f" hint-placeholder-count="4">
+                <button onClick="{{f.pick}}" style="padding:8px 15px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:12.5px;cursor:pointer">{{f.label}}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{addReceita}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">+ Nova receita</button>
+          </div>
+          <sc-if value="{{emptyRec}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhuma receita encontrada</div>
+              <div style="font-size:13px">Nada por aqui em {{compLabel}} com esse filtro.</div>
+            </div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{recList}}" as="r" hint-placeholder-count="0">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <button onClick="{{r.toggle}}" title="{{r.toggleTip}}" style="width:26px;height:26px;flex:none;border-radius:8px;border:2px solid {{r.chkBc}};background:{{r.chkBg}};color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">
+                  <sc-if value="{{r.recebida}}" hint-placeholder-val="{{false}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
+                </button>
+                <div style="flex:1;min-width:180px">
+                  <div style="font-weight:800;font-size:14px">{{r.desc}}</div>
+                  <div style="font-size:12px;color:var(--text3)">{{r.meta}}</div>
+                </div>
+                <sc-if value="{{r.recorrente}}" hint-placeholder-val="{{false}}"><span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:var(--accent-soft);color:var(--accent)">Recorrente</span></sc-if>
+                <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:{{r.stBg}};color:{{r.stFg}}">{{r.stLabel}}</span>
+                <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--green);min-width:110px;text-align:right">{{r.valorFmt}}</div>
+                <div style="display:flex;gap:4px">
+                  <button onClick="{{r.edit}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                  <button onClick="{{r.del}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;font-size:13.5px;color:var(--text2)">Total do filtro: <b style="font-family:Sora;color:var(--green)">{{recTotalFmt}}</b></div>
+        </div>
+      </sc-if>
+
+      <!-- ===== DESPESAS ===== -->
+      <sc-if value="{{showDesp}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{despFilters}}" as="f" hint-placeholder-count="4">
+                <button onClick="{{f.pick}}" style="padding:8px 15px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:12.5px;cursor:pointer">{{f.label}}</button>
+              </sc-for>
+            </div>
+            <button onClick="{{addDespesa}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">+ Nova despesa</button>
+          </div>
+          <sc-if value="{{emptyDesp}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhuma despesa encontrada</div>
+              <div style="font-size:13px">Nada por aqui em {{compLabel}} com esse filtro.</div>
+            </div>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <sc-for list="{{despList}}" as="d" hint-placeholder-count="0">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                <button onClick="{{d.toggle}}" title="{{d.toggleTip}}" style="width:26px;height:26px;flex:none;border-radius:8px;border:2px solid {{d.chkBc}};background:{{d.chkBg}};color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center">
+                  <sc-if value="{{d.paga}}" hint-placeholder-val="{{false}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
+                </button>
+                <div style="flex:1;min-width:180px">
+                  <div style="font-weight:800;font-size:14px">{{d.desc}}</div>
+                  <div style="font-size:12px;color:var(--text3)">{{d.meta}}</div>
+                </div>
+                <sc-if value="{{d.deFixo}}" hint-placeholder-val="{{false}}"><span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:var(--accent-soft);color:var(--accent)">Gasto fixo</span></sc-if>
+                <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:{{d.stBg}};color:{{d.stFg}}">{{d.stLabel}}</span>
+                <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--red);min-width:110px;text-align:right">{{d.valorFmt}}</div>
+                <div style="display:flex;gap:4px">
+                  <button onClick="{{d.edit}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                  <button onClick="{{d.del}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;font-size:13.5px;color:var(--text2)">Total do filtro: <b style="font-family:Sora;color:var(--red)">{{despTotalFmt}}</b></div>
+        </div>
+      </sc-if>
+
+      <!-- ===== CARTÕES ===== -->
+      <sc-if value="{{showCart}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;justify-content:flex-end">
+            <button onClick="{{addCartao}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">+ Novo cartão</button>
+          </div>
+          <sc-if value="{{emptyCart}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhum cartão cadastrado</div>
+              <div style="font-size:13px">Cadastre seus cartões de crédito para acompanhar as faturas.</div>
+            </div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:20px">
+            <sc-for list="{{cartList}}" as="k" hint-placeholder-count="0">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;opacity:{{k.op}}">
+                <div style="margin:16px;height:170px;border-radius:16px;background:{{k.bg}};color:#fff;padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden">
+                  <div style="position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08);top:-70px;right:-50px"></div>
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                    <div style="font-weight:800;font-size:15px;letter-spacing:.02em">{{k.nome}}</div>
+                    <div style="font-size:11px;font-weight:800;opacity:.85;text-transform:uppercase;letter-spacing:.08em">{{k.bandeira}}</div>
+                  </div>
+                  <div>
+                    <div style="width:38px;height:27px;border-radius:6px;background:linear-gradient(135deg,rgba(255,255,255,.85),rgba(255,255,255,.5));margin-bottom:10px"></div>
+                    <div style="font-family:Sora;font-size:15px;letter-spacing:.14em;opacity:.9">•••• •••• •••• {{k.dig}}</div>
+                    <div style="display:flex;gap:18px;font-size:10.5px;margin-top:8px;opacity:.8;font-weight:700">
+                      <span>FECHA DIA {{k.fecha}}</span><span>VENCE DIA {{k.vence}}</span>
+                    </div>
+                  </div>
+                </div>
+                <div style="padding:4px 20px 18px">
+                  <sc-if value="{{k.inativo}}" hint-placeholder-val="{{false}}">
+                    <div style="font-size:11.5px;font-weight:800;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">Fora de uso — não aparece em novos lançamentos</div>
+                  </sc-if>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin-bottom:14px">
+                    <div><div style="font-size:11px;color:var(--text3);font-weight:700">Fatura atual</div><div style="font-family:Sora;font-weight:600;font-size:16px">{{k.faturaFmt}}</div></div>
+                    <div><div style="font-size:11px;color:var(--text3);font-weight:700">Em aberto</div><div style="font-family:Sora;font-weight:600;font-size:16px;color:{{k.abertoColor}}">{{k.abertoFmt}}</div></div>
+                    <div><div style="font-size:11px;color:var(--text3);font-weight:700">Valor pago</div><div style="font-family:Sora;font-weight:600;font-size:14px;color:var(--green)">{{k.pagoFmt}}</div></div>
+                    <div><div style="font-size:11px;color:var(--text3);font-weight:700">Total comprometido</div><div style="font-family:Sora;font-weight:600;font-size:14px">{{k.compFmt}}</div></div>
+                  </div>
+                  <div style="display:flex;gap:8px">
+                    <sc-if value="{{k.temAberto}}" hint-placeholder-val="{{false}}">
+                      <button onClick="{{k.pagarFatura}}" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--green);background:var(--green-soft);color:var(--green);font-weight:800;font-size:12.5px;cursor:pointer" style-hover="background:var(--green);color:#fff">Pagar fatura</button>
+                    </sc-if>
+                    <button onClick="{{k.edit}}" style="padding:10px 14px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent)">Editar</button>
+                    <button onClick="{{k.del}}" style="padding:10px 14px;border-radius:10px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer" style-hover="border-color:var(--red);color:var(--red)">Excluir</button>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== CONTAS ===== -->
+      <sc-if value="{{showContas}}" hint-placeholder-val="{{false}}">
+        <div style="animation:fadeUp .35s ease;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div style="color:var(--text2);font-size:13.5px">Patrimônio total: <b style="font-family:Sora;font-size:18px;color:var(--text)">{{patrimonioFmt}}</b></div>
+            <button onClick="{{addConta}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">+ Nova conta</button>
+          </div>
+          <sc-if value="{{emptyContas}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhuma conta cadastrada</div>
+              <div style="font-size:13px">Cadastre contas bancárias, carteiras, dinheiro e investimentos.</div>
+            </div>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+            <sc-for list="{{contasList}}" as="a" hint-placeholder-count="0">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);opacity:{{a.op}}">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+                  <div style="width:38px;height:38px;flex:none;border-radius:11px;background:{{a.corSoft}};color:{{a.cor}};display:flex;align-items:center;justify-content:center">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{a.icon}}"></path></svg>
+                  </div>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{a.nome}}</div>
+                    <div style="font-size:11.5px;color:var(--text3);font-weight:600">{{a.tipoStatus}}</div>
+                  </div>
+                  <div style="display:flex;gap:2px">
+                    <button onClick="{{a.edit}}" style="width:28px;height:28px;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                    <button onClick="{{a.del}}" style="width:28px;height:28px;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                  </div>
+                </div>
+                <div style="font-family:Sora;font-weight:600;font-size:22px;letter-spacing:-.02em">{{a.saldoFmt}}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<sc-if value="{{modalOpen}}" hint-placeholder-val="{{false}}">
+  <div onClick="{{modalClose}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease">
+    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:480px;max-height:88vh;overflow:auto;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0">
+        <h3 style="font-family:Sora;font-weight:600;font-size:17px;margin:0;letter-spacing:-.02em">{{modalTitle}}</h3>
+        <button onClick="{{modalClose}}" style="width:30px;height:30px;border:none;background:var(--surface2);border-radius:9px;cursor:pointer;color:var(--text2);font-size:15px" style-hover="color:var(--red)">✕</button>
+      </div>
+      <div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <sc-for list="{{modalFields}}" as="f" hint-placeholder-count="0">
+          <div style="display:flex;flex-direction:column;gap:6px;grid-column:span {{f.span}}">
+            <label style="font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">{{f.label}}</label>
+            <sc-if value="{{f.isInput}}" hint-placeholder-val="{{false}}">
+              <input type="{{f.itype}}" value="{{f.value}}" onChange="{{f.on}}" placeholder="{{f.ph}}" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent);background:var(--surface)"/>
+            </sc-if>
+            <sc-if value="{{f.isSelect}}" hint-placeholder-val="{{false}}">
+              <select value="{{f.value}}" onChange="{{f.on}}" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13.5px;outline:none;cursor:pointer">
+                <sc-for list="{{f.options}}" as="o" hint-placeholder-count="0"><option value="{{o.v}}">{{o.l}}</option></sc-for>
+              </select>
+            </sc-if>
+            <sc-if value="{{f.isTextarea}}" hint-placeholder-val="{{false}}">
+              <textarea value="{{f.value}}" onChange="{{f.on}}" rows="2" placeholder="{{f.ph}}" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13.5px;outline:none;resize:vertical;font-family:inherit" style-focus="border-color:var(--accent)"></textarea>
+            </sc-if>
+            <sc-if value="{{f.isToggle}}" hint-placeholder-val="{{false}}">
+              <button onClick="{{f.on}}" style="width:46px;height:26px;border-radius:99px;border:none;cursor:pointer;background:{{f.togBg}};position:relative;transition:background .2s">
+                <span style="position:absolute;top:3px;left:{{f.togX}};width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s cubic-bezier(.4,0,.2,1)"></span>
+              </button>
+            </sc-if>
+            <sc-if value="{{f.isColor}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <sc-for list="{{f.swatches}}" as="sw" hint-placeholder-count="0">
+                  <button onClick="{{sw.pick}}" style="width:27px;height:27px;border-radius:50%;background:{{sw.c}};border:{{sw.b}};cursor:pointer;flex:none" style-hover="transform:scale(1.12)"></button>
+                </sc-for>
+                <input value="{{f.value}}" onChange="{{f.on}}" placeholder="#7c5cbf" style="width:96px;padding:8px 10px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:12.5px;outline:none;font-family:monospace"/>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;padding:0 24px 22px">
+        <button onClick="{{modalClose}}" style="padding:11px 18px;border-radius:11px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="color:var(--text)">Cancelar</button>
+        <button onClick="{{modalSubmit}}" style="padding:11px 22px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">Salvar</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- ===== CONFIRM ===== -->
+<sc-if value="{{confirmOpen}}" hint-placeholder-val="{{false}}">
+  <div onClick="{{confirmCancel}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
+    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:380px;padding:26px;animation:popIn .25s cubic-bezier(.3,.9,.4,1)">
+      <div style="width:42px;height:42px;border-radius:12px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg>
+      </div>
+      <h3 style="font-family:Sora;font-weight:600;font-size:16px;margin:0 0 6px">Confirmar exclusão</h3>
+      <p style="color:var(--text2);font-size:13.5px;margin:0 0 20px">{{confirmMsg}}</p>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onClick="{{confirmCancel}}" style="padding:10px 16px;border-radius:11px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="color:var(--text)">Cancelar</button>
+        <button onClick="{{confirmOk}}" style="padding:10px 18px;border-radius:11px;border:none;background:var(--red);color:#fff;font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">Excluir</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<!-- ===== TOASTS ===== -->
+<div style="position:fixed;bottom:22px;right:22px;z-index:200;display:flex;flex-direction:column;gap:10px;pointer-events:none">
+  <sc-for list="{{toasts}}" as="t" hint-placeholder-count="0">
+    <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid {{t.color}};border-radius:12px;box-shadow:var(--shadow);padding:13px 18px;min-width:240px;max-width:340px;display:flex;align-items:center;gap:10px;animation:toastIn .3s cubic-bezier(.3,.9,.4,1)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{t.color}}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="{{t.icon}}"></path></svg>
+      <span style="font-size:13px;font-weight:700">{{t.msg}}</span>
+    </div>
+  </sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;accent&quot;: {&quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;options&quot;: [&quot;#6d4fa1&quot;, &quot;#3f5bb5&quot;, &quot;#2e7d5b&quot;, &quot;#b3562e&quot;], &quot;section&quot;: &quot;Aparência&quot;}, &quot;radius&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 14, &quot;min&quot;: 6, &quot;max&quot;: 24, &quot;step&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;unit&quot;: &quot;px&quot;, &quot;section&quot;: &quot;Aparência&quot;}}">
+class Component extends DCLogic {
+  state = (() => {
+    const now = new Date();
+    let theme = 'light';
+    try { theme = localStorage.getItem('fn_theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) {}
+    return {
+      theme, view: 'auth', authTab: 'login',
+      authName: '', authEmail: '', authPass: '', authError: '', authMsg: '',
+      user: null, db: null,
+      screen: 'dashboard', sidebarOpen: true, loading: false,
+      comp: { m: now.getMonth() + 1, y: now.getFullYear() },
+      reservaMeses: 6, distMode: 'pct',
+      recFilter: 'todas', despFilter: 'todas',
+      modal: null, confirm: null, toasts: []
+    };
+  })();
+
+  rootRef = React.createRef();
+
+  // ---------- utils ----------
+  uid() { return Math.random().toString(36).slice(2, 10); }
+  fmt(v) { return (v < 0 ? '-' : '') + 'R$ ' + Math.abs(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  ck(c) { return c.y + '-' + String(c.m).padStart(2, '0'); }
+  inComp(dateStr, c) { return !!dateStr && dateStr.slice(0, 7) === this.ck(c); }
+  monthName(m) { return ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][m - 1]; }
+  monthShort(m) { return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][m - 1]; }
+  shiftComp(c, n) { const d = new Date(c.y, c.m - 1 + n, 1); return { m: d.getMonth() + 1, y: d.getFullYear() }; }
+  isCur(c) { const n = new Date(); return c.m === n.getMonth() + 1 && c.y === n.getFullYear(); }
+  dateFor(c, day) { return this.ck(c) + '-' + String(Math.min(day || 1, 28)).padStart(2, '0'); }
+  parseNum(v) { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+
+  CATCOLORS = ['#7c5cbf', '#4f6bd8', '#3e9c7b', '#c2703d', '#c94f6d', '#b8933e', '#5a9aa8', '#8a8f98'];
+  PALETTE = ['#7c5cbf', '#4f6bd8', '#3e9c7b', '#c2703d', '#c94f6d', '#b8933e', '#2f2f3a', '#5a9aa8'];
+  ICONS = {
+    dash: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-12h8V3h-8v6Z',
+    plan: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Zm0-5a4 4 0 1 1 0-8',
+    fixo: 'M17 2l4 4-4 4M21 6H7a4 4 0 0 0-4 4M7 22l-4-4 4-4M3 18h14a4 4 0 0 0 4-4',
+    rec: 'M3 17l6-6 4 4 8-8M15 7h6v6',
+    desp: 'M3 7l6 6 4-4 8 8M15 17h6v-6',
+    card: 'M2 6h20v13H2zM2 10h20',
+    conta: 'M3 8h18v12H3zM3 8l2-4h12l2 4M15 14h3',
+    check: 'M5 13l4 4L19 7',
+    alert: 'M12 8v4m0 4h.01M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z',
+    coin: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5h-2.5a1.75 1.75 0 0 0 0 3.5H15'
+  };
+
+  // ---------- seed ----------
+  emptyDB() {
+    return {
+      contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [],
+      categorias: [
+        { id: 'c1', nome: 'Liberdade Financeira', pct: 25, abs: 0 },
+        { id: 'c2', nome: 'Custos Fixos', pct: 30, abs: 0 },
+        { id: 'c3', nome: 'Conforto', pct: 15, abs: 0 },
+        { id: 'c4', nome: 'Metas', pct: 15, abs: 0 },
+        { id: 'c5', nome: 'Prazeres', pct: 10, abs: 0 },
+        { id: 'c6', nome: 'Conhecimento', pct: 5, abs: 0 }
+      ]
+    };
+  }
+
+  seedDB() {
+    const db = this.emptyDB();
+    const cur = { m: new Date().getMonth() + 1, y: new Date().getFullYear() };
+    db.fontes = [ { id: 'f1', nome: 'Salário', valor: 6500 }, { id: 'f2', nome: 'Freelance', valor: 1400 } ];
+    db.contas = [
+      { id: 'a1', nome: 'Conta Corrente', tipo: 'Conta bancária', saldo: 4820, cor: '#7c5cbf', ativo: true },
+      { id: 'a2', nome: 'Carteira Digital', tipo: 'Carteira digital', saldo: 1230, cor: '#4f6bd8', ativo: true },
+      { id: 'a3', nome: 'Dinheiro', tipo: 'Dinheiro físico', saldo: 350, cor: '#3e9c7b', ativo: true },
+      { id: 'a4', nome: 'CDB Liquidez Diária', tipo: 'Investimento', saldo: 8200, cor: '#b8933e', ativo: true },
+      { id: 'a5', nome: 'Tesouro Selic', tipo: 'Investimento', saldo: 6400, cor: '#c2703d', ativo: true }
+    ];
+    db.cartoes = [
+      { id: 'k1', nome: 'Ametista', bandeira: 'Mastercard', cor: '#6d4fa1', fecha: 28, vence: 7, ativo: true },
+      { id: 'k2', nome: 'Safira', bandeira: 'Visa', cor: '#3f5bb5', fecha: 15, vence: 22, ativo: true },
+      { id: 'k3', nome: 'Antigo Gold', bandeira: 'Visa', cor: '#8a8f98', fecha: 10, vence: 17, ativo: false }
+    ];
+    db.fixos = [
+      { id: 'g1', desc: 'Aluguel', cat: 'Custos Fixos', valor: 1800, venc: 5, obs: '', ativo: true },
+      { id: 'g2', desc: 'Energia elétrica', cat: 'Custos Fixos', valor: 160, venc: 10, obs: '', ativo: true },
+      { id: 'g3', desc: 'Internet', cat: 'Custos Fixos', valor: 99, venc: 15, obs: 'Fibra 500MB', ativo: true },
+      { id: 'g4', desc: 'Plano de saúde', cat: 'Custos Fixos', valor: 420, venc: 8, obs: '', ativo: true },
+      { id: 'g5', desc: 'Academia', cat: 'Conforto', valor: 120, venc: 12, obs: '', ativo: true },
+      { id: 'g6', desc: 'Streaming', cat: 'Prazeres', valor: 45, venc: 20, obs: '', ativo: true }
+    ];
+    // 6 months of history
+    for (let i = 5; i >= 0; i--) {
+      const c = this.shiftComp(cur, -i);
+      const past = i > 0;
+      db.receitas.push({ id: this.uid(), desc: 'Salário', cat: 'Salário', contaId: 'a1', data: this.dateFor(c, 5), valor: 6500, obs: '', recorrente: true, recebida: true });
+      if (i % 2 === 0) db.receitas.push({ id: this.uid(), desc: 'Projeto freelance', cat: 'Freelance', contaId: 'a2', data: this.dateFor(c, 18), valor: 900 + i * 180, obs: '', recorrente: false, recebida: past });
+      db.fixos.forEach((g, gi) => {
+        const isCurM = i === 0;
+        const paidNow = isCurM ? gi < 2 : true; // current month: aluguel + energia pagos
+        if (paidNow) db.despesas.push({ id: this.uid(), desc: g.desc, cat: g.cat, contaId: 'a1', cartaoId: null, data: this.dateFor(c, g.venc), valor: g.valor, obs: '', paga: true, fixoId: g.id });
+      });
+      db.despesas.push({ id: this.uid(), desc: 'Mercado', cat: 'Custos Fixos', contaId: 'a1', cartaoId: null, data: this.dateFor(c, 9), valor: 620 + (i % 3) * 60, obs: '', paga: past, fixoId: null });
+      db.despesas.push({ id: this.uid(), desc: 'Restaurante', cat: 'Prazeres', contaId: null, cartaoId: 'k1', data: this.dateFor(c, 14), valor: 140 + (i % 2) * 45, obs: '', paga: past, fixoId: null });
+      db.despesas.push({ id: this.uid(), desc: 'Transporte por app', cat: 'Conforto', contaId: null, cartaoId: 'k2', data: this.dateFor(c, 21), valor: 95 + (i % 3) * 20, obs: '', paga: past, fixoId: null });
+      if (i % 2 === 1) db.despesas.push({ id: this.uid(), desc: 'Curso online', cat: 'Conhecimento', contaId: 'a2', cartaoId: null, data: this.dateFor(c, 11), valor: 240, obs: '', paga: true, fixoId: null });
+    }
+    db.despesas.push({ id: this.uid(), desc: 'Presente de aniversário', cat: 'Prazeres', contaId: null, cartaoId: 'k1', data: this.dateFor(cur, 24), valor: 180, obs: '', paga: false, fixoId: null });
+    db.planejamentos = [
+      { id: 'p1', catId: 'c5', nome: 'Cinema', valor: 80 }, { id: 'p2', catId: 'c5', nome: 'Restaurantes', valor: 320 }, { id: 'p3', catId: 'c5', nome: 'Show', valor: 450 },
+      { id: 'p4', catId: 'c4', nome: 'Viagem de fim de ano', valor: 900 },
+      { id: 'p5', catId: 'c6', nome: 'Curso de inglês', valor: 300 },
+      { id: 'p6', catId: 'c1', nome: 'Aporte investimentos', valor: 1900 }
+    ];
+    return db;
+  }
+
+  // ---------- persistence ----------
+  commit(db) {
+    this.setState({ db });
+    const u = this.state.user;
+    if (u && !u.visitor) { try { localStorage.setItem('fn_db_' + u.email, JSON.stringify(db)); } catch (e) {} }
+  }
+  loadDB(email) {
+    try { const raw = localStorage.getItem('fn_db_' + email); if (raw) return JSON.parse(raw); } catch (e) {}
+    return this.emptyDB();
+  }
+
+  // ---------- tweaks ----------
+  componentDidMount() { this.applyTweaks(); }
+  componentDidUpdate() { this.applyTweaks(); }
+  applyTweaks() {
+    const el = this.rootRef.current; if (!el) return;
+    const a = this.props.accent;
+    if (a) { el.style.setProperty('--accent', a); el.style.setProperty('--accent-soft', 'color-mix(in oklab, ' + a + ', var(--bg) 86%)'); }
+    else { el.style.removeProperty('--accent'); el.style.removeProperty('--accent-soft'); }
+    if (this.props.radius != null) el.style.setProperty('--radius', this.props.radius + 'px');
+  }
+
+  // ---------- toasts ----------
+  toast(msg, kind) {
+    const id = this.uid();
+    const t = { id, msg, kind: kind || 'ok' };
+    this.setState(s => ({ toasts: [...s.toasts, t] }));
+    setTimeout(() => this.setState(s => ({ toasts: s.toasts.filter(x => x.id !== id) })), 3200);
+  }
+  askConfirm(msg, fn) { this.setState({ confirm: { msg, fn } }); }
+
+  // ---------- auth ----------
+  getUsers() { try { return JSON.parse(localStorage.getItem('fn_users') || '[]'); } catch (e) { return []; } }
+  enter(user, db) {
+    let theme = this.state.theme;
+    if (!user.visitor) { try { theme = localStorage.getItem('fn_theme_' + user.email) || theme; } catch (e) {} }
+    this.setState({ user, db, view: 'app', screen: 'dashboard', authError: '', authMsg: '', authPass: '', theme });
+    this.toast('Bem-vindo, ' + user.name.split(' ')[0] + '!');
+  }
+  doLogin = () => {
+    const { authEmail, authPass } = this.state;
+    const u = this.getUsers().find(x => x.email === authEmail.trim().toLowerCase());
+    if (!u || u.pass !== authPass) { this.setState({ authError: 'E-mail ou senha inválidos.' }); return; }
+    this.enter({ name: u.name, email: u.email, visitor: false }, this.loadDB(u.email));
+  };
+  doCadastro = () => {
+    const { authName, authEmail, authPass } = this.state;
+    const email = authEmail.trim().toLowerCase();
+    if (!authName.trim() || !email.includes('@') || authPass.length < 4) { this.setState({ authError: 'Preencha nome, e-mail válido e senha com ao menos 4 caracteres.' }); return; }
+    const users = this.getUsers();
+    if (users.find(x => x.email === email)) { this.setState({ authError: 'Este e-mail já possui cadastro.' }); return; }
+    users.push({ name: authName.trim(), email, pass: authPass });
+    try { localStorage.setItem('fn_users', JSON.stringify(users)); } catch (e) {}
+    this.enter({ name: authName.trim(), email, visitor: false }, this.emptyDB());
+  };
+  doRecuperar = () => {
+    if (!this.state.authEmail.includes('@')) { this.setState({ authMsg: '', authError: 'Informe um e-mail válido.' }); return; }
+    this.setState({ authMsg: 'Se este e-mail estiver cadastrado, você receberá as instruções em instantes.', authError: '' });
+  };
+  doVisitante = () => { this.enter({ name: 'Visitante', email: null, visitor: true }, this.seedDB()); };
+  sair = () => { this.setState({ view: 'auth', user: null, db: null, authTab: 'login', authError: '', authMsg: '' }); };
+
+  // ---------- theme ----------
+  toggleTheme = () => {
+    const theme = this.state.theme === 'dark' ? 'light' : 'dark';
+    this.setState({ theme });
+    try {
+      localStorage.setItem('fn_theme', theme);
+      const u = this.state.user;
+      if (u && !u.visitor) localStorage.setItem('fn_theme_' + u.email, theme);
+    } catch (e) {}
+  };
+
+  // ---------- nav ----------
+  go(screen) {
+    if (screen === this.state.screen) return;
+    this.setState({ screen, loading: true });
+    clearTimeout(this._lt);
+    this._lt = setTimeout(() => this.setState({ loading: false }), 380);
+  }
+
+  // ---------- modal engine ----------
+  openModal(type, entity) {
+    const d = entity ? { ...entity } : {};
+    this.setState({ modal: { type, id: entity ? entity.id : null, draft: d, extra: {} } });
+  }
+  setDraft(k, v) { this.setState(s => ({ modal: { ...s.modal, draft: { ...s.modal.draft, [k]: v } } })); }
+  closeModal = () => this.setState({ modal: null });
+
+  modalDefs() {
+    const db = this.state.db || this.emptyDB();
+    const catOpts = db.categorias.map(c => ({ v: c.nome, l: c.nome }));
+    const recCatOpts = ['Salário', 'Freelance', 'Aluguel', 'Dividendos', 'Outros'].map(x => ({ v: x, l: x }));
+    const contaOpts = db.contas.filter(a => a.ativo).map(a => ({ v: a.id, l: a.nome }));
+    const formaOpts = [...contaOpts.map(o => ({ v: 'a:' + o.v, l: o.l })), ...db.cartoes.filter(k => k.ativo).map(k => ({ v: 'k:' + k.id, l: 'Cartão ' + k.nome }))];
+    return {
+      conta: { title: n => n ? 'Editar conta' : 'Nova conta', fields: [
+        { k: 'nome', label: 'Nome', t: 'text', ph: 'Ex: Conta Corrente', span: 2 },
+        { k: 'tipo', label: 'Tipo', t: 'select', options: ['Conta bancária', 'Carteira digital', 'Dinheiro físico', 'Investimento', 'Outro'].map(x => ({ v: x, l: x })), span: 1 },
+        { k: 'saldo', label: 'Saldo (R$)', t: 'number', span: 1 },
+        { k: 'cor', label: 'Cor', t: 'color', span: 2 },
+        { k: 'ativo', label: 'Conta ativa', t: 'toggle', span: 2 }
+      ], defaults: { nome: '', tipo: 'Conta bancária', saldo: 0, cor: '#7c5cbf', ativo: true } },
+      cartao: { title: n => n ? 'Editar cartão' : 'Novo cartão', fields: [
+        { k: 'nome', label: 'Nome', t: 'text', ph: 'Ex: Cartão principal', span: 1 },
+        { k: 'bandeira', label: 'Bandeira', t: 'select', options: ['Mastercard', 'Visa', 'Elo', 'Amex', 'Hipercard'].map(x => ({ v: x, l: x })), span: 1 },
+        { k: 'fecha', label: 'Dia de fechamento', t: 'number', span: 1 },
+        { k: 'vence', label: 'Dia de vencimento', t: 'number', span: 1 },
+        { k: 'cor', label: 'Cor', t: 'color', span: 2 },
+        { k: 'ativo', label: 'Em uso', t: 'toggle', span: 2 }
+      ], defaults: { nome: '', bandeira: 'Mastercard', fecha: 28, vence: 7, cor: '#6d4fa1', ativo: true } },
+      fixo: { title: n => n ? 'Editar gasto fixo' : 'Novo gasto fixo', fields: [
+        { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Aluguel', span: 2 },
+        { k: 'cat', label: 'Categoria', t: 'select', options: catOpts, span: 1 },
+        { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
+        { k: 'venc', label: 'Dia de vencimento', t: 'number', span: 1 },
+        { k: 'ativo', label: 'Ativo', t: 'toggle', span: 1 },
+        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
+      ], defaults: { desc: '', cat: catOpts.length ? catOpts[0].v : '', valor: 0, venc: 5, obs: '', ativo: true } },
+      receita: { title: n => n ? 'Editar receita' : 'Nova receita', fields: [
+        { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Salário', span: 2 },
+        { k: 'cat', label: 'Categoria', t: 'select', options: recCatOpts, span: 1 },
+        { k: 'contaId', label: 'Conta de destino', t: 'select', options: contaOpts, span: 1 },
+        { k: 'data', label: 'Data', t: 'date', span: 1 },
+        { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
+        { k: 'recorrente', label: 'Recorrente', t: 'toggle', span: 1 },
+        { k: 'recebida', label: 'Já recebida', t: 'toggle', span: 1 },
+        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
+      ], defaults: { desc: '', cat: 'Salário', contaId: contaOpts.length ? contaOpts[0].v : '', data: this.dateFor(this.state.comp, new Date().getDate()), valor: 0, obs: '', recorrente: false, recebida: false } },
+      despesa: { title: n => n ? 'Editar despesa' : 'Nova despesa', fields: [
+        { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Mercado', span: 2 },
+        { k: 'cat', label: 'Categoria', t: 'select', options: catOpts, span: 1 },
+        { k: 'forma', label: 'Conta / Cartão', t: 'select', options: formaOpts, span: 1 },
+        { k: 'data', label: 'Data', t: 'date', span: 1 },
+        { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
+        { k: 'paga', label: 'Já paga', t: 'toggle', span: 1 },
+        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
+      ], defaults: { desc: '', cat: catOpts.length ? catOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: this.dateFor(this.state.comp, new Date().getDate()), valor: 0, obs: '', paga: false } },
+      fonte: { title: n => n ? 'Editar fonte de renda' : 'Nova fonte de renda', fields: [
+        { k: 'nome', label: 'Nome', t: 'text', ph: 'Ex: Salário', span: 1 },
+        { k: 'valor', label: 'Valor mensal (R$)', t: 'number', span: 1 }
+      ], defaults: { nome: '', valor: 0 } },
+      categoria: { title: n => n ? 'Editar categoria' : 'Nova categoria', fields: [
+        { k: 'nome', label: 'Nome', t: 'text', ph: 'Ex: Saúde', span: 1 },
+        { k: 'pct', label: 'Percentual (%)', t: 'number', span: 1 }
+      ], defaults: { nome: '', pct: 5, abs: 0 } },
+      plano: { title: n => n ? 'Editar planejamento' : 'Novo planejamento', fields: [
+        { k: 'nome', label: 'Descrição', t: 'text', ph: 'Ex: Cinema', span: 1 },
+        { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 }
+      ], defaults: { nome: '', valor: 0 } }
+    };
+  }
+
+  submitModal = () => {
+    const m = this.state.modal; if (!m) return;
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const d = m.draft;
+    const num = k => { d[k] = this.parseNum(d[k]); };
+    const collMap = { conta: 'contas', cartao: 'cartoes', fixo: 'fixos', receita: 'receitas', despesa: 'despesas', fonte: 'fontes', categoria: 'categorias', plano: 'planejamentos' };
+    if (m.type === 'conta') num('saldo');
+    if (m.type === 'cartao') { num('fecha'); num('vence'); }
+    if (m.type === 'fixo') { num('valor'); num('venc'); }
+    if (m.type === 'receita' || m.type === 'despesa' || m.type === 'fonte' || m.type === 'plano') num('valor');
+    if (m.type === 'categoria') num('pct');
+    if (m.type === 'despesa') {
+      const f = d.forma || '';
+      d.contaId = f.startsWith('a:') ? f.slice(2) : null;
+      d.cartaoId = f.startsWith('k:') ? f.slice(2) : null;
+      delete d.forma;
+    }
+    const req = { conta: 'nome', cartao: 'nome', fixo: 'desc', receita: 'desc', despesa: 'desc', fonte: 'nome', categoria: 'nome', plano: 'nome' }[m.type];
+    if (!String(d[req] || '').trim()) { this.toast('Preencha a descrição/nome.', 'err'); return; }
+    const coll = db[collMap[m.type]];
+    // saldo effects for receitas/despesas on create/edit
+    const applySaldo = (item, sign, revert) => {
+      const done = m.type === 'receita' ? item.recebida : item.paga;
+      if (!done || !item.contaId) return;
+      const a = db.contas.find(x => x.id === item.contaId); if (!a) return;
+      a.saldo += (revert ? -1 : 1) * sign * item.valor;
+    };
+    if (m.id) {
+      const idx = coll.findIndex(x => x.id === m.id);
+      if (idx >= 0) {
+        const old = coll[idx];
+        if (m.type === 'receita') applySaldo(old, 1, true);
+        if (m.type === 'despesa') applySaldo(old, -1, true);
+        coll[idx] = { ...old, ...d };
+        if (m.type === 'receita') applySaldo(coll[idx], 1, false);
+        if (m.type === 'despesa') applySaldo(coll[idx], -1, false);
+      }
+      this.toast('Alterações salvas.');
+    } else {
+      const item = { id: this.uid(), ...d };
+      if (m.type === 'plano') item.catId = m.extra && m.extra.catId ? m.extra.catId : (m.draft.catId || null);
+      coll.push(item);
+      if (m.type === 'receita') applySaldo(item, 1, false);
+      if (m.type === 'despesa') applySaldo(item, -1, false);
+      this.toast('Cadastro realizado.');
+    }
+    this.commit(db);
+    this.setState({ modal: null });
+  };
+
+  // ---------- mutations ----------
+  del(collName, id, msg, extraFn) {
+    this.askConfirm(msg, () => {
+      const db = JSON.parse(JSON.stringify(this.state.db));
+      const item = db[collName].find(x => x.id === id);
+      if (item) {
+        if (collName === 'receitas' && item.recebida && item.contaId) { const a = db.contas.find(x => x.id === item.contaId); if (a) a.saldo -= item.valor; }
+        if (collName === 'despesas' && item.paga && item.contaId) { const a = db.contas.find(x => x.id === item.contaId); if (a) a.saldo += item.valor; }
+      }
+      db[collName] = db[collName].filter(x => x.id !== id);
+      if (extraFn) extraFn(db, item);
+      this.commit(db);
+      this.setState({ confirm: null });
+      this.toast('Excluído com sucesso.');
+    });
+  }
+
+  toggleReceita(id) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const r = db.receitas.find(x => x.id === id); if (!r) return;
+    r.recebida = !r.recebida;
+    const a = db.contas.find(x => x.id === r.contaId);
+    if (a) a.saldo += (r.recebida ? 1 : -1) * r.valor;
+    this.commit(db);
+    this.toast(r.recebida ? 'Receita marcada como recebida.' : 'Receita marcada como pendente.');
+  }
+  toggleDespesa(id) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const dd = db.despesas.find(x => x.id === id); if (!dd) return;
+    dd.paga = !dd.paga;
+    const a = db.contas.find(x => x.id === dd.contaId);
+    if (a) a.saldo += (dd.paga ? -1 : 1) * dd.valor;
+    this.commit(db);
+    this.toast(dd.paga ? 'Despesa marcada como paga.' : 'Despesa marcada como pendente.');
+  }
+  pagarFixo(id) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const g = db.fixos.find(x => x.id === id); if (!g) return;
+    const conta = db.contas.find(a => a.ativo);
+    db.despesas.push({ id: this.uid(), desc: g.desc, cat: g.cat, contaId: conta ? conta.id : null, cartaoId: null, data: this.dateFor(this.state.comp, g.venc), valor: g.valor, obs: 'Gerada pelo gasto fixo', paga: true, fixoId: g.id });
+    if (conta) conta.saldo -= g.valor;
+    this.commit(db);
+    this.toast(g.desc + ' pago — despesa criada' + (conta ? ' em ' + conta.nome : '') + '.');
+  }
+  pagarFatura(cardId) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const conta = db.contas.find(a => a.ativo);
+    let total = 0;
+    db.despesas.forEach(dd => { if (dd.cartaoId === cardId && this.inComp(dd.data, this.state.comp) && !dd.paga) { dd.paga = true; total += dd.valor; } });
+    if (conta) conta.saldo -= total;
+    this.commit(db);
+    this.toast('Fatura paga: ' + this.fmt(total) + (conta ? ' debitados de ' + conta.nome : '') + '.');
+  }
+  toggleAtivo(collName, id) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const it = db[collName].find(x => x.id === id); if (!it) return;
+    it.ativo = !it.ativo;
+    this.commit(db);
+    this.toast(it.ativo ? 'Ativado.' : 'Desativado.');
+  }
+  setCatPct(id, v) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const c = db.categorias.find(x => x.id === id); if (!c) return;
+    c.pct = this.parseNum(v);
+    this.commit(db);
+  }
+  setCatAbs(id, v) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const c = db.categorias.find(x => x.id === id); if (!c) return;
+    c.abs = this.parseNum(v);
+    this.commit(db);
+  }
+
+  // ---------- render ----------
+  renderVals() {
+    const s = this.state;
+    const stop = e => e.stopPropagation();
+    const base = {
+      rootRef: this.rootRef, theme: s.theme, stop,
+      isAuth: s.view === 'auth', isApp: s.view === 'app',
+      toasts: s.toasts.map(t => ({ ...t, color: t.kind === 'err' ? 'var(--red)' : t.kind === 'warn' ? 'var(--amber)' : 'var(--green)', icon: t.kind === 'ok' ? this.ICONS.check : this.ICONS.alert })),
+      confirmOpen: !!s.confirm, confirmMsg: s.confirm ? s.confirm.msg : '',
+      confirmOk: () => { if (s.confirm) s.confirm.fn(); },
+      confirmCancel: () => this.setState({ confirm: null })
+    };
+
+    if (s.view === 'auth') {
+      const active = { bg: 'var(--surface)', fg: 'var(--text)', sh: 'var(--shadow)' };
+      const idle = { bg: 'transparent', fg: 'var(--text2)', sh: 'none' };
+      const L = s.authTab === 'login' ? active : idle;
+      const C = s.authTab === 'cadastro' ? active : idle;
+      return { ...base,
+        authBullets: [
+          { t: 'Planejamento de renda por categorias', icon: this.ICONS.plan },
+          { t: 'Reserva de emergência calculada automaticamente', icon: this.ICONS.coin },
+          { t: 'Cartões, contas e patrimônio em tempo real', icon: this.ICONS.card }
+        ],
+        tabMain: s.authTab !== 'recuperar', tabRecuperar: s.authTab === 'recuperar',
+        tabLogin: s.authTab === 'login', tabCadastro: s.authTab === 'cadastro',
+        tabLoginBg: L.bg, tabLoginFg: L.fg, tabLoginSh: L.sh,
+        tabCadBg: C.bg, tabCadFg: C.fg, tabCadSh: C.sh,
+        setTabLogin: () => this.setState({ authTab: 'login', authError: '', authMsg: '' }),
+        setTabCadastro: () => this.setState({ authTab: 'cadastro', authError: '', authMsg: '' }),
+        setTabRecuperar: () => this.setState({ authTab: 'recuperar', authError: '', authMsg: '' }),
+        authName: s.authName, authEmail: s.authEmail, authPass: s.authPass,
+        onAuthName: e => this.setState({ authName: e.target.value }),
+        onAuthEmail: e => this.setState({ authEmail: e.target.value }),
+        onAuthPass: e => this.setState({ authPass: e.target.value }),
+        authError: s.authError, authMsg: s.authMsg,
+        authMainLabel: s.authTab === 'cadastro' ? 'Criar minha conta' : 'Entrar',
+        doAuthMain: s.authTab === 'cadastro' ? this.doCadastro : this.doLogin,
+        doRecuperar: this.doRecuperar, doVisitante: this.doVisitante,
+        // app placeholders
+        isVisitor: false, loading: false, showDash: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, modalOpen: false, navItems: [], sbOpen: true, sbWidth: '240px'
+      };
+    }
+
+    // ===== APP =====
+    const db = s.db;
+    const comp = s.comp;
+    const titles = { dashboard: 'Dashboard', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio' };
+    const navDefs = [
+      ['dashboard', 'Dashboard', this.ICONS.dash], ['planejamento', 'Planejamento', this.ICONS.plan],
+      ['fixos', 'Gastos Fixos', this.ICONS.fixo], ['receitas', 'Receitas', this.ICONS.rec],
+      ['despesas', 'Despesas', this.ICONS.desp], ['cartoes', 'Cartões', this.ICONS.card], ['contas', 'Contas', this.ICONS.conta]
+    ];
+    const renda = db.fontes.reduce((t, f) => t + f.valor, 0);
+    const patrimonio = db.contas.filter(a => a.ativo).reduce((t, a) => t + a.saldo, 0);
+    const custoFixo = db.fixos.filter(g => g.ativo).reduce((t, g) => t + g.valor, 0);
+    const despComp = db.despesas.filter(d => this.inComp(d.data, comp));
+    const recComp = db.receitas.filter(r => this.inComp(r.data, comp));
+    const aPagar = despComp.filter(d => !d.paga).reduce((t, d) => t + d.valor, 0);
+    const next = this.shiftComp(comp, 1);
+    const prevNext = custoFixo + db.despesas.filter(d => this.inComp(d.data, next) && !d.paga).reduce((t, d) => t + d.valor, 0);
+    const contaNome = id => { const a = db.contas.find(x => x.id === id); return a ? a.nome : '—'; };
+    const cartaoNome = id => { const k = db.cartoes.find(x => x.id === id); return k ? 'Cartão ' + k.nome : '—'; };
+    const fmtDia = ds => ds ? ds.slice(8, 10) + '/' + ds.slice(5, 7) : '';
+    const fixoPago = g => db.despesas.some(d => d.fixoId === g.id && this.inComp(d.data, comp));
+
+    const vals = { ...base,
+      isVisitor: !!(s.user && s.user.visitor),
+      userName: s.user ? s.user.name : '', userInitial: s.user ? s.user.name[0].toUpperCase() : '?',
+      sair: this.sair,
+      sbOpen: s.sidebarOpen, sbWidth: s.sidebarOpen ? '236px' : '76px',
+      sbChevFlip: s.sidebarOpen ? 'none' : 'rotate(180deg)',
+      toggleSidebar: () => this.setState({ sidebarOpen: !s.sidebarOpen }),
+      navItems: navDefs.map(([id, label, icon]) => ({
+        label, icon, go: () => this.go(id),
+        bg: s.screen === id ? 'var(--accent-soft)' : 'transparent',
+        fg: s.screen === id ? 'var(--accent)' : 'var(--text2)',
+        fw: s.screen === id ? '800' : '600'
+      })),
+      screenTitle: titles[s.screen],
+      compLabel: this.monthName(comp.m) + ' ' + comp.y,
+      compPrev: () => this.setState({ comp: this.shiftComp(comp, -1) }),
+      compNext: () => this.setState({ comp: this.shiftComp(comp, 1) }),
+      compHoje: () => { const n = new Date(); this.setState({ comp: { m: n.getMonth() + 1, y: n.getFullYear() } }); },
+      notCurrentComp: !this.isCur(comp),
+      toggleTheme: this.toggleTheme,
+      themeIcon: s.theme === 'dark' ? 'M12 4V2m0 20v-2m8-8h2M2 12h2m13.6-5.6 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z' : 'M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z',
+      loading: s.loading,
+      showDash: !s.loading && s.screen === 'dashboard',
+      showPlan: !s.loading && s.screen === 'planejamento',
+      showFixos: !s.loading && s.screen === 'fixos',
+      showRec: !s.loading && s.screen === 'receitas',
+      showDesp: !s.loading && s.screen === 'despesas',
+      showCart: !s.loading && s.screen === 'cartoes',
+      showContas: !s.loading && s.screen === 'contas',
+      custoFixoFmt: this.fmt(custoFixo), patrimonioFmt: this.fmt(patrimonio)
+    };
+
+    // ---- Dashboard ----
+    vals.dashCards = [
+      { label: 'Patrimônio total', value: this.fmt(patrimonio), sub: db.contas.filter(a => a.ativo).length + ' contas ativas', icon: this.ICONS.conta, iconBg: 'var(--accent-soft)', iconFg: 'var(--accent)', valueColor: 'var(--text)' },
+      { label: 'A pagar este mês', value: this.fmt(aPagar), sub: despComp.filter(d => !d.paga).length + ' despesas em aberto', icon: this.ICONS.desp, iconBg: 'var(--red-soft)', iconFg: 'var(--red)', valueColor: aPagar > 0 ? 'var(--red)' : 'var(--text)' },
+      { label: 'Previsão próximo mês', value: this.fmt(prevNext), sub: 'Fixos + despesas já agendadas', icon: this.ICONS.fixo, iconBg: 'var(--amber-soft)', iconFg: 'var(--amber)', valueColor: 'var(--text)' }
+    ];
+    const reservaMeta = custoFixo * s.reservaMeses;
+    const reservaAtual = db.contas.filter(a => a.ativo && a.tipo === 'Investimento').reduce((t, a) => t + a.saldo, 0);
+    const rp = reservaMeta > 0 ? Math.min(100, Math.round(reservaAtual / reservaMeta * 100)) : 0;
+    vals.reservaOpts = [3, 6, 9, 12].map(n => ({ n, pick: () => this.setState({ reservaMeses: n }), bg: n === s.reservaMeses ? 'var(--accent)' : 'transparent', fg: n === s.reservaMeses ? 'var(--on-accent)' : 'var(--text2)' }));
+    vals.reservaAtualFmt = this.fmt(reservaAtual);
+    vals.reservaMetaFmt = this.fmt(reservaMeta);
+    vals.reservaPctW = rp + '%';
+    vals.reservaPctLabel = rp + '%';
+    vals.reservaFaltaMsg = reservaAtual >= reservaMeta ? 'Meta alcançada 🎯'.replace(' 🎯', '!') : 'Faltam ' + this.fmt(Math.max(0, reservaMeta - reservaAtual));
+    let maxFlow = 1;
+    const flowData = [];
+    for (let i = 5; i >= 0; i--) {
+      const c = this.shiftComp(comp, -i);
+      const rec = db.receitas.filter(r => this.inComp(r.data, c)).reduce((t, r) => t + r.valor, 0);
+      const desp = db.despesas.filter(d => this.inComp(d.data, c)).reduce((t, d) => t + d.valor, 0);
+      maxFlow = Math.max(maxFlow, rec, desp);
+      flowData.push({ c, rec, desp });
+    }
+    vals.fluxo = flowData.map(f => ({
+      label: this.monthShort(f.c.m), rec: f.rec, desp: f.desp,
+      recH: Math.max(3, Math.round(f.rec / maxFlow * 100)) + '%',
+      despH: Math.max(3, Math.round(f.desp / maxFlow * 100)) + '%',
+      tip: this.monthName(f.c.m) + ': +' + this.fmt(f.rec) + ' / -' + this.fmt(f.desp),
+      op: this.ck(f.c) === this.ck(comp) ? '1' : '.55',
+      fw: this.ck(f.c) === this.ck(comp) ? '800' : '600',
+      fg: this.ck(f.c) === this.ck(comp) ? 'var(--accent)' : 'var(--text3)'
+    }));
+    const lanc = [
+      ...recComp.map(r => ({ d: r.data, desc: r.desc, meta: fmtDia(r.data) + ' · ' + r.cat + ' · ' + contaNome(r.contaId), valor: '+ ' + this.fmt(r.valor), color: 'var(--green)', icon: this.ICONS.rec, iconBg: 'var(--green-soft)', iconFg: 'var(--green)' })),
+      ...despComp.map(d => ({ d: d.data, desc: d.desc, meta: fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)), valor: '- ' + this.fmt(d.valor), color: 'var(--red)', icon: this.ICONS.desp, iconBg: 'var(--red-soft)', iconFg: 'var(--red)' }))
+    ].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 7);
+    vals.ultimos = lanc;
+    vals.emptyLanc = lanc.length === 0;
+
+    // ---- Planejamento ----
+    vals.rendaFmt = this.fmt(renda);
+    vals.emptyFontes = db.fontes.length === 0;
+    vals.fontes = db.fontes.map(f => ({ ...f, valorFmt: this.fmt(f.valor),
+      edit: () => this.openModal('fonte', f),
+      del: () => this.del('fontes', f.id, 'Excluir a fonte "' + f.nome + '"?') }));
+    vals.addFonte = () => this.openModal('fonte', null);
+    vals.modePct = s.distMode === 'pct'; vals.modeAbs = s.distMode === 'abs';
+    vals.setModePct = () => this.setState({ distMode: 'pct' });
+    vals.setModeAbs = () => this.setState({ distMode: 'abs' });
+    vals.modePctBg = vals.modePct ? 'var(--surface)' : 'transparent'; vals.modePctFg = vals.modePct ? 'var(--text)' : 'var(--text2)';
+    vals.modeAbsBg = vals.modeAbs ? 'var(--surface)' : 'transparent'; vals.modeAbsFg = vals.modeAbs ? 'var(--text)' : 'var(--text2)';
+    const somaPct = db.categorias.reduce((t, c) => t + (c.pct || 0), 0);
+    const somaAbs = db.categorias.reduce((t, c) => t + (c.abs || 0), 0);
+    if (s.distMode === 'pct') {
+      vals.somaMsg = somaPct === 100 ? '100% da renda distribuída ✓' : somaPct + '% distribuído — ' + (somaPct < 100 ? (100 - somaPct) + '% livre' : (somaPct - 100) + '% acima da renda');
+      vals.somaColor = somaPct === 100 ? 'var(--green)' : somaPct > 100 ? 'var(--red)' : 'var(--amber)';
+    } else {
+      vals.somaMsg = this.fmt(somaAbs) + ' de ' + this.fmt(renda) + ' distribuídos' + (somaAbs > renda ? ' — acima da renda' : '');
+      vals.somaColor = somaAbs > renda ? 'var(--red)' : 'var(--text2)';
+    }
+    const catBudget = c => s.distMode === 'pct' ? renda * (c.pct || 0) / 100 : (c.abs || 0);
+    vals.cats = db.categorias.map((c, i) => ({
+      id: c.id, nome: c.nome, pct: c.pct || 0, abs: c.abs || 0,
+      cor: this.CATCOLORS[i % this.CATCOLORS.length],
+      pctLabel: s.distMode === 'pct' ? (c.pct || 0) + '%' : Math.round(catBudget(c) / (renda || 1) * 100) + '%',
+      valorFmt: this.fmt(catBudget(c)),
+      slide: e => this.setCatPct(c.id, e.target.value),
+      setAbs: e => this.setCatAbs(c.id, e.target.value),
+      edit: () => this.openModal('categoria', c),
+      del: () => this.del('categorias', c.id, 'Excluir a categoria "' + c.nome + '"? Os planejamentos dela também serão removidos.', (dbb) => { dbb.planejamentos = dbb.planejamentos.filter(p => p.catId !== c.id); })
+    }));
+    vals.addCategoria = () => this.openModal('categoria', null);
+    vals.planCards = db.categorias.map((c, i) => {
+      const orc = catBudget(c);
+      const itens = db.planejamentos.filter(p => p.catId === c.id);
+      const usado = itens.reduce((t, p) => t + p.valor, 0);
+      const rest = orc - usado;
+      const over = usado > orc && orc >= 0;
+      return {
+        nome: c.nome, cor: this.CATCOLORS[i % this.CATCOLORS.length],
+        orcFmt: this.fmt(orc), usadoFmt: this.fmt(usado),
+        restMsg: rest >= 0 ? 'Restam ' + this.fmt(rest) : 'Excesso de ' + this.fmt(-rest),
+        restColor: rest >= 0 ? 'var(--green)' : 'var(--red)',
+        barW: Math.min(100, orc > 0 ? Math.round(usado / orc * 100) : (usado > 0 ? 100 : 0)) + '%',
+        barColor: over ? 'var(--red)' : this.CATCOLORS[i % this.CATCOLORS.length],
+        borderC: over ? 'var(--amber)' : 'var(--border)',
+        over,
+        itens: itens.map(p => ({ nome: p.nome, valorFmt: this.fmt(p.valor),
+          edit: () => this.openModal('plano', p),
+          del: () => this.del('planejamentos', p.id, 'Excluir o planejamento "' + p.nome + '"?') })),
+        add: () => { this.openModal('plano', null); this.setState(st => ({ modal: { ...st.modal, extra: { catId: c.id } } })); }
+      };
+    });
+
+    // ---- Fixos ----
+    vals.emptyFixos = db.fixos.length === 0;
+    vals.addFixo = () => this.openModal('fixo', null);
+    vals.fixosList = [...db.fixos].sort((a, b) => (b.ativo - a.ativo) || a.venc - b.venc).map(g => {
+      const pago = fixoPago(g);
+      return {
+        desc: g.desc, valorFmt: this.fmt(g.valor),
+        meta: g.cat + ' · vence dia ' + g.venc + (g.obs ? ' · ' + g.obs : ''),
+        op: g.ativo ? '1' : '.5',
+        stLabel: !g.ativo ? 'Inativo' : pago ? 'Pago' : 'Em aberto',
+        stBg: !g.ativo ? 'var(--surface2)' : pago ? 'var(--green-soft)' : 'var(--amber-soft)',
+        stFg: !g.ativo ? 'var(--text3)' : pago ? 'var(--green)' : 'var(--amber)',
+        podePagar: g.ativo && !pago,
+        pagar: () => this.pagarFixo(g.id),
+        toggle: () => this.toggleAtivo('fixos', g.id),
+        toggleTip: g.ativo ? 'Desativar' : 'Ativar',
+        toggleIcon: g.ativo ? 'M17.94 17.94A10 10 0 0 1 2 12s2-5 7-6.7M9.9 4.24A9.8 9.8 0 0 1 12 4c7 0 10 8 10 8a17 17 0 0 1-2.16 3.19M1 1l22 22' : 'M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
+        edit: () => this.openModal('fixo', g),
+        del: () => this.del('fixos', g.id, 'Excluir o gasto fixo "' + g.desc + '"?')
+      };
+    });
+
+    // ---- Receitas ----
+    const recFilterDefs = [['todas', 'Todas'], ['recebidas', 'Recebidas'], ['pendentes', 'Pendentes'], ['recorrentes', 'Recorrentes']];
+    vals.recFilters = recFilterDefs.map(([id, label]) => ({ label, pick: () => this.setState({ recFilter: id }),
+      bg: s.recFilter === id ? 'var(--accent)' : 'var(--surface)', fg: s.recFilter === id ? 'var(--on-accent)' : 'var(--text2)', bc: s.recFilter === id ? 'var(--accent)' : 'var(--border2)' }));
+    const recFiltered = recComp.filter(r => s.recFilter === 'todas' || (s.recFilter === 'recebidas' && r.recebida) || (s.recFilter === 'pendentes' && !r.recebida) || (s.recFilter === 'recorrentes' && r.recorrente)).sort((a, b) => b.data.localeCompare(a.data));
+    vals.emptyRec = recFiltered.length === 0;
+    vals.addReceita = () => this.openModal('receita', null);
+    vals.recTotalFmt = this.fmt(recFiltered.reduce((t, r) => t + r.valor, 0));
+    vals.recList = recFiltered.map(r => ({
+      desc: r.desc, recebida: r.recebida, recorrente: r.recorrente,
+      meta: fmtDia(r.data) + ' · ' + r.cat + ' · ' + contaNome(r.contaId) + (r.obs ? ' · ' + r.obs : ''),
+      valorFmt: this.fmt(r.valor),
+      stLabel: r.recebida ? 'Recebida' : 'Pendente',
+      stBg: r.recebida ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: r.recebida ? 'var(--green)' : 'var(--amber)',
+      chkBc: r.recebida ? 'var(--green)' : 'var(--border2)', chkBg: r.recebida ? 'var(--green)' : 'transparent',
+      toggle: () => this.toggleReceita(r.id), toggleTip: r.recebida ? 'Marcar como pendente' : 'Marcar como recebida',
+      edit: () => this.openModal('receita', r),
+      del: () => this.del('receitas', r.id, 'Excluir a receita "' + r.desc + '"?')
+    }));
+
+    // ---- Despesas ----
+    const despFilterDefs = [['todas', 'Todas'], ['pagas', 'Pagas'], ['pendentes', 'Pendentes'], ['fixas', 'De gastos fixos']];
+    vals.despFilters = despFilterDefs.map(([id, label]) => ({ label, pick: () => this.setState({ despFilter: id }),
+      bg: s.despFilter === id ? 'var(--accent)' : 'var(--surface)', fg: s.despFilter === id ? 'var(--on-accent)' : 'var(--text2)', bc: s.despFilter === id ? 'var(--accent)' : 'var(--border2)' }));
+    const despFiltered = despComp.filter(d => s.despFilter === 'todas' || (s.despFilter === 'pagas' && d.paga) || (s.despFilter === 'pendentes' && !d.paga) || (s.despFilter === 'fixas' && d.fixoId)).sort((a, b) => b.data.localeCompare(a.data));
+    vals.emptyDesp = despFiltered.length === 0;
+    vals.addDespesa = () => this.openModal('despesa', null);
+    vals.despTotalFmt = this.fmt(despFiltered.reduce((t, d) => t + d.valor, 0));
+    vals.despList = despFiltered.map(d => ({
+      desc: d.desc, paga: d.paga, deFixo: !!d.fixoId,
+      meta: fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.obs ? ' · ' + d.obs : ''),
+      valorFmt: this.fmt(d.valor),
+      stLabel: d.paga ? 'Paga' : 'Pendente',
+      stBg: d.paga ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: d.paga ? 'var(--green)' : 'var(--amber)',
+      chkBc: d.paga ? 'var(--green)' : 'var(--border2)', chkBg: d.paga ? 'var(--green)' : 'transparent',
+      toggle: () => this.toggleDespesa(d.id), toggleTip: d.paga ? 'Marcar como pendente' : 'Marcar como paga',
+      edit: () => this.openModal('despesa', { ...d, forma: d.cartaoId ? 'k:' + d.cartaoId : 'a:' + (d.contaId || '') }),
+      del: () => this.del('despesas', d.id, 'Excluir a despesa "' + d.desc + '"?' + (d.fixoId ? ' O gasto fixo correspondente voltará para "Em aberto".' : ''))
+    }));
+
+    // ---- Cartões ----
+    vals.emptyCart = db.cartoes.length === 0;
+    vals.addCartao = () => this.openModal('cartao', null);
+    vals.cartList = [...db.cartoes].sort((a, b) => b.ativo - a.ativo).map(k => {
+      const compras = db.despesas.filter(d => d.cartaoId === k.id && this.inComp(d.data, comp));
+      const fatura = compras.reduce((t, d) => t + d.valor, 0);
+      const pago = compras.filter(d => d.paga).reduce((t, d) => t + d.valor, 0);
+      const aberto = fatura - pago;
+      const comprometido = db.despesas.filter(d => d.cartaoId === k.id && !d.paga).reduce((t, d) => t + d.valor, 0);
+      return {
+        nome: k.nome, bandeira: k.bandeira, fecha: k.fecha, vence: k.vence,
+        dig: String(Math.abs(k.id.split('').reduce((t, c) => t + c.charCodeAt(0), 0) * 37 % 10000)).padStart(4, '0'),
+        bg: 'linear-gradient(135deg, ' + k.cor + ', color-mix(in oklab, ' + k.cor + ', black 35%))',
+        op: k.ativo ? '1' : '.55', inativo: !k.ativo,
+        faturaFmt: this.fmt(fatura), pagoFmt: this.fmt(pago), abertoFmt: this.fmt(aberto), compFmt: this.fmt(comprometido),
+        abertoColor: aberto > 0 ? 'var(--red)' : 'var(--text)',
+        temAberto: aberto > 0,
+        pagarFatura: () => this.pagarFatura(k.id),
+        edit: () => this.openModal('cartao', k),
+        del: () => this.del('cartoes', k.id, 'Excluir o cartão "' + k.nome + '"? As despesas lançadas nele serão mantidas.')
+      };
+    });
+
+    // ---- Contas ----
+    const contaIcons = { 'Conta bancária': this.ICONS.conta, 'Carteira digital': 'M12 18h.01M8 21h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z', 'Dinheiro físico': 'M2 7h20v10H2zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z', 'Investimento': this.ICONS.rec, 'Outro': this.ICONS.coin };
+    vals.emptyContas = db.contas.length === 0;
+    vals.addConta = () => this.openModal('conta', null);
+    vals.contasList = [...db.contas].sort((a, b) => b.ativo - a.ativo).map(a => ({
+      nome: a.nome, saldoFmt: this.fmt(a.saldo),
+      tipoStatus: a.tipo + (a.ativo ? '' : ' · Inativa'),
+      cor: a.cor, corSoft: 'color-mix(in oklab, ' + a.cor + ', var(--bg) 84%)',
+      icon: contaIcons[a.tipo] || this.ICONS.coin,
+      op: a.ativo ? '1' : '.55',
+      edit: () => this.openModal('conta', a),
+      del: () => this.del('contas', a.id, 'Excluir a conta "' + a.nome + '"?')
+    }));
+
+    // ---- Modal ----
+    const m = s.modal;
+    vals.modalOpen = !!m;
+    if (m) {
+      const def = this.modalDefs()[m.type];
+      const draft = { ...def.defaults, ...m.draft };
+      vals.modalTitle = def.title(!!m.id);
+      vals.modalFields = def.fields.map(f => {
+        const v = draft[f.k];
+        const field = { label: f.label, span: String(f.span || 2) };
+        if (f.t === 'select') {
+          field.isSelect = true; field.options = f.options; field.value = v == null ? '' : String(v);
+          field.on = e => this.setDraft(f.k, e.target.value);
+        } else if (f.t === 'textarea') {
+          field.isTextarea = true; field.value = v || ''; field.ph = f.ph || '';
+          field.on = e => this.setDraft(f.k, e.target.value);
+        } else if (f.t === 'toggle') {
+          field.isToggle = true;
+          field.togBg = v ? 'var(--accent)' : 'var(--border2)';
+          field.togX = v ? '23px' : '3px';
+          field.on = () => this.setDraft(f.k, !v);
+        } else if (f.t === 'color') {
+          field.isColor = true; field.value = v || '';
+          field.on = e => this.setDraft(f.k, e.target.value);
+          field.swatches = this.PALETTE.map(c => ({ c, b: c === v ? '3px solid var(--text)' : '2px solid var(--border)', pick: () => this.setDraft(f.k, c) }));
+        } else {
+          field.isInput = true; field.itype = f.t === 'number' ? 'number' : f.t === 'date' ? 'date' : 'text';
+          field.value = v == null ? '' : v; field.ph = f.ph || '';
+          field.on = e => this.setDraft(f.k, e.target.value);
+        }
+        return field;
+      });
+      vals.modalSubmit = this.submitModal;
+      vals.modalClose = this.closeModal;
+    } else { vals.modalFields = []; vals.modalTitle = ''; vals.modalClose = () => {}; vals.modalSubmit = () => {}; }
+
+    return vals;
+  }
+}
+</script>
+</body>
+</html>
