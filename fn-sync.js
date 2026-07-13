@@ -1,5 +1,5 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.4.0)
+ * fn-sync.js - Integracao FinanceNan (v0.5.0)
  * ---------------------------------------------------------------------------
  * ALEM da integracao com o backend, este arquivo tambem injeta um CSS responsivo
  * (secao "RESPONSIVO" no final) que adapta o layout para celular/tablet sem
@@ -15,14 +15,14 @@
  *  - Em caso de falha de rede, ha fallback para a validacao local (offline).
  *  - Mantem o espelhamento de dados (fn_db_<email>) para o backend.
  *
- * API: aponta para o backend atual (https://finance.renanguedes.com), que ja funciona,
- * para nao depender de mudanca de DNS. Quando voce mover o app para
- * finance.renanguedes.com e o backend para api.finance.renanguedes.com, troque a
+ * API: aponta para a URL estavel da Vercel do backend (finance-nan-a8so.vercel.app),
+ * que tem SSL valido e nao depende de DNS. Assim liberamos finance.renanguedes.com
+ * para servir o app. Se quiser um endereco proprio para a API depois, troque a
  * constante API abaixo (ou defina window.FN_API_BASE antes de carregar este script).
  */
 (function () {
   'use strict';
-  var API = (typeof window !== 'undefined' && window.FN_API_BASE) || 'https://finance.renanguedes.com';
+  var API = (typeof window !== 'undefined' && window.FN_API_BASE) || 'https://finance-nan-a8so.vercel.app';
   var K_TOK = 'fn_sync_tok', K_RT = 'fn_sync_rt', K_WHO = 'fn_sync_who', K_PW = 'fn_sync_pw';
   var LS = window.localStorage;
   var og = { get: LS.getItem.bind(LS), set: LS.setItem.bind(LS), del: LS.removeItem.bind(LS) };

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0 - 2026-07-13
+- aponta o fn-sync para a URL estável da Vercel do backend (finance-nan-a8so.vercel.app), liberando finance.renanguedes.com para servir o app
+- prepara a publicação do app no domínio próprio (frontend hospedado na Vercel)
+
 ## v0.4.0 - 2026-07-13
 - deixa o app responsivo para celular e tablet (o layout se adapta abaixo de 820px de largura)
 - adiciona cache-busting do fn-sync.js no index.html (`?v=0.4.0`)
