@@ -1,7 +1,11 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v2: login/cadastro AUTORITATIVOS no backend)
+ * fn-sync.js - Integracao FinanceNan (v0.4.0)
  * ---------------------------------------------------------------------------
- * O QUE MUDOU:
+ * ALEM da integracao com o backend, este arquivo tambem injeta um CSS responsivo
+ * (secao "RESPONSIVO" no final) que adapta o layout para celular/tablet sem
+ * precisar editar o index.html gerado.
+ *
+ * O QUE MUDOU (login):
  *  - O login/cadastro passam a ser validados NO BACKEND (fonte da verdade), e nao
  *    mais so no localStorage do navegador. Assim funciona em qualquer navegador/
  *    dispositivo, resolvendo o "login invalido apos atualizar a pagina".
@@ -245,5 +249,43 @@
   if (document.readyState !== 'loading') tryPatch();
   document.addEventListener('DOMContentLoaded', tryPatch);
 
-  log('carregado v2, API=', API);
+  // ---- RESPONSIVO ----------------------------------------------------------
+  // O app usa estilos inline; por isso sobrescrevemos via [style*=] + !important.
+  // As regras so valem quando <html> tem a classe fn-mobile (largura <= 820px).
+  var FN_RESP_CSS = [
+    // esconde o painel de marketing (hero) no login em telas pequenas
+    'html.fn-mobile [style*="linear-gradient(160deg"][style*="flex: 1.1"]{display:none!important}',
+    // container de tela cheia em flex (login/estrutura) empilha na vertical
+    'html.fn-mobile [style*="min-height: 100vh"][style*="display: flex"]{flex-direction:column!important;min-height:auto!important}',
+    // grids fixos de varias colunas viram 1 coluna (os grids auto-fit/auto-fill ja sao responsivos)
+    'html.fn-mobile [style*="repeat(3,1fr)"],',
+    'html.fn-mobile [style*="5fr 4fr"],',
+    'html.fn-mobile [style*="2fr 3fr"],',
+    'html.fn-mobile [style*="1fr 1fr"],',
+    'html.fn-mobile [style*="34px minmax(200px,1fr)"]{grid-template-columns:1fr!important}',
+    // reduz margens/paddings grandes
+    'html.fn-mobile [style*="padding: 64px"],',
+    'html.fn-mobile [style*="padding: 48px"],',
+    'html.fn-mobile [style*="padding: 40px"]{padding:18px!important}',
+    // container principal ocupa a largura toda
+    'html.fn-mobile [style*="max-width: 1240px"]{max-width:100%!important}',
+    // evita rolagem horizontal indesejada
+    'html.fn-mobile{overflow-x:hidden!important}'
+  ].join('\n');
+
+  function applyResponsive() {
+    try {
+      if (!document.getElementById('fn-responsive-style')) {
+        var st = document.createElement('style'); st.id = 'fn-responsive-style'; st.textContent = FN_RESP_CSS;
+        (document.head || document.documentElement).appendChild(st);
+      }
+      document.documentElement.classList.toggle('fn-mobile', window.innerWidth <= 820);
+    } catch (e) { log('responsive err', e && e.message); }
+  }
+  applyResponsive();
+  window.addEventListener('resize', applyResponsive);
+  window.addEventListener('orientationchange', applyResponsive);
+  document.addEventListener('DOMContentLoaded', applyResponsive);
+
+  log('carregado v0.4.0, API=', API);
 })();
