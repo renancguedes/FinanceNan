@@ -1,24 +1,20 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.5.1)
+ * fn-sync.js - Integracao FinanceNan (v0.6.0)
  * ---------------------------------------------------------------------------
- * ALEM da integracao com o backend, este arquivo tambem injeta um CSS responsivo
- * (secao "RESPONSIVO" no final) que adapta o layout para celular/tablet sem
- * precisar editar o index.html gerado.
+ * BANCO COMO FONTE DA VERDADE (usuario logado): cada alteracao do app e gravada
+ * no backend e re-baixada a cada login (hydrate). Modo visitante = 100% local.
  *
- * O QUE MUDOU (login):
- *  - O login/cadastro passam a ser validados NO BACKEND (fonte da verdade), e nao
- *    mais so no localStorage do navegador. Assim funciona em qualquer navegador/
- *    dispositivo, resolvendo o "login invalido apos atualizar a pagina".
- *  - Este script corrige o app EM TEMPO DE EXECUCAO (faz patch dos metodos
- *    doLogin/doCadastro do componente React), entao NAO e preciso editar o
- *    index.html gerado.
- *  - Em caso de falha de rede, ha fallback para a validacao local (offline).
- *  - Mantem o espelhamento de dados (fn_db_<email>) para o backend.
+ * Correcoes desta versao:
+ *  - Mapeamento casa com os campos REAIS do app: desc/venc/cat/contaId/forma/fecha/vence.
+ *  - Valores convertidos: app usa REAIS, backend usa CENTAVOS (x100 ao enviar, /100 ao receber).
+ *  - Categoria: o app referencia por NOME; convertido para categoryId do backend (nome->id).
+ *  - forma "a:<id>" => conta, "k:<id>" => cartao.
+ *  - hydrate carrega /categories primeiro para montar o mapa nome<->id.
+ *  - syncDiff nao recria categoria que ja existe (evita duplicatas).
+ *  - Login/cadastro autenticados no backend; patch em runtime (var self = inst).
+ *  - CSS responsivo para celular/tablet.
  *
- * API: aponta para a URL estavel da Vercel do backend (finance-nan-a8so.vercel.app),
- * que tem SSL valido e nao depende de DNS. Assim liberamos finance.renanguedes.com
- * para servir o app. Se quiser um endereco proprio para a API depois, troque a
- * constante API abaixo (ou defina window.FN_API_BASE antes de carregar este script).
+ * API: URL estavel da Vercel do backend.
  */
 (function () {
   'use strict';
@@ -32,27 +28,63 @@
   var CAT_TO = { 'Receita': 'receita', 'Despesa': 'despesa', 'Investimento': 'investimento' };
   var CAT_FROM = { receita: 'Receita', despesa: 'Despesa', investimento: 'Investimento' };
   var N = function (v) { return Math.round(Number(v) || 0); };
+  var C = function (v) { return Math.round((Number(v) || 0) * 100); }; // reais -> centavos
+  var R = function (v) { return (Number(v) || 0) / 100; };            // centavos -> reais
   var log = function () { try { if (window.__FN_DEBUG) console.log.apply(console, ['[fn-sync]'].concat([].slice.call(arguments))); } catch (e) {} };
 
+  // mapa categoria (catalogo) nome<->id, preenchido no hydrate
+  var catByName = {}, catById = {};
+  function catId(name) { return catByName[(name == null ? '' : name).toString()]; }
+
+  function undef(v) { return (v === '' || v == null) ? undefined : v; }
+  function formaToTarget(o, forma) {
+    var f = (forma || '').toString();
+    if (f.indexOf('k:') === 0) o.creditCardId = f.slice(2);
+    else if (f.indexOf('a:') === 0) o.accountId = f.slice(2);
+    else if (f) o.accountId = f;
+    return o;
+  }
+
   var MAP = {
-    contas: { path: '/accounts', to: function (x) { return { nome: x.nome, tipo: CONTA_TO[x.tipo] || 'outro', saldo: N(x.saldo), cor: x.cor, ativo: x.ativo !== false }; }, from: function (x) { return { id: x.id, nome: x.nome, tipo: CONTA_FROM[x.tipo] || 'Outro', saldo: x.saldo, cor: x.cor, ativo: x.ativo }; } },
-    catalogo: { path: '/categories', to: function (x) { return { nome: x.nome, tipo: CAT_TO[x.tipo] || 'despesa', cor: x.cor, icone: x.icone }; }, from: function (x) { return { id: x.id, nome: x.nome, tipo: CAT_FROM[x.tipo] || 'Despesa', cor: x.cor, icone: x.icone }; } },
-    categorias: { path: '/plan-categories', to: function (x) { return { nome: x.nome, pct: N(x.pct), abs: N(x.abs) }; }, from: function (x) { return { id: x.id, nome: x.nome, pct: x.pct, abs: x.abs }; } },
-    fontes: { path: '/income-sources', to: function (x) { return { nome: x.nome, valor: N(x.valor) }; }, from: function (x) { return x; } },
-    cartoes: { path: '/credit-cards', to: function (x) { return { nome: x.nome, bandeira: x.bandeira, diaFechamento: N(x.diaFechamento), diaVencimento: N(x.diaVencimento), cor: x.cor, ativo: x.ativo !== false }; }, from: function (x) { return x; } },
-    fixos: { path: '/fixed-expenses', to: function (x) { return { descricao: x.descricao, valor: N(x.valor), diaVencimento: N(x.diaVencimento), categoryId: x.categoryId || x.catId, contaPadraoId: x.contaPadraoId || undefined, observacoes: x.observacoes || undefined, ativo: x.ativo !== false }; }, from: function (x) { return x; } },
-    receitas: { path: '/incomes', to: function (x) { return { descricao: x.descricao, valor: N(x.valor), data: x.data, accountId: x.accountId || x.contaId, categoryId: x.categoryId || x.catId, recebida: !!x.recebida, recorrente: !!x.recorrente, observacoes: x.observacoes || undefined }; }, from: function (x) { return x; } },
-    despesas: { path: '/expenses', to: function (x) { return { descricao: x.descricao, valor: N(x.valor), dataCompra: x.dataCompra || x.data, categoryId: x.categoryId || x.catId, accountId: x.accountId || x.contaId || undefined, creditCardId: x.creditCardId || x.cartaoId || undefined, paga: !!x.paga, observacoes: x.observacoes || undefined }; }, from: function (x) { return x; } },
-    planejamentos: { path: '/plan-items', to: function (x) { return { nome: x.nome, planCategoryId: x.planCategoryId || x.categoriaId, valor: N(x.valor) }; }, from: function (x) { return x; } }
+    contas: { path: '/accounts',
+      to: function (x) { return { nome: x.nome, tipo: CONTA_TO[x.tipo] || 'outro', saldo: C(x.saldo), cor: x.cor, ativo: x.ativo !== false }; },
+      from: function (x) { return { id: x.id, nome: x.nome, tipo: CONTA_FROM[x.tipo] || 'Outro', saldo: R(x.saldo), cor: x.cor, ativo: x.ativo }; } },
+    catalogo: { path: '/categories',
+      to: function (x) { return { nome: x.nome, tipo: CAT_TO[x.tipo] || 'despesa', cor: x.cor, icone: x.icone || 'tag' }; },
+      from: function (x) { return { id: x.id, nome: x.nome, tipo: CAT_FROM[x.tipo] || 'Despesa', cor: x.cor, icone: x.icone }; } },
+    categorias: { path: '/plan-categories',
+      to: function (x) { return { nome: x.nome, pct: N(x.pct), abs: C(x.abs) }; },
+      from: function (x) { return { id: x.id, nome: x.nome, pct: x.pct, abs: R(x.abs) }; } },
+    fontes: { path: '/income-sources',
+      to: function (x) { return { nome: x.nome, valor: C(x.valor) }; },
+      from: function (x) { return { id: x.id, nome: x.nome, valor: R(x.valor) }; } },
+    cartoes: { path: '/credit-cards',
+      to: function (x) { return { nome: x.nome, bandeira: x.bandeira, diaFechamento: N(x.fecha), diaVencimento: N(x.vence), cor: x.cor, ativo: x.ativo !== false }; },
+      from: function (x) { return { id: x.id, nome: x.nome, bandeira: x.bandeira, fecha: x.diaFechamento, vence: x.diaVencimento, cor: x.cor, ativo: x.ativo }; } },
+    fixos: { path: '/fixed-expenses',
+      to: function (x) { return { descricao: x.desc, categoryId: catId(x.cat), contaPadraoId: undef(x.contaId), valor: C(x.valor), diaVencimento: N(x.venc), observacoes: undef(x.obs), ativo: x.ativo !== false }; },
+      from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], contaId: x.contaPadraoId || '', valor: R(x.valor), venc: x.diaVencimento, obs: x.observacoes || '', ativo: x.ativo }; } },
+    receitas: { path: '/incomes',
+      to: function (x) { return { descricao: x.desc, categoryId: catId(x.cat), accountId: x.contaId, data: x.data, valor: C(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, observacoes: undef(x.obs) }; },
+      from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], contaId: x.accountId, data: x.data, valor: R(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, obs: x.observacoes || '' }; } },
+    despesas: { path: '/expenses',
+      to: function (x) { return formaToTarget({ descricao: x.desc, categoryId: catId(x.cat), dataCompra: x.data, valor: C(x.valor), paga: !!x.paga, observacoes: undef(x.obs) }, x.forma); },
+      from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], forma: x.creditCardId ? ('k:' + x.creditCardId) : ('a:' + x.accountId), data: x.dataCompra, valor: R(x.valor), paga: !!x.paga, obs: x.observacoes || '' }; } },
+    planejamentos: { path: '/plan-items',
+      to: function (x) { return { nome: x.nome, planCategoryId: x.planCategoryId || x.categoriaId, valor: C(x.valor) }; },
+      from: function (x) { return { id: x.id, nome: x.nome, planCategoryId: x.planCategoryId, valor: R(x.valor) }; } }
   };
-  var ORDER = ['contas', 'catalogo', 'categorias', 'fontes', 'cartoes', 'fixos', 'receitas', 'despesas', 'planejamentos'];
+  // ordem de sync: categorias (catalogo) antes das entidades que dependem do nome->id
+  var ORDER = ['contas', 'catalogo', 'cartoes', 'categorias', 'fontes', 'planejamentos', 'fixos', 'receitas', 'despesas'];
 
   function tok() { return og.get(K_TOK); }
   function req(method, path, body) {
-    return fetch(API + path, { method: method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok() }, body: body ? JSON.stringify(body) : undefined })
+    var headers = { Authorization: 'Bearer ' + tok() };
+    if (body) headers['Content-Type'] = 'application/json';
+    return fetch(API + path, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) {
         if (r.status === 401) { return refresh().then(function (ok) { if (!ok) throw new Error('unauth'); return req(method, path, body); }); }
-        return r.text().then(function (t) { var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {} if (!r.ok) throw new Error(path + ' ' + r.status); return d; });
+        return r.text().then(function (t) { var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {} if (!r.ok) { log('req falhou', method, path, r.status, t && t.slice(0, 120)); throw new Error(path + ' ' + r.status); } return d; });
       });
   }
   function refresh() {
@@ -63,21 +95,46 @@
 
   var prev = {}, currentEmail = null, syncing = false;
 
+  function rebuildCatMaps(catalogoRaw) {
+    catByName = {}; catById = {};
+    (catalogoRaw || []).forEach(function (c) { if (c && c.id && c.nome != null) { if (catByName[c.nome] == null) catByName[c.nome] = c.id; catById[c.id] = c.nome; } });
+  }
+
   function hydrate(email) {
     var db = { contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], catalogo: [], categorias: [], config: { patrimonioExcl: [], reservaIds: [] } };
-    var jobs = ORDER.map(function (c) { return req('GET', MAP[c].path).then(function (a) { db[c] = (a || []).map(MAP[c].from); }).catch(function () {}); });
-    jobs.push(req('GET', '/settings').then(function (s) { if (s) db.config = { patrimonioExcl: s.patrimonioExcludedAccountIds || [], reservaIds: s.reservaAccountIds || [] }; }).catch(function () {}));
-    return Promise.all(jobs).then(function () { prev = JSON.parse(JSON.stringify(db)); og.set('fn_db_' + email, JSON.stringify(db)); log('hidratado', email); return db; });
+    // 1) categorias primeiro (para montar nome<->id)
+    return req('GET', '/categories').then(function (cats) {
+      var raw = cats || [];
+      rebuildCatMaps(raw);
+      db.catalogo = raw.map(MAP.catalogo.from);
+      // 2) demais entidades
+      var rest = ORDER.filter(function (c) { return c !== 'catalogo'; });
+      var jobs = rest.map(function (c) { return req('GET', MAP[c].path).then(function (a) { db[c] = (a || []).map(MAP[c].from); }).catch(function () {}); });
+      jobs.push(req('GET', '/settings').then(function (s) { if (s) db.config = { patrimonioExcl: s.patrimonioExcludedAccountIds || [], reservaIds: s.reservaAccountIds || [] }; }).catch(function () {}));
+      return Promise.all(jobs);
+    }).then(function () {
+      prev = JSON.parse(JSON.stringify(db)); og.set('fn_db_' + email, JSON.stringify(db)); log('hidratado', email, db); return db;
+    }).catch(function (e) { log('hydrate err', e && e.message); prev = JSON.parse(JSON.stringify(db)); og.set('fn_db_' + email, JSON.stringify(db)); return db; });
   }
 
   function syncDiff(email, next) {
     if (syncing) return;
+    // mantem o mapa nome->id atualizado com o catalogo local (pode ter ids do backend)
+    rebuildCatMaps(next.catalogo || prev.catalogo || []);
     ORDER.forEach(function (c) {
       var oldArr = (prev[c] || []), newArr = (next[c] || []), oldById = {}; oldArr.forEach(function (o) { oldById[o.id] = o; }); var seen = {};
+      var oldNames = {}; if (c === 'catalogo') oldArr.forEach(function (o) { oldNames[o.nome] = 1; });
       newArr.forEach(function (it) {
-        seen[it.id] = 1; var p = MAP[c].to(it);
-        if (!it.id || !oldById[it.id]) { req('POST', MAP[c].path, p).then(function (cr) { if (cr && cr.id && cr.id !== it.id) { it.id = cr.id; og.set('fn_db_' + email, JSON.stringify(next)); } }).catch(function () {}); }
-        else if (JSON.stringify(MAP[c].to(oldById[it.id])) !== JSON.stringify(p)) { req('PATCH', MAP[c].path + '/' + it.id, p).catch(function () {}); }
+        seen[it.id] = 1;
+        var p = MAP[c].to(it);
+        // entidades que dependem de categoria: nao envia se nao resolveu o categoryId
+        if ((c === 'fixos' || c === 'receitas' || c === 'despesas') && !p.categoryId) { log('skip', c, 'sem categoryId para', it.cat); return; }
+        if (!it.id || !oldById[it.id]) {
+          if (c === 'catalogo' && oldNames[it.nome]) { return; } // nao recria categoria existente (evita duplicata)
+          req('POST', MAP[c].path, p).then(function (cr) { if (cr && cr.id && cr.id !== it.id) { it.id = cr.id; og.set('fn_db_' + email, JSON.stringify(next)); if (c === 'catalogo') rebuildCatMaps(next.catalogo); } }).catch(function () {});
+        } else if (JSON.stringify(MAP[c].to(oldById[it.id])) !== JSON.stringify(p)) {
+          req('PATCH', MAP[c].path + '/' + it.id, p).catch(function () {});
+        }
       });
       oldArr.forEach(function (o) { if (o.id && !seen[o.id]) req('DELETE', MAP[c].path + '/' + o.id).catch(function () {}); });
     });
@@ -91,7 +148,6 @@
     og.set(K_RT, d.refreshToken || '');
     og.set(K_WHO, email);
     og.set(K_PW, JSON.stringify({ e: email, p: password }));
-    // Copia local em fn_users para o modo offline do app continuar funcionando.
     try {
       var arr = JSON.parse(og.get('fn_users') || '[]'); if (!Array.isArray(arr)) arr = [];
       arr = arr.filter(function (x) { return x && x.email !== email; });
@@ -106,7 +162,6 @@
       .then(function (r) { return r.text().then(function (t) { var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {} return { status: r.status, ok: r.ok, data: d }; }); });
   }
 
-  // Retornam Promise<{ok, status, user?, message?}>. status 0 = falha de rede.
   function authLogin(email, password) {
     email = (email || '').trim().toLowerCase();
     return postJson('/auth/login', { email: email, password: password })
@@ -170,14 +225,14 @@
       var email = (self.state.authEmail || '').trim().toLowerCase();
       var pass = self.state.authPass || '';
       if (!email.indexOf || email.indexOf('@') < 0 || !pass) { self.setState({ authError: 'Informe e-mail e senha.' }); return; }
-      self.setState({ authError: '', authMsg: '' });
+      self.setState({ authError: '', authMsg: '', loading: true });
       authLogin(email, pass).then(function (res) {
+        self.setState({ loading: false });
         if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); return; }
         if (res && res.status === 401) { self.setState({ authError: 'E-mail ou senha inválidos.' }); return; }
-        // offline / servidor fora do ar -> validacao local
         var u = (self.getUsers() || []).find(function (x) { return x.email === email; });
         if (u && u.pass === pass) { self.enter({ name: u.name, email: email, visitor: false }, self.loadDB(email)); return; }
-        self.setState({ authError: 'E-mail ou senha inválidos.' });
+        self.setState({ authError: 'Sem conexão com o servidor. Tente novamente.' });
       });
     };
 
@@ -187,8 +242,9 @@
       var email = (self.state.authEmail || '').trim().toLowerCase();
       var pass = self.state.authPass || '';
       if (!name || email.indexOf('@') < 0 || pass.length < 6) { self.setState({ authError: 'Preencha nome, e-mail válido e senha com ao menos 6 caracteres.' }); return; }
-      self.setState({ authError: '', authMsg: '' });
+      self.setState({ authError: '', authMsg: '', loading: true });
       authRegister(name, email, pass).then(function (res) {
+        self.setState({ loading: false });
         if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); return; }
         if (res && res.status === 409) { self.setState({ authError: 'Este e-mail já possui cadastro.' }); return; }
         if (res && res.status === 0) { self.setState({ authError: 'Sem conexão com o servidor. Tente novamente.' }); return; }
@@ -196,7 +252,7 @@
       });
     };
 
-    try { if (typeof inst.setState === 'function') inst.setState({}); } catch (e) {} // forca re-render p/ religar o onClick
+    try { if (typeof inst.setState === 'function') inst.setState({}); } catch (e) {}
     log('patch de auth aplicado');
     return true;
   }
@@ -212,7 +268,6 @@
     }
     return null;
   }
-  // O controller do app (com doLogin/state) fica em fiber.stateNode.logic no dc-runtime.
   function isAuthController(o) {
     return o && typeof o.doLogin === 'function' && typeof o.doCadastro === 'function' &&
       typeof o.setState === 'function' && o.state && ('authEmail' in o.state || 'authTab' in o.state);
@@ -225,10 +280,7 @@
       var f = stack.pop(); seen++;
       if (!f) continue;
       var sn = f.stateNode;
-      if (sn) {
-        if (isAuthController(sn)) return sn;
-        if (sn.logic && isAuthController(sn.logic)) return sn.logic;
-      }
+      if (sn) { if (isAuthController(sn)) return sn; if (sn.logic && isAuthController(sn.logic)) return sn.logic; }
       if (f.child) stack.push(f.child);
       if (f.sibling) stack.push(f.sibling);
     }
@@ -238,11 +290,7 @@
   var patched = false, tries = 0;
   function tryPatch() {
     if (patched) return true;
-    try {
-      var root = findReactRootFiber();
-      var inst = findAuthInstance(root);
-      if (inst) { patched = patchAuth(inst); return patched; }
-    } catch (e) { log('tryPatch err', e && e.message); }
+    try { var root = findReactRootFiber(); var inst = findAuthInstance(root); if (inst) { patched = patchAuth(inst); return patched; } } catch (e) { log('tryPatch err', e && e.message); }
     return false;
   }
   var iv = setInterval(function () { tries++; if (tryPatch() || tries > 120) clearInterval(iv); }, 400);
@@ -250,29 +298,20 @@
   document.addEventListener('DOMContentLoaded', tryPatch);
 
   // ---- RESPONSIVO ----------------------------------------------------------
-  // O app usa estilos inline; por isso sobrescrevemos via [style*=] + !important.
-  // As regras so valem quando <html> tem a classe fn-mobile (largura <= 820px).
   var FN_RESP_CSS = [
-    // esconde o painel de marketing (hero) no login em telas pequenas
     'html.fn-mobile [style*="linear-gradient(160deg"][style*="flex: 1.1"]{display:none!important}',
-    // container de tela cheia em flex (login/estrutura) empilha na vertical
     'html.fn-mobile [style*="min-height: 100vh"][style*="display: flex"]{flex-direction:column!important;min-height:auto!important}',
-    // grids fixos de varias colunas viram 1 coluna (os grids auto-fit/auto-fill ja sao responsivos)
     'html.fn-mobile [style*="repeat(3,1fr)"],',
     'html.fn-mobile [style*="5fr 4fr"],',
     'html.fn-mobile [style*="2fr 3fr"],',
     'html.fn-mobile [style*="1fr 1fr"],',
     'html.fn-mobile [style*="34px minmax(200px,1fr)"]{grid-template-columns:1fr!important}',
-    // reduz margens/paddings grandes
     'html.fn-mobile [style*="padding: 64px"],',
     'html.fn-mobile [style*="padding: 48px"],',
     'html.fn-mobile [style*="padding: 40px"]{padding:18px!important}',
-    // container principal ocupa a largura toda
     'html.fn-mobile [style*="max-width: 1240px"]{max-width:100%!important}',
-    // evita rolagem horizontal indesejada
     'html.fn-mobile{overflow-x:hidden!important}'
   ].join('\n');
-
   function applyResponsive() {
     try {
       if (!document.getElementById('fn-responsive-style')) {
@@ -287,5 +326,5 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  log('carregado v0.4.0, API=', API);
+  log('carregado v0.6.0, API=', API);
 })();
