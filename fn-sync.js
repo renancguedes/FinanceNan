@@ -1,5 +1,5 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.6.0)
+ * fn-sync.js - Integracao FinanceNan (v0.6.1)
  * ---------------------------------------------------------------------------
  * BANCO COMO FONTE DA VERDADE (usuario logado): cada alteracao do app e gravada
  * no backend e re-baixada a cada login (hydrate). Modo visitante = 100% local.
@@ -326,5 +326,6 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  log('carregado v0.6.0, API=', API);
+  window.__FN_SYNC_VER = '0.6.1';
+  log('carregado v0.6.1, API=', API);
 })();

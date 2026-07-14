@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.1 - 2026-07-14
+- corrige cache: index.html passa a carregar fn-sync.js?v=0.6.1, forçando o navegador a baixar o sync corrigido (v0.5.1 ficava preso em cache, por isso os dados não persistiam)
+- adiciona marcador window.__FN_SYNC_VER para diagnóstico da versão em execução
+
 ## v0.6.0 - 2026-07-13
 - banco como fonte da verdade: reescreve o mapeamento do fn-sync para casar com os campos reais do app (desc, venc, cat, contaId, forma, fecha, vence)
 - converte valores reais<->centavos (x100 ao enviar, /100 ao receber)
