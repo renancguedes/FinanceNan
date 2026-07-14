@@ -1,5 +1,5 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.5.0)
+ * fn-sync.js - Integracao FinanceNan (v0.5.1)
  * ---------------------------------------------------------------------------
  * ALEM da integracao com o backend, este arquivo tambem injeta um CSS responsivo
  * (secao "RESPONSIVO" no final) que adapta o layout para celular/tablet sem
@@ -166,7 +166,7 @@
     inst.__fnAuthPatched = true;
 
     inst.doLogin = function () {
-      var self = this;
+      var self = inst;
       var email = (self.state.authEmail || '').trim().toLowerCase();
       var pass = self.state.authPass || '';
       if (!email.indexOf || email.indexOf('@') < 0 || !pass) { self.setState({ authError: 'Informe e-mail e senha.' }); return; }
@@ -182,7 +182,7 @@
     };
 
     inst.doCadastro = function () {
-      var self = this;
+      var self = inst;
       var name = (self.state.authName || '').trim();
       var email = (self.state.authEmail || '').trim().toLowerCase();
       var pass = self.state.authPass || '';
