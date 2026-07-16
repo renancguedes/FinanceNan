@@ -1,20 +1,28 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.6.1)
+ * fn-sync.js - Integracao FinanceNan (v0.7.0)
  * ---------------------------------------------------------------------------
  * BANCO COMO FONTE DA VERDADE (usuario logado): cada alteracao do app e gravada
  * no backend e re-baixada a cada login (hydrate). Modo visitante = 100% local.
  *
- * Correcoes desta versao:
- *  - Mapeamento casa com os campos REAIS do app: desc/venc/cat/contaId/forma/fecha/vence.
- *  - Valores convertidos: app usa REAIS, backend usa CENTAVOS (x100 ao enviar, /100 ao receber).
- *  - Categoria: o app referencia por NOME; convertido para categoryId do backend (nome->id).
- *  - forma "a:<id>" => conta, "k:<id>" => cartao.
- *  - hydrate carrega /categories primeiro para montar o mapa nome<->id.
- *  - syncDiff nao recria categoria que ja existe (evita duplicatas).
- *  - Login/cadastro autenticados no backend; patch em runtime (var self = inst).
- *  - CSS responsivo para celular/tablet.
+ * Correcoes desta versao (0.7.0):
+ *  - CORRIGE PERDA DE DADOS (POST 4xx silencioso): quando o app criava uma
+ *    entidade nova (ex.: categoria) e logo referenciava ela (ex.: despesa),
+ *    o id gerado pelo backend NAO voltava para o estado do app, entao o item
+ *    dependente ia com um id-cliente invalido e o backend recusava (422).
+ *    Agora mantemos um MAPA clientId->backendId (idMap) e um conjunto de ids
+ *    conhecidos do backend; a sincronizacao virou SERIAL e ORDENADA por
+ *    dependencia (contas/cartoes/categorias antes de receitas/despesas/fixos),
+ *    resolvendo TODAS as chaves estrangeiras para o id real do backend.
+ *  - hydrate NAO-DESTRUTIVO: se a carga do backend falhar, nao sobrescreve os
+ *    dados locais com um banco vazio.
+ *  - idMap e limpo a cada login (o hydrate ja traz ids reais do backend).
+ *  - Coalescencia de gravacoes rapidas (pending) para evitar corridas.
+ *  - LOADING SCREEN durante login/cadastro/validacao/carga inicial.
+ *  - logout limpa a sessao (tokens) para isolar visitante x autenticado.
+ *  - Mantido: mapeamento de campos, REAIS<->CENTAVOS, patch de auth em runtime,
+ *    espelhamento automatico via Storage.setItem e CSS responsivo.
  *
- * API: URL estavel da Vercel do backend.
+ * API: URL estavel da Vercel do backend (pode ser trocada via window.FN_API_BASE).
  */
 (function () {
   'use strict';
@@ -32,7 +40,17 @@
   var R = function (v) { return (Number(v) || 0) / 100; };            // centavos -> reais
   var log = function () { try { if (window.__FN_DEBUG) console.log.apply(console, ['[fn-sync]'].concat([].slice.call(arguments))); } catch (e) {} };
 
-  // mapa categoria (catalogo) nome<->id, preenchido no hydrate
+  // ---- mapa de ids clientId<->backendId e ids conhecidos do backend ---------
+  // idMap: id gerado pelo app (uid, 8 chars)  ->  id gerado pelo backend (cuid).
+  // known: conjunto de ids que EXISTEM no backend (hidratados ou recem-criados).
+  var idMap = {};        // { clientId: backendId }
+  var known = {};        // { backendId: true }
+  function realId(id) { if (id == null) return id; return idMap[id] || id; }         // traduz p/ id do backend
+  function isKnown(id) { return id != null && (known[id] === true); }                 // id existe no backend?
+  function markKnown(id) { if (id != null) known[id] = true; }
+  function resetIdState() { idMap = {}; known = {}; }
+
+  // mapa categoria (catalogo) nome->idResolvido, preenchido no hydrate/sync
   var catByName = {}, catById = {};
   function catId(name) { return catByName[(name == null ? '' : name).toString()]; }
 
@@ -45,36 +63,40 @@
     return o;
   }
 
+  // Campos que sao chaves estrangeiras (precisam ser resolvidos p/ id do backend).
+  // fkRefs = FKs que apontam para OUTRAS entidades (contas/cartoes/categorias/planCat).
   var MAP = {
-    contas: { path: '/accounts',
+    contas: { path: '/accounts', dep: false, fkRefs: [],
       to: function (x) { return { nome: x.nome, tipo: CONTA_TO[x.tipo] || 'outro', saldo: C(x.saldo), cor: x.cor, ativo: x.ativo !== false }; },
       from: function (x) { return { id: x.id, nome: x.nome, tipo: CONTA_FROM[x.tipo] || 'Outro', saldo: R(x.saldo), cor: x.cor, ativo: x.ativo }; } },
-    catalogo: { path: '/categories',
+    catalogo: { path: '/categories', dep: false, fkRefs: [],
       to: function (x) { return { nome: x.nome, tipo: CAT_TO[x.tipo] || 'despesa', cor: x.cor, icone: x.icone || 'tag' }; },
       from: function (x) { return { id: x.id, nome: x.nome, tipo: CAT_FROM[x.tipo] || 'Despesa', cor: x.cor, icone: x.icone }; } },
-    categorias: { path: '/plan-categories',
+    categorias: { path: '/plan-categories', dep: false, fkRefs: [],
       to: function (x) { return { nome: x.nome, pct: N(x.pct), abs: C(x.abs) }; },
       from: function (x) { return { id: x.id, nome: x.nome, pct: x.pct, abs: R(x.abs) }; } },
-    fontes: { path: '/income-sources',
+    fontes: { path: '/income-sources', dep: false, fkRefs: [],
       to: function (x) { return { nome: x.nome, valor: C(x.valor) }; },
       from: function (x) { return { id: x.id, nome: x.nome, valor: R(x.valor) }; } },
-    cartoes: { path: '/credit-cards',
+    cartoes: { path: '/credit-cards', dep: false, fkRefs: [],
       to: function (x) { return { nome: x.nome, bandeira: x.bandeira, diaFechamento: N(x.fecha), diaVencimento: N(x.vence), cor: x.cor, ativo: x.ativo !== false }; },
       from: function (x) { return { id: x.id, nome: x.nome, bandeira: x.bandeira, fecha: x.diaFechamento, vence: x.diaVencimento, cor: x.cor, ativo: x.ativo }; } },
-    fixos: { path: '/fixed-expenses',
+    fixos: { path: '/fixed-expenses', dep: true, fkRefs: ['categoryId', 'contaPadraoId'],
       to: function (x) { return { descricao: x.desc, categoryId: catId(x.cat), contaPadraoId: undef(x.contaId), valor: C(x.valor), diaVencimento: N(x.venc), observacoes: undef(x.obs), ativo: x.ativo !== false }; },
       from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], contaId: x.contaPadraoId || '', valor: R(x.valor), venc: x.diaVencimento, obs: x.observacoes || '', ativo: x.ativo }; } },
-    receitas: { path: '/incomes',
+    receitas: { path: '/incomes', dep: true, fkRefs: ['categoryId', 'accountId'],
       to: function (x) { return { descricao: x.desc, categoryId: catId(x.cat), accountId: x.contaId, data: x.data, valor: C(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, observacoes: undef(x.obs) }; },
       from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], contaId: x.accountId, data: x.data, valor: R(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, obs: x.observacoes || '' }; } },
-    despesas: { path: '/expenses',
+    despesas: { path: '/expenses', dep: true, fkRefs: ['categoryId', 'accountId', 'creditCardId'],
       to: function (x) { return formaToTarget({ descricao: x.desc, categoryId: catId(x.cat), dataCompra: x.data, valor: C(x.valor), paga: !!x.paga, observacoes: undef(x.obs) }, x.forma); },
       from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], forma: x.creditCardId ? ('k:' + x.creditCardId) : ('a:' + x.accountId), data: x.dataCompra, valor: R(x.valor), paga: !!x.paga, obs: x.observacoes || '' }; } },
-    planejamentos: { path: '/plan-items',
-      to: function (x) { return { nome: x.nome, planCategoryId: x.planCategoryId || x.categoriaId, valor: C(x.valor) }; },
-      from: function (x) { return { id: x.id, nome: x.nome, planCategoryId: x.planCategoryId, valor: R(x.valor) }; } }
+    planejamentos: { path: '/plan-items', dep: false, fkRefs: ['planCategoryId'],
+      // O app guarda o vinculo da meta no campo `catId` (id de uma categoria de
+      // planejamento). Mapeamos catId <-> planCategoryId nas duas direcoes.
+      to: function (x) { return { nome: x.nome, planCategoryId: x.catId || x.planCategoryId || x.categoriaId, valor: C(x.valor) }; },
+      from: function (x) { return { id: x.id, catId: x.planCategoryId, nome: x.nome, valor: R(x.valor) }; } }
   };
-  // ordem de sync: categorias (catalogo) antes das entidades que dependem do nome->id
+  // ordem de sync: entidades "pai" antes das que dependem delas (nome->id / FKs)
   var ORDER = ['contas', 'catalogo', 'cartoes', 'categorias', 'fontes', 'planejamentos', 'fixos', 'receitas', 'despesas'];
 
   function tok() { return og.get(K_TOK); }
@@ -84,7 +106,7 @@
     return fetch(API + path, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) {
         if (r.status === 401) { return refresh().then(function (ok) { if (!ok) throw new Error('unauth'); return req(method, path, body); }); }
-        return r.text().then(function (t) { var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {} if (!r.ok) { log('req falhou', method, path, r.status, t && t.slice(0, 120)); throw new Error(path + ' ' + r.status); } return d; });
+        return r.text().then(function (t) { var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {} if (!r.ok) { log('req falhou', method, path, r.status, t && t.slice(0, 160)); throw new Error(path + ' ' + r.status); } return d; });
       });
   }
   function refresh() {
@@ -93,53 +115,146 @@
       .then(function (r) { return r.ok ? r.json() : null; }).then(function (d) { if (d && d.accessToken) { og.set(K_TOK, d.accessToken); if (d.refreshToken) og.set(K_RT, d.refreshToken); return true; } return false; }).catch(function () { return false; });
   }
 
-  var prev = {}, currentEmail = null, syncing = false;
+  var prev = {}, currentEmail = null, syncing = false, pendingNext = null;
 
+  // Reconstroi catByName / catById mapeando SEMPRE para o id REAL do backend.
   function rebuildCatMaps(catalogoRaw) {
     catByName = {}; catById = {};
-    (catalogoRaw || []).forEach(function (c) { if (c && c.id && c.nome != null) { if (catByName[c.nome] == null) catByName[c.nome] = c.id; catById[c.id] = c.nome; } });
+    (catalogoRaw || []).forEach(function (c) {
+      if (c && c.id != null && c.nome != null) {
+        var rid = realId(c.id);
+        if (catByName[c.nome] == null) catByName[c.nome] = rid; // nome -> id do backend
+        catById[rid] = c.nome; catById[c.id] = c.nome;          // aceita ambos (backend e cliente)
+      }
+    });
+  }
+
+  // Resolve as FKs de um payload (categoryId/accountId/creditCardId/...) para o
+  // id do backend. Retorna false se alguma FK obrigatoria ainda nao existe no
+  // backend (nesse caso o item e adiado ate a entidade pai ser criada).
+  function resolveFks(coll, payload) {
+    var refs = MAP[coll].fkRefs || [];
+    for (var i = 0; i < refs.length; i++) {
+      var f = refs[i];
+      if (payload[f] == null || payload[f] === '') continue;      // FK opcional ausente: ok
+      var rid = realId(payload[f]);
+      payload[f] = rid;
+      // categoria e obrigatoria em fixos/receitas/despesas; conta/cartao tambem
+      // precisam existir. Se o id resolvido ainda nao consta no backend, adia.
+      if (!isKnown(rid)) return false;
+    }
+    return true;
   }
 
   function hydrate(email) {
+    resetIdState();
     var db = { contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], catalogo: [], categorias: [], config: { patrimonioExcl: [], reservaIds: [] } };
-    // 1) categorias primeiro (para montar nome<->id)
+    // 1) categorias primeiro (para montar nome<->id). Se ESTA falhar, aborta
+    //    sem sobrescrever os dados locais (hydrate nao-destrutivo).
     return req('GET', '/categories').then(function (cats) {
       var raw = cats || [];
+      raw.forEach(function (c) { if (c && c.id != null) markKnown(c.id); });
       rebuildCatMaps(raw);
       db.catalogo = raw.map(MAP.catalogo.from);
-      // 2) demais entidades
+      // 2) demais entidades (em paralelo; marcamos os ids como conhecidos)
       var rest = ORDER.filter(function (c) { return c !== 'catalogo'; });
-      var jobs = rest.map(function (c) { return req('GET', MAP[c].path).then(function (a) { db[c] = (a || []).map(MAP[c].from); }).catch(function () {}); });
+      var jobs = rest.map(function (c) {
+        return req('GET', MAP[c].path).then(function (a) {
+          var arr = a || [];
+          arr.forEach(function (o) { if (o && o.id != null) markKnown(o.id); });
+          db[c] = arr.map(MAP[c].from);
+        }).catch(function () {});
+      });
       jobs.push(req('GET', '/settings').then(function (s) { if (s) db.config = { patrimonioExcl: s.patrimonioExcludedAccountIds || [], reservaIds: s.reservaAccountIds || [] }; }).catch(function () {}));
-      return Promise.all(jobs);
-    }).then(function () {
-      prev = JSON.parse(JSON.stringify(db)); og.set('fn_db_' + email, JSON.stringify(db)); log('hidratado', email, db); return db;
-    }).catch(function (e) { log('hydrate err', e && e.message); prev = JSON.parse(JSON.stringify(db)); og.set('fn_db_' + email, JSON.stringify(db)); return db; });
+      return Promise.all(jobs).then(function () {
+        prev = JSON.parse(JSON.stringify(db));
+        og.set('fn_db_' + email, JSON.stringify(db));
+        log('hidratado', email, db);
+        return db;
+      });
+    }).catch(function (e) {
+      // Falha de rede/credencial: NAO apaga o que ja existe localmente.
+      log('hydrate falhou (mantendo dados locais)', e && e.message);
+      var localRaw = og.get('fn_db_' + email);
+      var localDb = null; try { localDb = localRaw ? JSON.parse(localRaw) : null; } catch (e2) {}
+      var out = localDb || db;
+      prev = JSON.parse(JSON.stringify(out));
+      return out;
+    });
   }
 
+  // Sincronizacao SERIAL e ORDENADA por dependencia. Cada POST espera o anterior,
+  // garantindo que a entidade "pai" ja exista (com id do backend) antes do filho.
   function syncDiff(email, next) {
-    if (syncing) return;
-    // mantem o mapa nome->id atualizado com o catalogo local (pode ter ids do backend)
+    if (syncing) { pendingNext = next; return Promise.resolve(); } // coalesce gravacoes rapidas
+    syncing = true;
+    // catByName precisa refletir os ids ja conhecidos
     rebuildCatMaps(next.catalogo || prev.catalogo || []);
-    ORDER.forEach(function (c) {
-      var oldArr = (prev[c] || []), newArr = (next[c] || []), oldById = {}; oldArr.forEach(function (o) { oldById[o.id] = o; }); var seen = {};
-      var oldNames = {}; if (c === 'catalogo') oldArr.forEach(function (o) { oldNames[o.nome] = 1; });
-      newArr.forEach(function (it) {
-        seen[it.id] = 1;
-        var p = MAP[c].to(it);
-        // entidades que dependem de categoria: nao envia se nao resolveu o categoryId
-        if ((c === 'fixos' || c === 'receitas' || c === 'despesas') && !p.categoryId) { log('skip', c, 'sem categoryId para', it.cat); return; }
-        if (!it.id || !oldById[it.id]) {
-          if (c === 'catalogo' && oldNames[it.nome]) { return; } // nao recria categoria existente (evita duplicata)
-          req('POST', MAP[c].path, p).then(function (cr) { if (cr && cr.id && cr.id !== it.id) { it.id = cr.id; og.set('fn_db_' + email, JSON.stringify(next)); if (c === 'catalogo') rebuildCatMaps(next.catalogo); } }).catch(function () {});
-        } else if (JSON.stringify(MAP[c].to(oldById[it.id])) !== JSON.stringify(p)) {
-          req('PATCH', MAP[c].path + '/' + it.id, p).catch(function () {});
-        }
+
+    var chain = Promise.resolve();
+    ORDER.forEach(function (coll) {
+      chain = chain.then(function () {
+        var oldArr = (prev[coll] || []), newArr = (next[coll] || []);
+        var oldByCid = {}; oldArr.forEach(function (o) { oldByCid[o.id] = o; });
+        var seen = {};
+        var step = Promise.resolve();
+
+        newArr.forEach(function (it) {
+          seen[it.id] = 1;
+          step = step.then(function () {
+            var payload = MAP[coll].to(it);
+            // Resolve FKs para ids do backend; adia se algum pai ainda nao existe.
+            if (!resolveFks(coll, payload)) { log('adiado', coll, it.id, '(FK pendente)'); return; }
+            // Item obrigatorio dependente de categoria sem categoryId: nao envia.
+            if (MAP[coll].dep && !payload.categoryId) { log('skip', coll, 'sem categoryId', it.cat); return; }
+
+            var backendId = idMap[it.id];
+            var existsOld = oldByCid[it.id];
+            if (!backendId && !existsOld) {
+              // CRIACAO
+              return req('POST', MAP[coll].path, payload).then(function (cr) {
+                if (cr && cr.id) {
+                  idMap[it.id] = cr.id; markKnown(cr.id);
+                  if (coll === 'catalogo') rebuildCatMaps(next.catalogo || []);
+                }
+              }).catch(function (e) { log('POST falhou', coll, e && e.message); });
+            }
+            // ATUALIZACAO (se mudou)
+            var rid = backendId || realId(it.id);
+            var oldPayload = existsOld ? MAP[coll].to(existsOld) : null;
+            if (oldPayload) resolveFks(coll, oldPayload);
+            if (!oldPayload || JSON.stringify(oldPayload) !== JSON.stringify(payload)) {
+              return req('PATCH', MAP[coll].path + '/' + rid, payload).catch(function (e) { log('PATCH falhou', coll, e && e.message); });
+            }
+          });
+        });
+
+        // EXCLUSOES
+        step = step.then(function () {
+          var delChain = Promise.resolve();
+          oldArr.forEach(function (o) {
+            if (!seen[o.id]) {
+              delChain = delChain.then(function () {
+                var rid = realId(o.id);
+                return req('DELETE', MAP[coll].path + '/' + rid).then(function () { delete idMap[o.id]; }).catch(function (e) { log('DELETE falhou', coll, e && e.message); });
+              });
+            }
+          });
+          return delChain;
+        });
+        return step;
       });
-      oldArr.forEach(function (o) { if (o.id && !seen[o.id]) req('DELETE', MAP[c].path + '/' + o.id).catch(function () {}); });
     });
-    var cf = next.config || {}; req('PATCH', '/settings', { patrimonioExcludedAccountIds: cf.patrimonioExcl || [], reservaAccountIds: cf.reservaIds || [] }).catch(function () {});
-    prev = JSON.parse(JSON.stringify(next));
+
+    return chain.then(function () {
+      var cf = next.config || {};
+      return req('PATCH', '/settings', { patrimonioExcludedAccountIds: (cf.patrimonioExcl || []).map(realId), reservaAccountIds: (cf.reservaIds || []).map(realId) }).catch(function () {});
+    }).then(function () {
+      prev = JSON.parse(JSON.stringify(next));
+    }).catch(function () {}).then(function () {
+      syncing = false;
+      if (pendingNext) { var p = pendingNext; pendingNext = null; return syncDiff(email, p); }
+    });
   }
 
   // ---- sessao / shadow local -------------------------------------------------
@@ -155,6 +270,10 @@
       og.set('fn_users', JSON.stringify(arr));
     } catch (e) { log('shadow err', e && e.message); }
     currentEmail = email;
+  }
+  function clearSession() {
+    og.del(K_TOK); og.del(K_RT); og.del(K_WHO); og.del(K_PW);
+    currentEmail = null; resetIdState(); prev = {}; pendingNext = null;
   }
 
   function postJson(path, body) {
@@ -199,7 +318,7 @@
   window.FNAuth = {
     login: authLogin,
     register: authRegister,
-    logout: function () { og.del(K_TOK); og.del(K_RT); og.del(K_WHO); og.del(K_PW); currentEmail = null; }
+    logout: clearSession
   };
 
   // ---- espelhamento automatico das gravacoes do app -------------------------
@@ -215,6 +334,43 @@
     return og.set(key, val);
   };
 
+  // ---- LOADING SCREEN --------------------------------------------------------
+  var FN_LOADER_CSS = [
+    '#fn-loading{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;',
+    'flex-direction:column;gap:18px;background:var(--bg,#151019);color:var(--text,#e9e4ef);',
+    'font-family:Manrope,system-ui,sans-serif;opacity:1;transition:opacity .35s ease}',
+    '#fn-loading.fn-hide{opacity:0;pointer-events:none}',
+    '#fn-loading .fn-spin{width:46px;height:46px;border-radius:50%;border:4px solid rgba(140,110,200,.25);',
+    'border-top-color:var(--accent,#8c6ec8);animation:fn-spin 0.9s linear infinite}',
+    '#fn-loading .fn-msg{font-size:15px;font-weight:600;letter-spacing:.2px;opacity:.85}',
+    '@keyframes fn-spin{to{transform:rotate(360deg)}}'
+  ].join('');
+  function ensureLoaderStyle() {
+    if (!document.getElementById('fn-loading-style')) {
+      var st = document.createElement('style'); st.id = 'fn-loading-style'; st.textContent = FN_LOADER_CSS;
+      (document.head || document.documentElement).appendChild(st);
+    }
+  }
+  function showLoader(msg) {
+    try {
+      ensureLoaderStyle();
+      var el = document.getElementById('fn-loading');
+      if (!el) {
+        el = document.createElement('div'); el.id = 'fn-loading';
+        el.innerHTML = '<div class="fn-spin"></div><div class="fn-msg"></div>';
+        (document.body || document.documentElement).appendChild(el);
+      }
+      el.classList.remove('fn-hide');
+      el.querySelector('.fn-msg').textContent = msg || 'Carregando seus dados…';
+    } catch (e) { log('loader err', e && e.message); }
+  }
+  function hideLoader() {
+    try {
+      var el = document.getElementById('fn-loading');
+      if (el) { el.classList.add('fn-hide'); setTimeout(function () { if (el && el.parentNode) el.parentNode.removeChild(el); }, 400); }
+    } catch (e) { log('loader err', e && e.message); }
+  }
+
   // ---- PATCH em tempo de execucao dos metodos de auth do app React ----------
   function patchAuth(inst) {
     if (!inst || inst.__fnAuthPatched) return false;
@@ -226,9 +382,11 @@
       var pass = self.state.authPass || '';
       if (!email.indexOf || email.indexOf('@') < 0 || !pass) { self.setState({ authError: 'Informe e-mail e senha.' }); return; }
       self.setState({ authError: '', authMsg: '', loading: true });
+      showLoader('Entrando…');
       authLogin(email, pass).then(function (res) {
         self.setState({ loading: false });
-        if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); return; }
+        if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); hideLoader(); return; }
+        hideLoader();
         if (res && res.status === 401) { self.setState({ authError: 'E-mail ou senha inválidos.' }); return; }
         var u = (self.getUsers() || []).find(function (x) { return x.email === email; });
         if (u && u.pass === pass) { self.enter({ name: u.name, email: email, visitor: false }, self.loadDB(email)); return; }
@@ -243,14 +401,24 @@
       var pass = self.state.authPass || '';
       if (!name || email.indexOf('@') < 0 || pass.length < 6) { self.setState({ authError: 'Preencha nome, e-mail válido e senha com ao menos 6 caracteres.' }); return; }
       self.setState({ authError: '', authMsg: '', loading: true });
+      showLoader('Criando sua conta…');
       authRegister(name, email, pass).then(function (res) {
         self.setState({ loading: false });
-        if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); return; }
+        if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); hideLoader(); return; }
+        hideLoader();
         if (res && res.status === 409) { self.setState({ authError: 'Este e-mail já possui cadastro.' }); return; }
         if (res && res.status === 0) { self.setState({ authError: 'Sem conexão com o servidor. Tente novamente.' }); return; }
         self.setState({ authError: (res && res.message) || 'Não foi possível concluir o cadastro.' });
       });
     };
+
+    // logout: alem de voltar para a tela de auth, limpa a sessao/tokens para
+    // que um proximo modo visitante nao herde credenciais nem dispare sync.
+    if (typeof inst.sair === 'function' && !inst.__fnSairPatched) {
+      var origSair = inst.sair.bind(inst);
+      inst.sair = function () { try { clearSession(); } catch (e) {} return origSair(); };
+      inst.__fnSairPatched = true;
+    }
 
     try { if (typeof inst.setState === 'function') inst.setState({}); } catch (e) {}
     log('patch de auth aplicado');
@@ -299,18 +467,30 @@
 
   // ---- RESPONSIVO ----------------------------------------------------------
   var FN_RESP_CSS = [
+    // Tela de autenticacao: empilha o painel de marketing acima do formulario.
     'html.fn-mobile [style*="linear-gradient(160deg"][style*="flex: 1.1"]{display:none!important}',
     'html.fn-mobile [style*="min-height: 100vh"][style*="display: flex"]{flex-direction:column!important;min-height:auto!important}',
+    // Grids multi-coluna viram 1 coluna no celular.
     'html.fn-mobile [style*="repeat(3,1fr)"],',
+    'html.fn-mobile [style*="repeat(3, 1fr)"],',
+    'html.fn-mobile [style*="repeat(2,1fr)"],',
+    'html.fn-mobile [style*="repeat(2, 1fr)"],',
     'html.fn-mobile [style*="5fr 4fr"],',
     'html.fn-mobile [style*="2fr 3fr"],',
-    'html.fn-mobile [style*="1fr 1fr"],',
-    'html.fn-mobile [style*="34px minmax(200px,1fr)"]{grid-template-columns:1fr!important}',
+    'html.fn-mobile [style*="1fr 1fr"]{grid-template-columns:1fr!important}',
+    // Tabelas em grid (despesas/receitas) JA rolam sozinhas: o app usa um wrapper
+    // com overflow-x:auto e min-width. Nao mexer nelas para preservar esse comportamento.
+    // Paddings grandes encolhem.
     'html.fn-mobile [style*="padding: 64px"],',
     'html.fn-mobile [style*="padding: 48px"],',
     'html.fn-mobile [style*="padding: 40px"]{padding:18px!important}',
     'html.fn-mobile [style*="max-width: 1240px"]{max-width:100%!important}',
-    'html.fn-mobile{overflow-x:hidden!important}'
+    // Evita overflow horizontal e permite rolagem de tabelas largas.
+    'html.fn-mobile,html.fn-mobile body{overflow-x:hidden!important;max-width:100vw}',
+    'html.fn-mobile table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}',
+    // Modais: nunca estourar a largura da tela (restrito a dialogs para nao afetar chrome fixo).
+    'html.fn-mobile [role="dialog"]{max-width:96vw!important}',
+    'html.fn-tablet [style*="repeat(3,1fr)"],html.fn-tablet [style*="repeat(3, 1fr)"]{grid-template-columns:1fr 1fr!important}'
   ].join('\n');
   function applyResponsive() {
     try {
@@ -318,7 +498,9 @@
         var st = document.createElement('style'); st.id = 'fn-responsive-style'; st.textContent = FN_RESP_CSS;
         (document.head || document.documentElement).appendChild(st);
       }
-      document.documentElement.classList.toggle('fn-mobile', window.innerWidth <= 820);
+      var w = window.innerWidth;
+      document.documentElement.classList.toggle('fn-mobile', w <= 820);
+      document.documentElement.classList.toggle('fn-tablet', w > 820 && w <= 1100);
     } catch (e) { log('responsive err', e && e.message); }
   }
   applyResponsive();
@@ -326,6 +508,6 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  window.__FN_SYNC_VER = '0.6.1';
-  log('carregado v0.6.1, API=', API);
+  window.__FN_SYNC_VER = '0.7.0';
+  log('carregado v0.7.0, API=', API);
 })();
