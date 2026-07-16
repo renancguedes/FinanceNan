@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.1 - 2026-07-16
+- corrige o bug que impedia QUALQUER despesa de ser salva no banco (HTTP 422): o app grava a despesa nos campos contaId/cartaoId, mas o fn-sync lia um campo "forma" inexistente, enviando o item sem accountId nem creditCardId e violando a regra "exatamente um" do backend
+- mapeamento de despesas reescrito nos dois sentidos (contaId/cartaoId <-> accountId/creditCardId), com fallback defensivo para drafts antigos e trazendo vencimento/fixoId no hydrate
+- validado ao vivo contra o backend: POST /expenses passou de 422 para 201
+- atualiza o cache-buster do fn-sync.js no index.html para ?v=0.7.1
+
 ## v0.7.0 - 2026-07-16
 - CORRIGE PERDA DE DADOS (bug de persistência): itens que referenciavam uma entidade criada na mesma sessão (ex.: despesa/receita/gasto fixo usando uma categoria recém-criada) eram enviados com um id-cliente inválido e o backend recusava (HTTP 422), fazendo o item aparecer na tela mas nunca ser gravado no banco — sumindo no próximo login
 - o fn-sync agora mantém um mapa clientId→backendId e um conjunto de ids conhecidos; a sincronização virou serial e ordenada por dependência (contas/cartões/categorias antes de receitas/despesas/fixos), resolvendo todas as chaves estrangeiras para o id real do backend

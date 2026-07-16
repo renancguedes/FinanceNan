@@ -88,8 +88,16 @@
       to: function (x) { return { descricao: x.desc, categoryId: catId(x.cat), accountId: x.contaId, data: x.data, valor: C(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, observacoes: undef(x.obs) }; },
       from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], contaId: x.accountId, data: x.data, valor: R(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, obs: x.observacoes || '' }; } },
     despesas: { path: '/expenses', dep: true, fkRefs: ['categoryId', 'accountId', 'creditCardId'],
-      to: function (x) { return formaToTarget({ descricao: x.desc, categoryId: catId(x.cat), dataCompra: x.data, valor: C(x.valor), paga: !!x.paga, observacoes: undef(x.obs) }, x.forma); },
-      from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], forma: x.creditCardId ? ('k:' + x.creditCardId) : ('a:' + x.accountId), data: x.dataCompra, valor: R(x.valor), paga: !!x.paga, obs: x.observacoes || '' }; } },
+      // O app salva a despesa com contaId/cartaoId (nao "forma"). O backend exige
+      // EXATAMENTE um de accountId/creditCardId; por isso mapeamos direto desses campos.
+      to: function (x) {
+        var o = { descricao: x.desc, categoryId: catId(x.cat), dataCompra: x.data, valor: C(x.valor), paga: !!x.paga, observacoes: undef(x.obs) };
+        if (x.cartaoId) o.creditCardId = x.cartaoId;
+        else if (x.contaId) o.accountId = x.contaId;
+        else if (x.forma) formaToTarget(o, x.forma); // fallback defensivo (drafts antigos)
+        return o;
+      },
+      from: function (x) { return { id: x.id, desc: x.descricao, cat: catById[x.categoryId], contaId: x.accountId || null, cartaoId: x.creditCardId || null, data: x.dataCompra, venc: x.dataVencimento || null, valor: R(x.valor), paga: !!x.paga, obs: x.observacoes || '', fixoId: x.fixedExpenseId || null }; } },
     planejamentos: { path: '/plan-items', dep: false, fkRefs: ['planCategoryId'],
       // O app guarda o vinculo da meta no campo `catId` (id de uma categoria de
       // planejamento). Mapeamos catId <-> planCategoryId nas duas direcoes.
@@ -508,6 +516,6 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  window.__FN_SYNC_VER = '0.7.0';
-  log('carregado v0.7.0, API=', API);
+  window.__FN_SYNC_VER = '0.7.1';
+  log('carregado v0.7.1, API=', API);
 })();
