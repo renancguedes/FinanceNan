@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.2 - 2026-07-16
+- corrige PERDA de itens que dependem de uma entidade recém-criada (ex.: criar uma conta e logo em seguida uma receita/despesa): com o backend lento (cold start), o item filho era "adiado" enquanto o pai ainda sincronizava e nunca era reenviado, se perdendo
+- adiciona RETENTATIVA automática: enquanto houver item adiado por dependência pendente, o sync reexecuta sozinho (a cada 1,5s, até 12 vezes) relendo o estado mais recente, garantindo que tudo acabe gravado no banco
+- Enter agora envia o formulário de login/cadastro/recuperação (não é mais preciso clicar no botão)
+- atualiza o cache-buster do fn-sync.js no index.html para ?v=0.7.2
+
 ## v0.7.1 - 2026-07-16
 - corrige o bug que impedia QUALQUER despesa de ser salva no banco (HTTP 422): o app grava a despesa nos campos contaId/cartaoId, mas o fn-sync lia um campo "forma" inexistente, enviando o item sem accountId nem creditCardId e violando a regra "exatamente um" do backend
 - mapeamento de despesas reescrito nos dois sentidos (contaId/cartaoId <-> accountId/creditCardId), com fallback defensivo para drafts antigos e trazendo vencimento/fixoId no hydrate

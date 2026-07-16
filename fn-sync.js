@@ -124,6 +124,11 @@
   }
 
   var prev = {}, currentEmail = null, syncing = false, pendingNext = null;
+  // Controle de RETENTATIVA: quando um item depende de uma entidade "pai" que
+  // ainda esta sincronizando (backend lento/cold start), ele e adiado. Sem
+  // retentativa, esse item se perderia ate a proxima gravacao. Reexecutamos o
+  // sync automaticamente ate nao haver mais nada pendente.
+  var deferredThisPass = false, syncRetries = 0, retryTimer = null;
 
   // Reconstroi catByName / catById mapeando SEMPRE para o id REAL do backend.
   function rebuildCatMaps(catalogoRaw) {
@@ -196,6 +201,8 @@
   function syncDiff(email, next) {
     if (syncing) { pendingNext = next; return Promise.resolve(); } // coalesce gravacoes rapidas
     syncing = true;
+    deferredThisPass = false;
+    if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
     // catByName precisa refletir os ids ja conhecidos
     rebuildCatMaps(next.catalogo || prev.catalogo || []);
 
@@ -212,9 +219,9 @@
           step = step.then(function () {
             var payload = MAP[coll].to(it);
             // Resolve FKs para ids do backend; adia se algum pai ainda nao existe.
-            if (!resolveFks(coll, payload)) { log('adiado', coll, it.id, '(FK pendente)'); return; }
+            if (!resolveFks(coll, payload)) { deferredThisPass = true; log('adiado', coll, it.id, '(FK pendente)'); return; }
             // Item obrigatorio dependente de categoria sem categoryId: nao envia.
-            if (MAP[coll].dep && !payload.categoryId) { log('skip', coll, 'sem categoryId', it.cat); return; }
+            if (MAP[coll].dep && !payload.categoryId) { deferredThisPass = true; log('skip', coll, 'sem categoryId', it.cat); return; }
 
             var backendId = idMap[it.id];
             var existsOld = oldByCid[it.id];
@@ -261,7 +268,21 @@
       prev = JSON.parse(JSON.stringify(next));
     }).catch(function () {}).then(function () {
       syncing = false;
-      if (pendingNext) { var p = pendingNext; pendingNext = null; return syncDiff(email, p); }
+      // 1) Ha gravacao mais recente enfileirada -> processa ela (zera retentativas).
+      if (pendingNext) { var p = pendingNext; pendingNext = null; syncRetries = 0; return syncDiff(email, p); }
+      // 2) Algo ficou adiado (pai ainda sincronizando) -> reexecuta em breve, ate
+      //    tudo entrar. Rele o db mais recente do proprio app a cada tentativa.
+      if (deferredThisPass && syncRetries < 12) {
+        syncRetries++;
+        retryTimer = setTimeout(function () {
+          retryTimer = null;
+          if (!tok() || og.get(K_WHO) !== email) return; // sessao mudou: aborta
+          var raw = og.get('fn_db_' + email); var d = null; try { d = raw ? JSON.parse(raw) : null; } catch (e) {}
+          if (d) syncDiff(email, d);
+        }, 1500);
+      } else {
+        syncRetries = 0; // nada pendente: encerra o ciclo de retentativas
+      }
     });
   }
 
@@ -428,6 +449,27 @@
       inst.__fnSairPatched = true;
     }
 
+    // ENTER envia o formulario de auth (login/cadastro/recuperar), sem precisar
+    // clicar no botao. So age na tela de auth e quando o foco esta num input.
+    if (!inst.__fnEnterPatched) {
+      inst.__fnEnterPatched = true;
+      document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' || e.isComposing) return;
+        try {
+          var st = inst.state || {};
+          if (st.view !== 'auth') return;
+          var el = e.target;
+          if (el && el.tagName === 'TEXTAREA') return;
+          var inField = el && (el.tagName === 'INPUT');
+          if (!inField) return;
+          e.preventDefault();
+          if (st.authTab === 'cadastro') inst.doCadastro();
+          else if (st.authTab === 'recuperar' && typeof inst.doRecuperar === 'function') inst.doRecuperar();
+          else inst.doLogin();
+        } catch (err) { log('enter err', err && err.message); }
+      }, true);
+    }
+
     try { if (typeof inst.setState === 'function') inst.setState({}); } catch (e) {}
     log('patch de auth aplicado');
     return true;
@@ -516,6 +558,6 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  window.__FN_SYNC_VER = '0.7.1';
-  log('carregado v0.7.1, API=', API);
+  window.__FN_SYNC_VER = '0.7.2';
+  log('carregado v0.7.2, API=', API);
 })();
