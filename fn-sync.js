@@ -356,7 +356,11 @@
       if (String(key).indexOf('fn_db_') === 0) {
         og.set(key, val);
         var email = key.slice(6); var data = null; try { data = JSON.parse(val); } catch (e) {}
-        if (data && tok() && og.get(K_WHO) === email && !syncing) { syncDiff(email, data); }
+        // SEMPRE chama syncDiff: se ja houver um sync em andamento, o proprio
+        // syncDiff enfileira esta gravacao como pendingNext (nao a descarta).
+        // Antes havia um "&& !syncing" aqui que fazia gravacoes feitas durante
+        // um sync serem PERDIDAS (ex.: criar conta e, logo apos, uma receita).
+        if (data && tok() && og.get(K_WHO) === email) { syncDiff(email, data); }
         return;
       }
     } catch (e) { log('setItem err', e && e.message); }
@@ -558,6 +562,6 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  window.__FN_SYNC_VER = '0.7.2';
-  log('carregado v0.7.2, API=', API);
+  window.__FN_SYNC_VER = '0.7.3';
+  log('carregado v0.7.3, API=', API);
 })();

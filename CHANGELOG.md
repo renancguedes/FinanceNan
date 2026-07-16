@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.3 - 2026-07-16
+- corrige a CAUSA-RAIZ da perda de dados: o interceptador de gravação (Storage.setItem) só disparava a sincronização quando NÃO havia outro sync em andamento (`&& !syncing`). Assim, toda gravação feita durante um sync (ex.: criar uma conta e, logo em seguida, uma receita/despesa) era simplesmente descartada — nunca chegava ao banco
+- agora o setItem SEMPRE chama o syncDiff, que já enfileira a gravação (pendingNext) quando há sync em andamento e a processa em seguida; combinado com a retentativa da 0.7.2, garante que nada se perca mesmo com ações rápidas e backend lento
+- atualiza o cache-buster do fn-sync.js no index.html para ?v=0.7.3
+
 ## v0.7.2 - 2026-07-16
 - corrige PERDA de itens que dependem de uma entidade recém-criada (ex.: criar uma conta e logo em seguida uma receita/despesa): com o backend lento (cold start), o item filho era "adiado" enquanto o pai ainda sincronizava e nunca era reenviado, se perdendo
 - adiciona RETENTATIVA automática: enquanto houver item adiado por dependência pendente, o sync reexecuta sozinho (a cada 1,5s, até 12 vezes) relendo o estado mais recente, garantindo que tudo acabe gravado no banco
