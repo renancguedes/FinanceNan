@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.0 - 2026-07-17
+- responsividade completa para celular e tablet, sem alterar a identidade visual nem a lógica do app
+- tablet (<=900px): os grids de 2 colunas do Dashboard (reserva/fluxo de caixa) e do Planejamento passam a empilhar em 1 coluna
+- celular (<=760px): a barra lateral vira um trilho estreito só com ícones (rótulos ocultos), o cabeçalho quebra em duas linhas (título em cima, controles embaixo), o conteúdo ganha espaçamento reduzido e o modal de formulário passa a 1 coluna
+- tela de login (<=760px): o painel decorativo é ocultado e o formulário ocupa a largura toda, centralizado
+- implementado com media queries + classes dedicadas (app-sidebar, app-header, app-title, app-content, auth-wrap, auth-hero, auth-form, fn-grid-3/11/23/54), sem tocar em fn-sync.js
+- atualiza o cache-buster do fn-sync.js no index.html para ?v=0.8.0
+
 ## v0.7.3 - 2026-07-16
 - corrige a CAUSA-RAIZ da perda de dados: o interceptador de gravação (Storage.setItem) só disparava a sincronização quando NÃO havia outro sync em andamento (`&& !syncing`). Assim, toda gravação feita durante um sync (ex.: criar uma conta e, logo em seguida, uma receita/despesa) era simplesmente descartada — nunca chegava ao banco
 - agora o setItem SEMPRE chama o syncDiff, que já enfileira a gravação (pendingNext) quando há sync em andamento e a processa em seguida; combinado com a retentativa da 0.7.2, garante que nada se perca mesmo com ações rápidas e backend lento
