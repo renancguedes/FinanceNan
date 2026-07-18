@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.2.1 - 2026-07-18
+- corrige o cadastro que "não mostrava nenhuma mensagem": a mensagem de sucesso/pendência (`authMsg`) só era renderizada na aba "Recuperar senha". Nas abas Entrar e Criar conta só existia a caixa de erro. Agora a caixa verde de `authMsg` também aparece na tela principal, então o usuário vê "Solicitação de cadastro enviada ao administrador" ao se cadastrar e "aguardando aprovação" ao tentar logar sem liberação. (A lógica já funcionava — signUp, perfil pendente e signOut; só faltava exibir o retorno.)
+
 ## v1.2.0 - 2026-07-18
 - controle de acesso e admin: cadastro deixa de ser aberto. Ao se cadastrar, o usuário recebe "Solicitação de cadastro enviada ao administrador" e fica bloqueado até aprovação (login retorna `pending` e faz signOut enquanto não aprovado)
 - nova tabela `fn_profiles` (name, email, role, approved, created_at, last_login) + função `fn_is_admin()` (security definer) + trigger `fn_profiles_guard()` que impede não-admins de se auto-aprovarem/promoverem; RLS por usuário e admin. Bootstrap do admin: renanguedesrdg@gmail.com (role=admin, approved=true)

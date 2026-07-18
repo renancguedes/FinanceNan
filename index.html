@@ -151,6 +151,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
           <div style="text-align:right;margin-bottom:18px"><button onClick="{{setTabRecuperar}}" style="background:none;border:none;color:var(--accent);font-weight:700;cursor:pointer;font-size:12px;padding:0">Esqueci minha senha</button></div>
         </sc-if>
         <sc-if value="{{authError}}" hint-placeholder-val="{{false}}"><div style="margin-bottom:14px;padding:12px;border-radius:10px;background:var(--red-soft);color:var(--red);font-weight:600;font-size:13px;animation:fadeUp .25s ease">{{authError}}</div></sc-if>
+        <sc-if value="{{authMsg}}" hint-placeholder-val="{{false}}"><div style="margin-bottom:14px;padding:12px;border-radius:10px;background:var(--green-soft);color:var(--green);font-weight:600;font-size:13px;animation:fadeUp .25s ease">{{authMsg}}</div></sc-if>
         <button onClick="{{doAuthMain}}" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:14px;cursor:pointer;margin-top:6px" style-hover="filter:brightness(1.1);transform:translateY(-1px)">{{authMainLabel}}</button>
         <div style="display:flex;align-items:center;gap:12px;margin:22px 0">
           <div style="flex:1;height:1px;background:var(--border)"></div>
