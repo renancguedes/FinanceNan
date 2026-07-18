@@ -1,5 +1,5 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.7.0)
+ * fn-sync.js - Integracao FinanceNan (v0.8.1)
  * ---------------------------------------------------------------------------
  * BANCO COMO FONTE DA VERDADE (usuario logado): cada alteracao do app e gravada
  * no backend e re-baixada a cada login (hydrate). Modo visitante = 100% local.
@@ -523,7 +523,17 @@
   var FN_RESP_CSS = [
     // Tela de autenticacao: empilha o painel de marketing acima do formulario.
     'html.fn-mobile [style*="linear-gradient(160deg"][style*="flex: 1.1"]{display:none!important}',
-    'html.fn-mobile [style*="min-height: 100vh"][style*="display: flex"]{flex-direction:column!important;min-height:auto!important}',
+    // Tela de LOGIN: empilha o painel de marketing acima do formulario (escopo restrito).
+    'html.fn-mobile .auth-wrap{flex-direction:column!important;min-height:auto!important}',
+    // App shell: mantem layout em LINHA no mobile; a sidebar vira um trilho compacto de icones.
+    // (Sem isso, a <aside> com height:100vh ocupava a tela inteira e so o menu aparecia.)
+    'html.fn-mobile .app-sidebar{width:64px!important;padding:14px 8px!important}',
+    'html.fn-mobile .app-sidebar .sb-logo{justify-content:center!important;padding:6px 0!important}',
+    'html.fn-mobile .app-sidebar .sb-logo-text{display:none!important}',
+    'html.fn-mobile .app-sidebar nav button{justify-content:center!important;padding:11px 0!important}',
+    'html.fn-mobile .app-sidebar nav button span{display:none!important}',
+    'html.fn-mobile .app-sidebar .sb-toggle{justify-content:center!important;padding:11px 0!important}',
+    'html.fn-mobile .app-sidebar .sb-toggle span{display:none!important}',
     // Grids multi-coluna viram 1 coluna no celular.
     'html.fn-mobile [style*="repeat(3,1fr)"],',
     'html.fn-mobile [style*="repeat(3, 1fr)"],',
@@ -562,6 +572,6 @@
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', applyResponsive);
 
-  window.__FN_SYNC_VER = '0.7.3';
-  log('carregado v0.7.3, API=', API);
+  window.__FN_SYNC_VER = '0.8.1';
+  log('carregado v0.8.1, API=', API);
 })();

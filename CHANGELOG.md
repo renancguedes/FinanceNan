@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.8.1 - 2026-07-18
+- corrige regressão de responsividade no celular: a regra de empilhamento do fn-sync (`min-height:100vh` + `display:flex` → coluna) atingia também o shell do app, fazendo a sidebar (`height:100vh`) ocupar a tela inteira e esconder o conteúdo (só o menu aparecia)
+- o empilhamento agora fica restrito à tela de login (`.auth-wrap`); no app o layout permanece em linha e a sidebar vira um trilho compacto de ícones no mobile
+- atualiza o cache-buster do fn-sync.js no index.html para ?v=0.8.1
+
 ## v0.8.0 - 2026-07-17
 - responsividade completa para celular e tablet, sem alterar a identidade visual nem a lógica do app
 - tablet (<=900px): os grids de 2 colunas do Dashboard (reserva/fluxo de caixa) e do Planejamento passam a empilhar em 1 coluna
