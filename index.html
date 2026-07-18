@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.0.1"></script>
+<script src="./fn-supabase.js?v=1.1.0"></script>
 </head>
 <body>
 <x-dc>
@@ -772,6 +772,60 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
         </div>
       </sc-if>
 
+      <!-- ===== ADMIN ===== -->
+      <sc-if value="{{showAdmin}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+              <div style="font-family:Sora;font-weight:600;font-size:16px">Solicitações de acesso</div>
+              <span style="background:var(--amber-soft);color:var(--amber);font-weight:800;font-size:12px;padding:2px 9px;border-radius:99px">{{adminPendCount}}</span>
+            </div>
+            <sc-if value="{{adminPendEmpty}}" hint-placeholder-val="{{true}}">
+              <div style="color:var(--text3);font-size:13px;padding:6px 2px">Nenhuma solicitação pendente.</div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{adminPend}}" as="u" hint-placeholder-count="0">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;background:var(--surface2);border:1px solid var(--border);flex-wrap:wrap">
+                  <div style="flex:1;min-width:160px">
+                    <div style="font-weight:700;font-size:13.5px">{{u.nome}}</div>
+                    <div style="font-size:12px;color:var(--text2)">{{u.email}} · {{u.created}}</div>
+                  </div>
+                  <button onClick="{{u.approve}}" style="padding:8px 14px;border-radius:9px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:12.5px;cursor:pointer" style-hover="filter:brightness(1.1)">Permitir acesso</button>
+                  <button onClick="{{u.del}}" style="padding:8px 12px;border-radius:9px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer" style-hover="color:var(--red);border-color:var(--red)">Recusar</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow)">
+            <div style="font-family:Sora;font-weight:600;font-size:16px;margin-bottom:14px">Usuários cadastrados</div>
+            <sc-if value="{{adminEmpty}}" hint-placeholder-val="{{false}}">
+              <div style="color:var(--text3);font-size:13px;padding:6px 2px">Nenhum usuário ainda.</div>
+            </sc-if>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{adminUsers}}" as="u" hint-placeholder-count="1">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;background:var(--surface2);border:1px solid var(--border);flex-wrap:wrap">
+                  <div style="flex:1;min-width:180px">
+                    <div style="display:flex;align-items:center;gap:8px">
+                      <span style="font-weight:700;font-size:13.5px">{{u.nome}}</span>
+                      <span style="font-size:10.5px;font-weight:800;padding:1px 8px;border-radius:99px;background:{{u.statusBg}};color:{{u.statusFg}}">{{u.statusLabel}}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--text2)">{{u.email}}</div>
+                    <div style="font-size:11px;color:var(--text3)">Cadastro: {{u.created}} · Último login: {{u.last}}</div>
+                  </div>
+                  <sc-if value="{{u.canApprove}}" hint-placeholder-val="{{false}}">
+                    <button onClick="{{u.approve}}" style="padding:7px 12px;border-radius:9px;border:none;background:var(--green);color:#fff;font-weight:700;font-size:12px;cursor:pointer">Aprovar</button>
+                  </sc-if>
+                  <button onClick="{{u.reset}}" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:12px;cursor:pointer" style-hover="color:var(--accent);border-color:var(--accent)">Resetar senha</button>
+                  <sc-if value="{{u.canDelete}}" hint-placeholder-val="{{true}}">
+                    <button onClick="{{u.del}}" style="padding:7px 12px;border-radius:9px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:12px;cursor:pointer" style-hover="color:var(--red);border-color:var(--red)">Excluir</button>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
     </main>
   </div>
 </div>
@@ -928,7 +982,7 @@ class Component extends DCLogic {
       reservaMeses: 6, distMode: 'pct',
       recFilter: 'todas', despFilter: 'todas', formaFilter: 'todas',
       despSort: { k: 'data', dir: -1 },
-      modal: null, confirm: null, detail: null, toasts: []
+      modal: null, confirm: null, detail: null, toasts: [], adminUsers: [], adminLoading: false
     };
   })();
 
@@ -1173,6 +1227,7 @@ class Component extends DCLogic {
   go(screen) {
     if (screen === this.state.screen) return;
     this.setState({ screen, loading: true });
+    if (screen === 'admin') this.loadAdminUsers();
     clearTimeout(this._lt);
     this._lt = setTimeout(() => this.setState({ loading: false }), 380);
   }
@@ -1181,6 +1236,29 @@ class Component extends DCLogic {
     clearTimeout(this._lt);
     this._lt = setTimeout(() => this.setState({ loading: false }), 220);
   }
+
+  // ---------- admin ----------
+  loadAdminUsers() {
+    if (!window.FNAdmin) return;
+    this.setState({ adminLoading: true });
+    window.FNAdmin.listUsers().then(list => this.setState({ adminUsers: list || [], adminLoading: false }));
+  }
+  approveUser(id) {
+    if (!window.FNAdmin) return;
+    window.FNAdmin.approve(id).then(ok => { this.toast(ok ? 'Acesso liberado.' : 'Falha ao aprovar.', ok ? 'ok' : 'err'); if (ok) this.loadAdminUsers(); });
+  }
+  resetUserPwd(id, nome) {
+    if (!window.FNAdmin) return;
+    this.toast('Gerando nova senha...');
+    window.FNAdmin.resetPassword(id).then(pwd => { if (pwd) this.askConfirm('Nova senha de ' + nome + ': ' + pwd + '  —  copie e envie ao usuário (não será mostrada de novo).', () => {}); else this.toast('Não foi possível resetar a senha.', 'err'); });
+  }
+  delAdminUser(id, nome) {
+    if (!window.FNAdmin) return;
+    this.askConfirm('Excluir o usuário "' + nome + '" e TODOS os dados dele? Não pode ser desfeito.', () => {
+      window.FNAdmin.deleteUser(id).then(ok => { this.toast(ok ? 'Usuário excluído.' : 'Falha ao excluir.', ok ? 'ok' : 'err'); if (ok) this.loadAdminUsers(); });
+    });
+  }
+  openChangePwd() { this.openModal('senha', null); }
 
   // ---------- modal engine ----------
   openModal(type, entity, extra) {
@@ -1284,6 +1362,9 @@ class Component extends DCLogic {
         { k: 'nome', label: 'Descrição', t: 'text', ph: 'Ex: Cinema', span: 1 },
         { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 }
       ], defaults: { nome: '', valor: 0 } },
+      senha: { title: () => 'Alterar minha senha', submitLabel: 'Salvar nova senha', fields: [
+        { k: 'pwd', label: 'Nova senha', t: 'password', ph: 'mínimo 6 caracteres', span: 2 }
+      ], defaults: { pwd: '' } },
       importFixos: { title: () => 'Importar gastos fixos', submitLabel: 'Importar selecionados', hint: 'Itens com o mesmo nome já existentes na categoria de destino não serão duplicados.', fields: [
         { k: 'catId', label: 'Categoria de destino', t: 'select', options: planCatOpts, span: 2 },
         { k: 'sel', label: 'Gastos fixos', t: 'checklist', span: 2 }
@@ -1293,6 +1374,13 @@ class Component extends DCLogic {
 
   submitModal = () => {
     const m = this.state.modal; if (!m) return;
+    if (m.type === 'senha') {
+      const pwd = (m.draft.pwd || '');
+      if (pwd.length < 6) { this.toast('Senha muito curta (mín. 6 caracteres).', 'err'); return; }
+      this.closeModal();
+      if (window.FNAdmin) window.FNAdmin.changeMyPassword(pwd).then(ok => this.toast(ok ? 'Senha alterada com sucesso.' : 'Não foi possível alterar a senha.', ok ? 'ok' : 'err'));
+      return;
+    }
     const db = JSON.parse(JSON.stringify(this.state.db));
     const def = this.modalDefs()[m.type];
     const d = { ...def.defaults, ...m.draft };
@@ -1528,14 +1616,14 @@ class Component extends DCLogic {
         authMainLabel: s.authTab === 'cadastro' ? 'Criar minha conta' : 'Entrar',
         doAuthMain: s.authTab === 'cadastro' ? this.doCadastro : this.doLogin,
         doRecuperar: this.doRecuperar, doVisitante: this.doVisitante,
-        isVisitor: false, loading: false, showDash: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, modalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
+        isVisitor: false, loading: false, showDash: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, showAdmin: false, modalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
       };
     }
 
     // ===== APP =====
     const db = s.db;
     const comp = s.comp;
-    const titles = { dashboard: 'Dashboard', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio', categorias: 'Categorias', config: 'Configurações' };
+    const titles = { dashboard: 'Dashboard', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio', categorias: 'Categorias', config: 'Configurações', admin: 'Admin' };
     const navDefs = [
       ['dashboard', 'Dashboard', this.ICONS.dash], ['planejamento', 'Planejamento', this.ICONS.plan],
       ['fixos', 'Gastos Fixos', this.ICONS.fixo], ['receitas', 'Receitas', this.ICONS.rec],
@@ -1564,12 +1652,17 @@ class Component extends DCLogic {
       sbOpen: s.sidebarOpen, sbWidth: s.sidebarOpen ? '236px' : '76px',
       sbChevFlip: s.sidebarOpen ? 'none' : 'rotate(180deg)',
       toggleSidebar: () => this.setState({ sidebarOpen: !s.sidebarOpen }),
-      navItems: navDefs.map(nd => ({
-        label: nd[1], icon: nd[2], go: () => this.go(nd[0]),
-        bg: s.screen === nd[0] ? 'var(--accent-soft)' : 'transparent',
-        fg: s.screen === nd[0] ? 'var(--accent)' : 'var(--text2)',
-        fw: s.screen === nd[0] ? '800' : '600'
-      })),
+      navItems: (() => {
+        const items = navDefs.map(nd => ({
+          label: nd[1], icon: nd[2], go: () => this.go(nd[0]),
+          bg: s.screen === nd[0] ? 'var(--accent-soft)' : 'transparent',
+          fg: s.screen === nd[0] ? 'var(--accent)' : 'var(--text2)',
+          fw: s.screen === nd[0] ? '800' : '600'
+        }));
+        if (window.FNAdmin && window.FNAdmin.isAdmin && window.FNAdmin.isAdmin()) items.push({ label: 'Admin', icon: 'M12 2l7 4v6c0 4-3 7-7 8-4-1-7-4-7-8V6l7-4z', go: () => this.go('admin'), bg: s.screen === 'admin' ? 'var(--accent-soft)' : 'transparent', fg: s.screen === 'admin' ? 'var(--accent)' : 'var(--text2)', fw: s.screen === 'admin' ? '800' : '600' });
+        if (s.user && !s.user.visitor) items.push({ label: 'Alterar senha', icon: this.ICONS.cfg, go: () => this.openChangePwd(), bg: 'transparent', fg: 'var(--text2)', fw: '600' });
+        return items;
+      })(),
       screenTitle: titles[s.screen],
       compLabel: this.monthName(comp.m) + ' ' + comp.y,
       compPrev: () => this.setComp(this.shiftComp(comp, -1)),
@@ -1588,6 +1681,7 @@ class Component extends DCLogic {
       showContas: !s.loading && s.screen === 'contas',
       showCatalogo: !s.loading && s.screen === 'categorias',
       showConfig: !s.loading && s.screen === 'config',
+      showAdmin: !s.loading && s.screen === 'admin',
       custoFixoFmt: this.fmt(custoFixo), patrimonioFmt: this.fmt(patrimonio),
       goConfigLink: () => this.go('config')
     };
@@ -1887,6 +1981,23 @@ class Component extends DCLogic {
     vals.cfgPatrimonio = invAtivos.map(a => mkCfg(a, 'patrimonioExcl', !(db.config.patrimonioExcl || []).includes(a.id)));
     vals.cfgReserva = db.contas.filter(a => a.ativo).map(a => mkCfg(a, 'reservaIds', (db.config.reservaIds || []).includes(a.id)));
 
+    // ---- Admin ----
+    vals.adminLoading = !!s.adminLoading;
+    const fmtDt = ts => { if (!ts) return '—'; try { const d = new Date(ts); return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return '—'; } };
+    const au = (s.adminUsers || []);
+    vals.adminPend = au.filter(u => !u.approved).map(u => ({ nome: u.name || '—', email: u.email || '—', created: fmtDt(u.created_at), approve: () => this.approveUser(u.id), del: () => this.delAdminUser(u.id, u.name || u.email || 'usuário') }));
+    vals.adminPendEmpty = vals.adminPend.length === 0;
+    vals.adminPendCount = String(vals.adminPend.length);
+    vals.adminEmpty = au.length === 0;
+    vals.adminUsers = au.map(u => ({
+      nome: u.name || '—', email: u.email || '—', created: fmtDt(u.created_at), last: fmtDt(u.last_login),
+      statusLabel: u.role === 'admin' ? 'Admin' : (u.approved ? 'Ativo' : 'Pendente'),
+      statusBg: u.role === 'admin' ? 'var(--accent-soft)' : (u.approved ? 'var(--green-soft)' : 'var(--amber-soft)'),
+      statusFg: u.role === 'admin' ? 'var(--accent)' : (u.approved ? 'var(--green)' : 'var(--amber)'),
+      canApprove: !u.approved, canDelete: u.role !== 'admin',
+      approve: () => this.approveUser(u.id), reset: () => this.resetUserPwd(u.id, u.name || u.email || 'usuário'), del: () => this.delAdminUser(u.id, u.name || u.email || 'usuário')
+    }));
+
     // ---- Modal ----
     const m = s.modal;
     vals.modalOpen = !!m;
@@ -1938,7 +2049,7 @@ class Component extends DCLogic {
             };
           });
         } else {
-          field.isInput = true; field.itype = f.t === 'number' ? 'number' : f.t === 'date' ? 'date' : 'text';
+          field.isInput = true; field.itype = f.t === 'number' ? 'number' : f.t === 'date' ? 'date' : f.t === 'password' ? 'password' : 'text';
           field.value = v == null ? '' : v; field.ph = f.ph || '';
           field.on = e => this.setDraft(f.k, e.target.value);
         }

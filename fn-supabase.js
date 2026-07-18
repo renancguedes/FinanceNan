@@ -1,5 +1,5 @@
 /*!
- * fn-supabase.js - Camada de dados do FinanceNan via Supabase (v1.0.1)
+ * fn-supabase.js - Camada de dados do FinanceNan via Supabase (v1.1.0)
  * ---------------------------------------------------------------------------
  * Substitui o backend Fastify: o front fala DIRETO com o Supabase
  * (supabase-js + Supabase Auth + RLS). Sem API própria.
@@ -60,7 +60,7 @@
   };
   var ORDER = ['contas', 'catalogo', 'cartoes', 'categorias', 'fontes', 'planejamentos', 'fixos', 'receitas', 'despesas'];
 
-  var currentEmail = null, currentUid = null, prev = {}, syncing = false, pendingNext = null;
+  var currentEmail = null, currentUid = null, currentRole = 'user', prev = {}, syncing = false, pendingNext = null;
   var K_WHO = 'fn_sb_who';
 
   // ---- hydrate: baixa todas as coleções do Supabase para o estado do app ----
@@ -137,14 +137,31 @@
   // ---- AUTH (Supabase) ------------------------------------------------------
   function metaName(u) { return (u && u.user_metadata && u.user_metadata.name) || (u && u.email) || ''; }
 
+  // Garante um perfil (fn_profiles) para o usuário; cria como PENDENTE se nao existir.
+  function ensureProfile(uid, email, name) {
+    return sb.from('fn_profiles').select('*').eq('id', uid).limit(1).then(function (r) {
+      if (!r.error && r.data && r.data[0]) return r.data[0];
+      return sb.from('fn_profiles').insert({ id: uid, email: email, name: name }).select('*').then(function (ins) {
+        if (!ins.error && ins.data && ins.data[0]) return ins.data[0];
+        return sb.from('fn_profiles').select('*').eq('id', uid).limit(1).then(function (r2) { return (r2.data && r2.data[0]) || null; });
+      });
+    });
+  }
   function authLogin(email, password) {
     email = (email || '').trim().toLowerCase();
     return sb.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
       if (res.error || !res.data || !res.data.user) return { ok: false, status: 401, message: 'E-mail ou senha inválidos.' };
-      currentEmail = email; currentUid = res.data.user.id; og.set(K_WHO, email);
-      syncing = true;
-      return hydrate(email).then(function () { syncing = false; return { ok: true, status: 200, user: { name: metaName(res.data.user), email: email } }; })
-        .catch(function () { syncing = false; return { ok: true, status: 200, user: { name: email, email: email } }; });
+      var uid = res.data.user.id;
+      return ensureProfile(uid, email, metaName(res.data.user)).then(function (prof) {
+        if (!prof) return sb.auth.signOut().then(function () { return { ok: false, status: 403, message: 'Não foi possível verificar seu cadastro. Tente de novo.' }; });
+        if (!prof.approved) return sb.auth.signOut().then(function () { og.del(K_WHO); currentUid = null; return { ok: false, status: 403, pending: true, message: 'Seu cadastro está aguardando aprovação do administrador.' }; });
+        currentEmail = email; currentUid = uid; currentRole = prof.role || 'user'; og.set(K_WHO, email);
+        window.__FN_IS_ADMIN = (currentRole === 'admin');
+        sb.from('fn_profiles').update({ last_login: new Date().toISOString() }).eq('id', uid).then(function () {});
+        syncing = true;
+        return hydrate(email).then(function () { syncing = false; return { ok: true, status: 200, admin: currentRole === 'admin', user: { name: prof.name || metaName(res.data.user), email: email } }; })
+          .catch(function () { syncing = false; return { ok: true, status: 200, admin: currentRole === 'admin', user: { name: email, email: email } }; });
+      });
     }).catch(function () { return { ok: false, status: 0 }; });
   }
 
@@ -156,19 +173,42 @@
         if (/registered|already/i.test(m)) return { ok: false, status: 409, message: 'Este e-mail já possui cadastro.' };
         return { ok: false, status: 400, message: m || 'Não foi possível concluir o cadastro.' };
       }
-      if (!res.data.session) { // confirmação de e-mail ligada no Supabase
-        return { ok: false, status: 200, message: 'Enviamos um e-mail de confirmação. Confirme para ativar a conta e então entre.' };
+      if (!res.data.session || !res.data.user) {
+        return { ok: false, status: 200, pending: true, message: 'Solicitação de cadastro enviada ao administrador. Se pedirem confirmação de e-mail, confirme; depois aguarde a liberação.' };
       }
-      currentEmail = email; currentUid = res.data.user.id; og.set(K_WHO, email);
-      syncing = true;
-      return hydrate(email).then(function () { syncing = false; return { ok: true, status: 201, user: { name: name, email: email } }; })
-        .catch(function () { syncing = false; return { ok: true, status: 201, user: { name: name, email: email } }; });
+      var uid = res.data.user.id;
+      // cria o perfil (pendente por padrão) e desloga: cadastro precisa de aprovação do admin.
+      return ensureProfile(uid, email, name).then(function (prof) {
+        return sb.auth.signOut().then(function () {
+          og.del(K_WHO); currentUid = null; currentEmail = null;
+          if (prof && prof.approved) return { ok: false, status: 200, pending: true, message: 'Cadastro criado e já aprovado — faça login para entrar.' };
+          return { ok: false, status: 200, pending: true, message: 'Solicitação de cadastro enviada ao administrador. Você poderá entrar assim que for aprovado.' };
+        });
+      });
     }).catch(function () { return { ok: false, status: 0 }; });
   }
 
   function logout() { try { sb.auth.signOut(); } catch (e) {} currentEmail = null; currentUid = null; prev = {}; pendingNext = null; og.del(K_WHO); }
 
   window.FNAuth = { login: authLogin, register: authRegister, logout: logout };
+
+  // ---- API ADMIN ------------------------------------------------------------
+  function edgeCall(action, payload) {
+    return sb.auth.getSession().then(function (sess) {
+      var token = sess.data && sess.data.session && sess.data.session.access_token;
+      return fetch(URL + '/functions/v1/admin-actions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': ANON }, body: JSON.stringify(Object.assign({ action: action }, payload || {})) })
+        .then(function (r) { return r.text().then(function (t) { var d = null; try { d = t ? JSON.parse(t) : null; } catch (e) {} return { ok: r.ok, status: r.status, data: d }; }); });
+    });
+  }
+  window.FNAdmin = {
+    isAdmin: function () { return currentRole === 'admin'; },
+    listUsers: function () { return sb.from('fn_profiles').select('*').order('created_at', { ascending: true }).then(function (r) { return r.error ? [] : (r.data || []); }); },
+    pendingCount: function () { return sb.from('fn_profiles').select('id', { count: 'exact', head: true }).eq('approved', false).then(function (r) { return r.count || 0; }); },
+    approve: function (id) { return sb.from('fn_profiles').update({ approved: true }).eq('id', id).then(function (r) { return !r.error; }); },
+    resetPassword: function (id) { return edgeCall('reset_password', { userId: id }).then(function (r) { return (r.ok && r.data) ? (r.data.password || null) : null; }); },
+    deleteUser: function (id) { return edgeCall('delete_user', { userId: id }).then(function (r) { return r.ok; }); },
+    changeMyPassword: function (pwd) { return sb.auth.updateUser({ password: pwd }).then(function (r) { return !r.error; }); }
+  };
 
   // ---- LOADING SCREEN --------------------------------------------------------
   var FN_LOADER_CSS = '#fn-loading{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;background:var(--bg,#151019);color:var(--text,#e9e4ef);font-family:Manrope,system-ui,sans-serif;opacity:1;transition:opacity .35s ease}#fn-loading.fn-hide{opacity:0;pointer-events:none}#fn-loading .fn-spin{width:46px;height:46px;border-radius:50%;border:4px solid rgba(140,110,200,.25);border-top-color:var(--accent,#8c6ec8);animation:fn-spin .9s linear infinite}#fn-loading .fn-msg{font-size:15px;font-weight:600;opacity:.85}@keyframes fn-spin{to{transform:rotate(360deg)}}';
@@ -186,7 +226,12 @@
       self.setState({ authError: '', authMsg: '', loading: true }); showLoader('Entrando…');
       authLogin(email, pass).then(function (res) {
         self.setState({ loading: false }); hideLoader();
-        if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); return; }
+        if (res && res.ok) {
+          self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email));
+          if (res.admin && window.FNAdmin) { window.FNAdmin.pendingCount().then(function (n) { if (n > 0 && typeof self.toast === 'function') self.toast(n + ' solicitação(ões) de acesso aguardando aprovação — veja em Admin.', 'warn'); }); }
+          return;
+        }
+        if (res && res.pending) { self.setState({ authMsg: res.message, authError: '' }); return; }
         if (res && res.status === 401) { self.setState({ authError: 'E-mail ou senha inválidos.' }); return; }
         self.setState({ authError: (res && res.message) || 'Sem conexão. Tente novamente.' });
       });
@@ -194,7 +239,7 @@
     inst.doCadastro = function () {
       var self = inst; var name = (self.state.authName || '').trim(); var email = (self.state.authEmail || '').trim().toLowerCase(); var pass = self.state.authPass || '';
       if (!name || email.indexOf('@') < 0 || pass.length < 6) { self.setState({ authError: 'Preencha nome, e-mail válido e senha (mín. 6).' }); return; }
-      self.setState({ authError: '', authMsg: '', loading: true }); showLoader('Criando sua conta…');
+      self.setState({ authError: '', authMsg: '', loading: true }); showLoader('Enviando solicitação…');
       authRegister(name, email, pass).then(function (res) {
         self.setState({ loading: false }); hideLoader();
         if (res && res.ok) { self.enter({ name: res.user.name, email: email, visitor: false }, self.loadDB(email)); return; }
@@ -315,6 +360,6 @@
   var _sq = false; function queueSync() { if (_sq) return; _sq = true; requestAnimationFrame(function () { _sq = false; ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser(); }); }
   try { new MutationObserver(queueSync).observe(HTML, { childList: true, subtree: true }); } catch (e) {}
 
-  window.__FN_SUPABASE_VER = '1.0.1';
-  log('carregado v1.0.1, url=', URL);
+  window.__FN_SUPABASE_VER = '1.1.0';
+  log('carregado v1.1.0, url=', URL);
 })();

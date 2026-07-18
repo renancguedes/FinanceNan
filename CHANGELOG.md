@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.2.0 - 2026-07-18
+- controle de acesso e admin: cadastro deixa de ser aberto. Ao se cadastrar, o usuário recebe "Solicitação de cadastro enviada ao administrador" e fica bloqueado até aprovação (login retorna `pending` e faz signOut enquanto não aprovado)
+- nova tabela `fn_profiles` (name, email, role, approved, created_at, last_login) + função `fn_is_admin()` (security definer) + trigger `fn_profiles_guard()` que impede não-admins de se auto-aprovarem/promoverem; RLS por usuário e admin. Bootstrap do admin: renanguedesrdg@gmail.com (role=admin, approved=true)
+- nova opção de menu "Admin" (só visível para admin): lista solicitações pendentes (Permitir acesso / Recusar) e todos os usuários com nome, e-mail, data de cadastro e último login, com botões "Resetar senha" e "Excluir"
+- pop-up ao admin logar quando há solicitações pendentes
+- ações privilegiadas (resetar senha real / excluir conta em auth.users) via Supabase Edge Function `admin-actions` (Deno, usa service_role no servidor; valida se o chamador é admin; nunca expõe a service_role no front)
+- nova opção de menu "Alterar senha" para o usuário trocar a própria senha
+- `fn-supabase.js`: `ensureProfile`, gate de aprovação no login, cadastro como solicitação, `edgeCall` e `window.FNAdmin` (isAdmin/listUsers/pendingCount/approve/resetPassword/deleteUser/changeMyPassword)
+
 ## v1.1.0 - 2026-07-18
 - planejamento: novo botão "Metas padrão" que cadastra/ajusta as 6 metas recomendadas (Liberdade Financeira 25%, Custos Fixos 30%, Conforto 15%, Metas 15%, Prazeres 10%, Conhecimento 5%) — não apaga categorias personalizadas, só garante essas com o % correto
 - planejamento: ao alternar a visualização Percentual <-> Valor, os números agora se convertem acompanhando a renda (ex.: 25% de R$7.900 vira R$1.975 em "Valor"; ao editar o valor e voltar para "%", o percentual é recalculado). Sem perda de precisão ao alternar
