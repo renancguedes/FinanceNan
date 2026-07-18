@@ -52,4 +52,3 @@ export function summarizeInvoice(items: { valor: number; paga: boolean }[]): {
   const pago = items.filter((e) => e.paga).reduce((s, e) => s + e.valor, 0);
   return { fatura, pago, aberto: fatura - pago };
 }
-}

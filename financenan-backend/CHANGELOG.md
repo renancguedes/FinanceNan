@@ -2,6 +2,10 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/) e versionamento numérico `major.minor.patch`.
 
+## 0.2.1 — 2026-07-18
+
+- corrige chave de fechamento `}` extra em `src/domain/finance.ts` (função `summarizeInvoice`) que quebrava o `tsc build` e, principalmente, o bundle da função serverless na Vercel — causando o backend não responder ("Sem conexão com o servidor" no login). App volta a bootar e todas as rotas respondem.
+
 ## 0.2.0 — 2026-07-12
 
 - Documentação **OpenAPI 3.0** completa (`src/docs/openapi.ts`) servida como **Swagger UI em `/docs`**
