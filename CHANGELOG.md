@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.1.0 - 2026-07-18
+- planejamento: novo botão "Metas padrão" que cadastra/ajusta as 6 metas recomendadas (Liberdade Financeira 25%, Custos Fixos 30%, Conforto 15%, Metas 15%, Prazeres 10%, Conhecimento 5%) — não apaga categorias personalizadas, só garante essas com o % correto
+- planejamento: ao alternar a visualização Percentual <-> Valor, os números agora se convertem acompanhando a renda (ex.: 25% de R$7.900 vira R$1.975 em "Valor"; ao editar o valor e voltar para "%", o percentual é recalculado). Sem perda de precisão ao alternar
+
 ## v1.0.2 - 2026-07-18
 - corrige o index.html que estava TRUNCADO no fim (o dc-script perdeu o fechamento do bloco `else`, `return vals`, e as tags de fechamento) — causava "Root: Unexpected token ')'" e o app não abria. Fim restaurado a partir da history do GitHub; dc-script com chaves/parênteses equilibrados novamente. (A truncagem veio de uma edição in-place na pasta sincronizada; a anon key e o restante ficaram intactos.)
 

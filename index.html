@@ -376,6 +376,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                     <button onClick="{{setModePct}}" style="padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{modePctBg}};color:{{modePctFg}}">Percentual</button>
                     <button onClick="{{setModeAbs}}" style="padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{modeAbsBg}};color:{{modeAbsFg}}">Valor</button>
                   </div>
+                  <button onClick="{{setDefaultMetas}}" title="Aplicar metas padrão (25/30/15/15/10/5)" style="padding:6px 12px;border-radius:9px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap" style-hover="background:var(--accent);color:var(--on-accent)">Metas padrão</button>
                   <button onClick="{{addCategoria}}" style="width:30px;height:30px;border-radius:9px;border:1px dashed var(--border2);background:none;color:var(--accent);cursor:pointer;font-size:17px;line-height:1" style-hover="border-color:var(--accent);background:var(--accent-soft);transform:scale(1.08)">+</button>
                 </div>
               </div>
@@ -1455,6 +1456,28 @@ class Component extends DCLogic {
     c.abs = this.parseNum(v);
     this.commit(db);
   }
+  switchDistMode(mode) {
+    const s = this.state;
+    const renda = s.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const db = JSON.parse(JSON.stringify(s.db));
+    if (mode === 'abs') db.categorias.forEach(c => { c.abs = Math.round((renda * (c.pct || 0) / 100) * 100) / 100; });
+    else db.categorias.forEach(c => { c.pct = renda > 0 ? Math.round((c.abs || 0) / renda * 100) : 0; });
+    this.commit(db);
+    this.setState({ distMode: mode });
+  }
+  setDefaultMetas() {
+    const defs = [{ nome: 'Liberdade Financeira', pct: 25 }, { nome: 'Custos Fixos', pct: 30 }, { nome: 'Conforto', pct: 15 }, { nome: 'Metas', pct: 15 }, { nome: 'Prazeres', pct: 10 }, { nome: 'Conhecimento', pct: 5 }];
+    const s = this.state;
+    const renda = s.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const db = JSON.parse(JSON.stringify(s.db));
+    defs.forEach(d => {
+      const abs = Math.round((renda * d.pct / 100) * 100) / 100;
+      let c = db.categorias.find(x => (x.nome || '').trim().toLowerCase() === d.nome.toLowerCase());
+      if (c) { c.pct = d.pct; c.abs = abs; } else db.categorias.push({ id: this.uid(), nome: d.nome, pct: d.pct, abs: abs });
+    });
+    this.commit(db);
+    this.toast('Metas padrão aplicadas.');
+  }
   toggleCfg(listKey, id) {
     const db = JSON.parse(JSON.stringify(this.state.db));
     const arr = db.config[listKey] || [];
@@ -1649,8 +1672,8 @@ class Component extends DCLogic {
     vals.addFonte = () => this.openModal('fonte', null);
     vals.importFixos = () => this.openModal('importFixos', null);
     vals.modePct = s.distMode === 'pct'; vals.modeAbs = s.distMode === 'abs';
-    vals.setModePct = () => this.setState({ distMode: 'pct' });
-    vals.setModeAbs = () => this.setState({ distMode: 'abs' });
+    vals.setModePct = () => this.switchDistMode('pct');
+    vals.setModeAbs = () => this.switchDistMode('abs');
     vals.modePctBg = vals.modePct ? 'var(--surface)' : 'transparent'; vals.modePctFg = vals.modePct ? 'var(--text)' : 'var(--text2)';
     vals.modeAbsBg = vals.modeAbs ? 'var(--surface)' : 'transparent'; vals.modeAbsFg = vals.modeAbs ? 'var(--text)' : 'var(--text2)';
     const somaPct = db.categorias.reduce((t, c) => t + (c.pct || 0), 0);
@@ -1675,6 +1698,7 @@ class Component extends DCLogic {
       del: () => this.del('categorias', c.id, 'Excluir a categoria "' + c.nome + '"? Os planejamentos dela também serão removidos.', (dbb) => { dbb.planejamentos = dbb.planejamentos.filter(p => p.catId !== c.id); })
     }));
     vals.addCategoria = () => this.openModal('categoria', null);
+    vals.setDefaultMetas = () => this.setDefaultMetas();
     vals.planCards = db.categorias.map((c, i) => {
       const orc = catBudget(c);
       const itens = db.planejamentos.filter(p => p.catId === c.id);
