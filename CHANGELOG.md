@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.2 - 2026-07-18
+- corrige o index.html que estava TRUNCADO no fim (o dc-script perdeu o fechamento do bloco `else`, `return vals`, e as tags de fechamento) — causava "Root: Unexpected token ')'" e o app não abria. Fim restaurado a partir da history do GitHub; dc-script com chaves/parênteses equilibrados novamente. (A truncagem veio de uma edição in-place na pasta sincronizada; a anon key e o restante ficaram intactos.)
+
 ## v1.0.1 - 2026-07-18
 - mobile: botão do menu (☰) passa a usar o roxo da identidade do app (lido do tema, funciona em light/dark) — antes ficava escuro por estar fora do container temático
 - mobile: itens do menu alinhados à esquerda (corrige o `justify-content:center` herdado do CSS antigo)

@@ -1922,4 +1922,11 @@ class Component extends DCLogic {
       });
       vals.modalSubmit = this.submitModal;
       vals.modalClose = this.closeModal;
-    } else { vals.modalFields = []; val
+    } else { vals.modalFields = []; vals.modalTitle = ''; vals.modalHint = false; vals.modalSubmitLabel = 'Salvar'; vals.modalClose = () => {}; vals.modalSubmit = () => {}; }
+
+      return vals;
+    }
+  }
+</script>
+</body>
+</html>
