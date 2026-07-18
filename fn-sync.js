@@ -1,5 +1,5 @@
 /*!
- * fn-sync.js - Integracao FinanceNan (v0.8.1)
+ * fn-sync.js - Integracao FinanceNan (v0.9.0)
  * ---------------------------------------------------------------------------
  * BANCO COMO FONTE DA VERDADE (usuario logado): cada alteracao do app e gravada
  * no backend e re-baixada a cada login (hydrate). Modo visitante = 100% local.
@@ -525,15 +525,23 @@
     'html.fn-mobile [style*="linear-gradient(160deg"][style*="flex: 1.1"]{display:none!important}',
     // Tela de LOGIN: empilha o painel de marketing acima do formulario (escopo restrito).
     'html.fn-mobile .auth-wrap{flex-direction:column!important;min-height:auto!important}',
-    // App shell: mantem layout em LINHA no mobile; a sidebar vira um trilho compacto de icones.
-    // (Sem isso, a <aside> com height:100vh ocupava a tela inteira e so o menu aparecia.)
-    'html.fn-mobile .app-sidebar{width:64px!important;padding:14px 8px!important}',
-    'html.fn-mobile .app-sidebar .sb-logo{justify-content:center!important;padding:6px 0!important}',
-    'html.fn-mobile .app-sidebar .sb-logo-text{display:none!important}',
-    'html.fn-mobile .app-sidebar nav button{justify-content:center!important;padding:11px 0!important}',
-    'html.fn-mobile .app-sidebar nav button span{display:none!important}',
-    'html.fn-mobile .app-sidebar .sb-toggle{justify-content:center!important;padding:11px 0!important}',
-    'html.fn-mobile .app-sidebar .sb-toggle span{display:none!important}',
+    // App shell no mobile: a sidebar vira um DRAWER off-canvas (escondido ate abrir no botao ☰).
+    'html.fn-mobile .app-sidebar{position:fixed!important;top:0!important;left:0!important;height:100vh!important;width:262px!important;max-width:84vw!important;z-index:1000!important;transform:translateX(-100%);transition:transform .28s ease;box-shadow:0 10px 44px rgba(0,0,0,.4)}',
+    'html.fn-drawer-open .app-sidebar{transform:translateX(0)!important}',
+    // No drawer os rotulos ficam sempre visiveis; o botao \'Recolher\' nao faz sentido aqui.
+    'html.fn-mobile .app-sidebar .sb-logo-text,html.fn-mobile .app-sidebar nav button span{display:inline!important}',
+    'html.fn-mobile .app-sidebar .sb-toggle{display:none!important}',
+    // Backdrop escurecido atras do drawer.
+    '#fn-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;opacity:0;visibility:hidden;transition:opacity .25s}',
+    'html.fn-drawer-open #fn-drawer-backdrop{opacity:1;visibility:visible}',
+    // Botao hamburguer flutuante: aparece so no app (nao no login) e no mobile.
+    '#fn-hamb{display:none;position:fixed;top:9px;left:10px;z-index:1001;width:42px;height:42px;border-radius:12px;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,.2);cursor:pointer;padding:0}',
+    'html.fn-mobile.fn-app #fn-hamb{display:flex}',
+    'html.fn-mobile.fn-app .app-header{padding-left:62px!important}',
+    // Numeros grandes encolhem um pouco em telas pequenas.
+    'html.fn-mobile [style*="font-size: 30px"]{font-size:24px!important}',
+    'html.fn-mobile [style*="font-size: 26px"]{font-size:22px!important}',
+    'html.fn-mobile [style*="font-size: 24px"]{font-size:21px!important}',
     // Grids multi-coluna viram 1 coluna no celular.
     'html.fn-mobile [style*="repeat(3,1fr)"],',
     'html.fn-mobile [style*="repeat(3, 1fr)"],',
@@ -556,6 +564,40 @@
     'html.fn-mobile [role="dialog"]{max-width:96vw!important}',
     'html.fn-tablet [style*="repeat(3,1fr)"],html.fn-tablet [style*="repeat(3, 1fr)"]{grid-template-columns:1fr 1fr!important}'
   ].join('\n');
+  // ---- DRAWER (menu mobile) ------------------------------------------------
+  var HTML = document.documentElement;
+  function openDrawer() { HTML.classList.add('fn-drawer-open'); }
+  function closeDrawer() { HTML.classList.remove('fn-drawer-open'); }
+  function toggleDrawer() { HTML.classList.toggle('fn-drawer-open'); }
+  function ensureDrawerEls() {
+    try {
+      if (!document.body) return;
+      if (!document.getElementById('fn-drawer-backdrop')) {
+        var bd = document.createElement('div'); bd.id = 'fn-drawer-backdrop';
+        bd.addEventListener('click', closeDrawer);
+        document.body.appendChild(bd);
+      }
+      if (!document.getElementById('fn-hamb')) {
+        var h = document.createElement('button'); h.id = 'fn-hamb'; h.type = 'button';
+        h.setAttribute('aria-label', 'Abrir menu');
+        h.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>';
+        h.addEventListener('click', function (e) { e.stopPropagation(); toggleDrawer(); });
+        document.body.appendChild(h);
+      }
+    } catch (e) { log('drawer els err', e && e.message); }
+  }
+  function syncAppState() {
+    var hasApp = !!document.querySelector('.app-sidebar');
+    HTML.classList.toggle('fn-app', hasApp);
+    if (!hasApp) closeDrawer();
+  }
+  // Fecha o drawer ao escolher uma opcao do menu (e com ESC / clique fora).
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t && t.closest && t.closest('.app-sidebar nav button')) { setTimeout(closeDrawer, 20); }
+  }, true);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
+
   function applyResponsive() {
     try {
       if (!document.getElementById('fn-responsive-style')) {
@@ -563,15 +605,23 @@
         (document.head || document.documentElement).appendChild(st);
       }
       var w = window.innerWidth;
-      document.documentElement.classList.toggle('fn-mobile', w <= 820);
-      document.documentElement.classList.toggle('fn-tablet', w > 820 && w <= 1100);
+      HTML.classList.toggle('fn-mobile', w <= 820);
+      HTML.classList.toggle('fn-tablet', w > 820 && w <= 1100);
+      if (w > 820) closeDrawer();
+      ensureDrawerEls();
+      syncAppState();
     } catch (e) { log('responsive err', e && e.message); }
   }
   applyResponsive();
   window.addEventListener('resize', applyResponsive);
   window.addEventListener('orientationchange', applyResponsive);
-  document.addEventListener('DOMContentLoaded', applyResponsive);
+  document.addEventListener('DOMContentLoaded', function () { ensureDrawerEls(); applyResponsive(); });
+  // O app (dc-runtime) re-renderiza; observamos o DOM para detectar quando a tela
+  // do app monta/desmonta (login/logout) e manter o hamburguer coerente.
+  var _sq = false;
+  function queueSync() { if (_sq) return; _sq = true; requestAnimationFrame(function () { _sq = false; ensureDrawerEls(); syncAppState(); }); }
+  try { new MutationObserver(queueSync).observe(HTML, { childList: true, subtree: true }); } catch (e) {}
 
-  window.__FN_SYNC_VER = '0.8.1';
-  log('carregado v0.8.1, API=', API);
+  window.__FN_SYNC_VER = '0.9.0';
+  log('carregado v0.9.0, API=', API);
 })();

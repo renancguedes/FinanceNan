@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.0 - 2026-07-18
+- menu lateral vira um DRAWER no celular: fica oculto por padrão e abre por cima ao tocar no botão ☰ (flutuante, canto superior esquerdo), com backdrop escurecido
+- o drawer fecha automaticamente ao escolher uma opção do menu, ao tocar fora (backdrop) ou com ESC — liberando a largura inteira da tela para o conteúdo (resolve a sensação de layout "apertado")
+- rótulos do menu ficam sempre visíveis no drawer; o botão "Recolher" (desktop) é ocultado no mobile
+- ajuste de tamanhos: números grandes do dashboard encolhem em telas pequenas (30→24, 26→22, 24→21px)
+- implementado 100% no fn-sync.js (CSS + JS com MutationObserver para detectar login/logout), sem tocar na lógica do app; cache-buster do index.html para ?v=0.9.0
+
 ## v0.8.1 - 2026-07-18
 - corrige regressão de responsividade no celular: a regra de empilhamento do fn-sync (`min-height:100vh` + `display:flex` → coluna) atingia também o shell do app, fazendo a sidebar (`height:100vh`) ocupar a tela inteira e esconder o conteúdo (só o menu aparecia)
 - o empilhamento agora fica restrito à tela de login (`.auth-wrap`); no app o layout permanece em linha e a sidebar vira um trilho compacto de ícones no mobile
