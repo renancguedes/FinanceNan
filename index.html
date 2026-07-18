@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="./support.js"></script>
-<script src="./fn-sync.js?v=0.9.0"></script>
+<!-- Supabase (banco + auth direto do front). A anon key e PUBLICA (protegida por RLS). -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
+  window.FN_SUPABASE_ANON = 'COLE_AQUI_SUA_ANON_KEY'; /* <-- Supabase > Settings > API Keys > "anon public" */
+</script>
+<script src="./fn-supabase.js?v=1.0.0"></script>
 </head>
 <body>
 <x-dc>

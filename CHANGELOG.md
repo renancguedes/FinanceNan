@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.0 - 2026-07-18
+- migra a camada de dados do app para o **Supabase direto** (supabase-js + Supabase Auth + RLS), aposentando a API Fastify/Vercel: o front passa a ler/gravar direto no banco, com políticas de segurança por usuário
+- novo `fn-supabase.js` (substitui o `fn-sync.js`): login/cadastro via Supabase Auth, hydrate e gravação (upsert/delete) por coleção usando os ids do próprio app como PK, conversão reais↔centavos, tela de carregamento e o drawer mobile v0.9.0 portados
+- novo `supabase-schema.sql`: 10 tabelas `fn_*` com `user_id uuid default auth.uid()` e RLS + política por usuário
+- `index.html`: carrega o supabase-js (CDN) + config (URL do projeto e anon key) e passa a usar `fn-supabase.js?v=1.0.0`
+
 ## v0.9.0 - 2026-07-18
 - menu lateral vira um DRAWER no celular: fica oculto por padrão e abre por cima ao tocar no botão ☰ (flutuante, canto superior esquerdo), com backdrop escurecido
 - o drawer fecha automaticamente ao escolher uma opção do menu, ao tocar fora (backdrop) ou com ESC — liberando a largura inteira da tela para o conteúdo (resolve a sensação de layout "apertado")
