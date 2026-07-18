@@ -1,5 +1,5 @@
 /*!
- * fn-supabase.js - Camada de dados do FinanceNan via Supabase (v1.0.0)
+ * fn-supabase.js - Camada de dados do FinanceNan via Supabase (v1.0.1)
  * ---------------------------------------------------------------------------
  * Substitui o backend Fastify: o front fala DIRETO com o Supabase
  * (supabase-js + Supabase Auth + RLS). Sem API própria.
@@ -234,9 +234,23 @@
     'html.fn-mobile .app-sidebar .sb-toggle{display:none!important}',
     '#fn-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;opacity:0;visibility:hidden;transition:opacity .25s}',
     'html.fn-drawer-open #fn-drawer-backdrop{opacity:1;visibility:visible}',
-    '#fn-hamb{display:none;position:fixed;top:9px;left:10px;z-index:1001;width:42px;height:42px;border-radius:12px;align-items:center;justify-content:center;background:var(--surface);border:1px solid var(--border);color:var(--text);box-shadow:0 2px 12px rgba(0,0,0,.2);cursor:pointer;padding:0}',
+    '#fn-hamb{display:none;position:fixed;top:9px;left:10px;z-index:1001;width:44px;height:44px;border-radius:12px;align-items:center;justify-content:center;background:#7c5cbf;border:none;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.28);cursor:pointer;padding:0}',
     'html.fn-mobile.fn-app #fn-hamb{display:flex}',
     'html.fn-mobile.fn-app .app-header{padding-left:62px!important}',
+    // Menu: itens alinhados a esquerda (sobrepoe o center do CSS antigo <=760).
+    'html.fn-mobile .app-sidebar nav button{justify-content:flex-start!important;padding:10px 14px!important;gap:12px!important;text-align:left!important}',
+    'html.fn-mobile .app-sidebar .sb-logo{justify-content:flex-start!important;padding:6px 10px!important}',
+    // Header reorganizado: titulo + toggle na 1a linha, mes/ano centralizado na 2a; user vai pro menu.
+    'html.fn-mobile.fn-app .app-header{flex-wrap:wrap!important;row-gap:10px!important;align-items:center!important}',
+    'html.fn-mobile .app-header .app-title{order:0!important;flex:1 1 auto!important;min-width:0!important}',
+    'html.fn-mobile .app-header .fn-theme{order:1!important}',
+    'html.fn-mobile .app-header .fn-month{order:2!important;flex:1 1 100%!important;justify-content:center!important}',
+    'html.fn-mobile .app-header .fn-user-block{display:none!important}',
+    // Rodape do menu: nome do usuario + Sair.
+    '#fn-drawer-user{display:none}',
+    'html.fn-mobile .app-sidebar #fn-drawer-user{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding:12px 8px;border-top:1px solid var(--border)}',
+    '#fn-drawer-user .fn-du-name{font-weight:700;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+    '#fn-drawer-user .fn-du-sair{background:none;border:1px solid var(--border);border-radius:9px;padding:7px 14px;color:var(--text2);font-weight:700;font-size:12px;cursor:pointer;flex:none}',
     'html.fn-mobile [style*="font-size: 30px"]{font-size:24px!important}',
     'html.fn-mobile [style*="font-size: 26px"]{font-size:22px!important}',
     'html.fn-mobile [style*="font-size: 24px"]{font-size:21px!important}',
@@ -258,20 +272,49 @@
       if (!document.getElementById('fn-hamb')) { var h = document.createElement('button'); h.id = 'fn-hamb'; h.type = 'button'; h.setAttribute('aria-label', 'Abrir menu'); h.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>'; h.addEventListener('click', function (e) { e.stopPropagation(); toggleDrawer(); }); document.body.appendChild(h); }
     } catch (e) {} }
   function syncAppState() { var hasApp = !!document.querySelector('.app-sidebar'); HTML.classList.toggle('fn-app', hasApp); if (!hasApp) closeDrawer(); }
+
+  function themeAccent() { try { var root = document.querySelector('[data-theme]'); if (root) { var a = getComputedStyle(root).getPropertyValue('--accent'); if (a && a.trim()) return a.trim(); } } catch (e) {} return '#7c5cbf'; }
+  function applyHambColor() { var h = document.getElementById('fn-hamb'); if (h) { h.style.background = themeAccent(); h.style.color = '#fff'; } }
+  function headerSairBtn() { var hdr = document.querySelector('.app-header'); if (!hdr) return null; return [].slice.call(hdr.querySelectorAll('button')).filter(function (b) { return /^sair$/i.test((b.textContent || '').trim()); })[0] || null; }
+  function tagHeader() {
+    try {
+      var header = document.querySelector('.app-header'); if (!header) return;
+      var tt = header.querySelector('button[title="Alternar tema"]'); if (tt) tt.classList.add('fn-theme');
+      var sair = headerSairBtn();
+      if (sair) { var blk = sair; while (blk.parentElement && blk.parentElement !== header) blk = blk.parentElement; if (blk !== header) blk.classList.add('fn-user-block'); }
+      [].slice.call(header.children).forEach(function (c) { if (c.classList && (c.classList.contains('app-title') || c.classList.contains('fn-user-block') || c.classList.contains('fn-theme'))) return; if (/\b(19|20)\d{2}\b/.test(c.textContent || '')) c.classList.add('fn-month'); });
+    } catch (e) {}
+  }
+  function drawerUser() {
+    try {
+      var sidebar = document.querySelector('.app-sidebar'); if (!sidebar) return;
+      var sair = headerSairBtn(); var name = '';
+      if (sair && sair.parentElement) { var nd = sair.parentElement.querySelector('div'); if (nd) name = (nd.textContent || '').trim(); }
+      var f = document.getElementById('fn-drawer-user');
+      if (!f) {
+        f = document.createElement('div'); f.id = 'fn-drawer-user';
+        var nm = document.createElement('div'); nm.className = 'fn-du-name';
+        var bt = document.createElement('button'); bt.className = 'fn-du-sair'; bt.type = 'button'; bt.textContent = 'Sair';
+        bt.addEventListener('click', function () { closeDrawer(); var sb = headerSairBtn(); if (sb) { sb.click(); } else { try { if (window.FNAuth) window.FNAuth.logout(); } catch (e) {} setTimeout(function () { location.reload(); }, 60); } });
+        f.appendChild(nm); f.appendChild(bt); sidebar.appendChild(f);
+      }
+      var nmEl = f.querySelector('.fn-du-name'); if (nmEl) nmEl.textContent = name || 'Minha conta';
+    } catch (e) {}
+  }
   document.addEventListener('click', function (e) { var t = e.target; if (t && t.closest && t.closest('.app-sidebar nav button')) setTimeout(closeDrawer, 20); }, true);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDrawer(); });
   function applyResponsive() {
     try { if (!document.getElementById('fn-responsive-style')) { var st = document.createElement('style'); st.id = 'fn-responsive-style'; st.textContent = FN_RESP_CSS; (document.head || document.documentElement).appendChild(st); }
       var w = window.innerWidth; HTML.classList.toggle('fn-mobile', w <= 820); HTML.classList.toggle('fn-tablet', w > 820 && w <= 1100);
-      if (w > 820) closeDrawer(); ensureDrawerEls(); syncAppState();
+      if (w > 820) closeDrawer(); ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser();
     } catch (e) {} }
   applyResponsive();
   window.addEventListener('resize', applyResponsive);
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', function () { ensureDrawerEls(); applyResponsive(); });
-  var _sq = false; function queueSync() { if (_sq) return; _sq = true; requestAnimationFrame(function () { _sq = false; ensureDrawerEls(); syncAppState(); }); }
+  var _sq = false; function queueSync() { if (_sq) return; _sq = true; requestAnimationFrame(function () { _sq = false; ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser(); }); }
   try { new MutationObserver(queueSync).observe(HTML, { childList: true, subtree: true }); } catch (e) {}
 
-  window.__FN_SUPABASE_VER = '1.0.0';
-  log('carregado v1.0.0, url=', URL);
+  window.__FN_SUPABASE_VER = '1.0.1';
+  log('carregado v1.0.1, url=', URL);
 })();

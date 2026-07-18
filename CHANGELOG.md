@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.0.1 - 2026-07-18
+- mobile: botão do menu (☰) passa a usar o roxo da identidade do app (lido do tema, funciona em light/dark) — antes ficava escuro por estar fora do container temático
+- mobile: itens do menu alinhados à esquerda (corrige o `justify-content:center` herdado do CSS antigo)
+- mobile: header reorganizado — título e o toggle de tema na 1ª linha, seletor de mês/ano centralizado na 2ª; nome do usuário e botão "Sair" movidos para o rodapé do menu (drawer)
+
 ## v1.0.0 - 2026-07-18
 - migra a camada de dados do app para o **Supabase direto** (supabase-js + Supabase Auth + RLS), aposentando a API Fastify/Vercel: o front passa a ler/gravar direto no banco, com políticas de segurança por usuário
 - novo `fn-supabase.js` (substitui o `fn-sync.js`): login/cadastro via Supabase Auth, hydrate e gravação (upsert/delete) por coleção usando os ids do próprio app como PK, conversão reais↔centavos, tela de carregamento e o drawer mobile v0.9.0 portados

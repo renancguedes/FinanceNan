@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.0.0"></script>
+<script src="./fn-supabase.js?v=1.0.1"></script>
 </head>
 <body>
 <x-dc>
@@ -1922,11 +1922,4 @@ class Component extends DCLogic {
       });
       vals.modalSubmit = this.submitModal;
       vals.modalClose = this.closeModal;
-    } else { vals.modalFields = []; vals.modalTitle = ''; vals.modalHint = false; vals.modalSubmitLabel = 'Salvar'; vals.modalClose = () => {}; vals.modalSubmit = () => {}; }
-
-    return vals;
-  }
-}
-</script>
-</body>
-</html>
+    } else { vals.modalFields = []; val
