@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.4 - 2026-07-18
+- planejamento: fontes de renda ordenadas de forma decrescente pelo valor
+- planejamento: "Distribuição da renda" ordenada de forma decrescente pelo valor orçado (funciona em % ou em valor)
+- planejamento: os cards de "Planejamento por categoria" seguem a mesma ordem da distribuição, e os itens dentro de cada card ficam em ordem decrescente pelo valor
+- cada categoria mantém sua cor fixa (vinculada à identidade, não à posição), então a cor não muda quando a ordem muda
+
 ## v1.2.3 - 2026-07-18
 - pop-ups: as contas de pagamento agora aparecem em ordem alfabética (respeitando acentos, pt-BR). Vale para os seletores "Conta de pagamento", "Conta de destino" e "Conta / Cartão" (os cartões continuam listados após as contas)
 - gastos fixos: a lista passa a mostrar os ativos primeiro e, dentro de cada grupo (ativos/inativos), ordenados de forma decrescente pelo valor (antes era por dia de vencimento)

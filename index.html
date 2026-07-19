@@ -1761,7 +1761,7 @@ class Component extends DCLogic {
     // ---- Planejamento ----
     vals.rendaFmt = this.fmt(renda);
     vals.emptyFontes = db.fontes.length === 0;
-    vals.fontes = db.fontes.map((f, i) => ({ ...f, valorFmt: this.fmt(f.valor), dl: this.dl(i),
+    vals.fontes = [...db.fontes].sort((a, b) => b.valor - a.valor).map((f, i) => ({ ...f, valorFmt: this.fmt(f.valor), dl: this.dl(i),
       edit: () => this.openModal('fonte', f),
       del: () => this.del('fontes', f.id, 'Excluir a fonte "' + f.nome + '"?') }));
     vals.addFonte = () => this.openModal('fonte', null);
@@ -1781,10 +1781,11 @@ class Component extends DCLogic {
       vals.somaColor = somaAbs > renda ? 'var(--red)' : 'var(--text2)';
     }
     const catBudget = c => s.distMode === 'pct' ? renda * (c.pct || 0) / 100 : (c.abs || 0);
-    vals.cats = db.categorias.map((c, i) => ({
+    const catOrder = db.categorias.map((c, oi) => ({ c, oi })).sort((x, y) => catBudget(y.c) - catBudget(x.c));
+    vals.cats = catOrder.map(({ c, oi }, i) => ({
       id: c.id, nome: c.nome, pct: c.pct || 0, abs: c.abs || 0, dl: this.dl(i),
-      cor: this.CATCOLORS[i % this.CATCOLORS.length],
-      trackBg: 'linear-gradient(90deg, ' + this.CATCOLORS[i % this.CATCOLORS.length] + ' ' + (c.pct || 0) + '%, var(--surface2) ' + (c.pct || 0) + '%)',
+      cor: this.CATCOLORS[oi % this.CATCOLORS.length],
+      trackBg: 'linear-gradient(90deg, ' + this.CATCOLORS[oi % this.CATCOLORS.length] + ' ' + (c.pct || 0) + '%, var(--surface2) ' + (c.pct || 0) + '%)',
       pctLabel: s.distMode === 'pct' ? (c.pct || 0) + '%' : Math.round(catBudget(c) / (renda || 1) * 100) + '%',
       valorFmt: this.fmt(catBudget(c)),
       slide: e => this.setCatPct(c.id, e.target.value),
@@ -1794,19 +1795,19 @@ class Component extends DCLogic {
     }));
     vals.addCategoria = () => this.openModal('categoria', null);
     vals.setDefaultMetas = () => this.setDefaultMetas();
-    vals.planCards = db.categorias.map((c, i) => {
+    vals.planCards = catOrder.map(({ c, oi }, i) => {
       const orc = catBudget(c);
-      const itens = db.planejamentos.filter(p => p.catId === c.id);
+      const itens = db.planejamentos.filter(p => p.catId === c.id).sort((a, b) => b.valor - a.valor);
       const usado = itens.reduce((t, p) => t + p.valor, 0);
       const rest = orc - usado;
       const over = usado > orc;
       return {
-        nome: c.nome, cor: this.CATCOLORS[i % this.CATCOLORS.length], dl: this.dl(i),
+        nome: c.nome, cor: this.CATCOLORS[oi % this.CATCOLORS.length], dl: this.dl(i),
         orcFmt: this.fmt(orc), usadoFmt: this.fmt(usado),
         restMsg: rest >= 0 ? 'Restam ' + this.fmt(rest) : 'Excesso de ' + this.fmt(-rest),
         restColor: rest >= 0 ? 'var(--green)' : 'var(--red)',
         barW: Math.min(100, orc > 0 ? Math.round(usado / orc * 100) : (usado > 0 ? 100 : 0)) + '%',
-        barColor: over ? 'var(--red)' : this.CATCOLORS[i % this.CATCOLORS.length],
+        barColor: over ? 'var(--red)' : this.CATCOLORS[oi % this.CATCOLORS.length],
         borderC: over ? 'var(--amber)' : 'var(--border)',
         over,
         itens: itens.map(p => ({ nome: p.nome, valorFmt: this.fmt(p.valor),
