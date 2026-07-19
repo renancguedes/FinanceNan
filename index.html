@@ -373,10 +373,6 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px">
                 <div style="font-family:Sora;font-weight:600;font-size:16px">Distribuição da renda</div>
                 <div style="display:flex;gap:8px;align-items:center">
-                  <div style="display:flex;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px">
-                    <button onClick="{{setModePct}}" style="padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{modePctBg}};color:{{modePctFg}}">Percentual</button>
-                    <button onClick="{{setModeAbs}}" style="padding:6px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:12px;background:{{modeAbsBg}};color:{{modeAbsFg}}">Valor</button>
-                  </div>
                   <button onClick="{{setDefaultMetas}}" title="Aplicar metas padrão (25/30/15/15/10/5)" style="padding:6px 12px;border-radius:9px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);cursor:pointer;font-weight:700;font-size:12px;white-space:nowrap" style-hover="background:var(--accent);color:var(--on-accent)">Metas padrão</button>
                   <button onClick="{{addCategoria}}" style="width:30px;height:30px;border-radius:9px;border:1px dashed var(--border2);background:none;color:var(--accent);cursor:pointer;font-size:17px;line-height:1" style-hover="border-color:var(--accent);background:var(--accent-soft);transform:scale(1.08)">+</button>
                 </div>
@@ -385,23 +381,26 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               <div style="display:flex;flex-direction:column;gap:14px">
                 <sc-for list="{{cats}}" as="c" hint-placeholder-count="6">
                   <div style="animation:fadeUp .35s ease both;animation-delay:{{c.dl}}">
-                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
                       <span style="width:10px;height:10px;border-radius:3px;background:{{c.cor}};flex:none"></span>
-                      <span style="flex:1;font-weight:700;font-size:13.5px">{{c.nome}}</span>
-                      <span style="font-family:Sora;font-weight:600;font-size:13px;color:var(--text2)">{{c.pctLabel}}</span>
-                      <span style="font-family:Sora;font-weight:600;font-size:13.5px;min-width:96px;text-align:right">{{c.valorFmt}}</span>
+                      <span style="flex:1;font-weight:700;font-size:13.5px;min-width:90px">{{c.nome}}</span>
+                      <input type="number" min="0" max="100" step="0.01" value="{{c.pctVal}}" onChange="{{c.setPct}}" style="width:66px;padding:6px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
+                      <span style="font-size:12px;color:var(--text3);font-weight:700">%</span>
+                      <input type="number" step="0.01" value="{{c.valInput}}" onChange="{{c.setVal}}" placeholder="0,00" style="width:118px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
                       <button onClick="{{c.edit}}" title="Renomear" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
                       <button onClick="{{c.del}}" title="Excluir" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
                     </div>
-                    <sc-if value="{{modePct}}" hint-placeholder-val="{{true}}">
-                      <input type="range" class="fn-slider" min="0" max="100" step="1" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;height:22px;cursor:grab;--fn-thumb:{{c.cor}};--fn-track:{{c.trackBg}}"/>
-                    </sc-if>
-                    <sc-if value="{{modeAbs}}" hint-placeholder-val="{{false}}">
-                      <input type="number" value="{{c.abs}}" onChange="{{c.setAbs}}" placeholder="R$ 0,00" style="width:160px;padding:8px 12px;border-radius:9px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;outline:none" style-focus="border-color:var(--accent)"/>
-                    </sc-if>
+                    <input type="range" class="fn-slider" min="0" max="100" step="1" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;height:22px;cursor:grab;--fn-thumb:{{c.cor}};--fn-track:{{c.trackBg}}"/>
                   </div>
                 </sc-for>
               </div>
+              <sc-if value="{{distDirty}}" hint-placeholder-val="{{false}}">
+                <div style="display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+                  <span style="flex:1;font-size:12px;color:var(--text3);font-weight:600">Alterações não salvas</span>
+                  <button onClick="{{discardDist}}" style="padding:9px 16px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="border-color:var(--red);color:var(--red)">Descartar</button>
+                  <button onClick="{{saveDist}}" style="padding:9px 18px;border-radius:10px;border:none;background:{{saveDistBg}};color:{{saveDistFg}};font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.06)">Salvar distribuição</button>
+                </div>
+              </sc-if>
             </div>
           </div>
 
@@ -980,7 +979,7 @@ class Component extends DCLogic {
       user: null, db: null,
       screen: 'dashboard', sidebarOpen: true, loading: false,
       comp: { m: now.getMonth() + 1, y: now.getFullYear() },
-      reservaMeses: 6, distMode: 'pct',
+      reservaMeses: 6, distDraft: null, distDirty: false,
       recFilter: 'todas', despFilter: 'todas', formaFilter: 'todas',
       despSort: { k: 'data', dir: -1 },
       modal: null, confirm: null, detail: null, toasts: [], adminUsers: [], adminLoading: false
@@ -1533,27 +1532,39 @@ class Component extends DCLogic {
     this.commit(db);
     this.toast(it.ativo ? 'Ativado.' : 'Desativado.');
   }
-  setCatPct(id, v) {
-    const db = JSON.parse(JSON.stringify(this.state.db));
-    const c = db.categorias.find(x => x.id === id); if (!c) return;
-    c.pct = this.parseNum(v);
-    this.commit(db);
+  distSeedDraft() {
+    const renda = this.state.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const o = {};
+    this.state.db.categorias.forEach(c => { o[c.id] = (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)); });
+    return o;
   }
-  setCatAbs(id, v) {
-    const db = JSON.parse(JSON.stringify(this.state.db));
-    const c = db.categorias.find(x => x.id === id); if (!c) return;
-    c.abs = this.parseNum(v);
-    this.commit(db);
+  setDraftPct(id, v) {
+    const draft = { ...(this.state.distDraft || this.distSeedDraft()) };
+    let p = this.parseNum(v); if (p < 0) p = 0; if (p > 100) p = 100;
+    draft[id] = p;
+    this.setState({ distDraft: draft, distDirty: true });
   }
-  switchDistMode(mode) {
+  setDraftVal(id, v) {
+    const renda = this.state.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const draft = { ...(this.state.distDraft || this.distSeedDraft()) };
+    let val = this.parseNum(v); if (val < 0) val = 0;
+    draft[id] = renda > 0 ? val / renda * 100 : 0;
+    this.setState({ distDraft: draft, distDirty: true });
+  }
+  saveDist() {
     const s = this.state;
     const renda = s.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const draft = s.distDraft || this.distSeedDraft();
+    const soma = s.db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
+    const leftover = Math.round((renda - renda * soma / 100) * 100) / 100;
+    if (Math.abs(leftover) >= 0.005) { this.toast('É preciso alocar 100% da renda para salvar (' + (leftover > 0 ? 'faltam ' : 'sobram ') + this.fmt(Math.abs(leftover)) + ').', 'err'); return; }
     const db = JSON.parse(JSON.stringify(s.db));
-    if (mode === 'abs') db.categorias.forEach(c => { c.abs = Math.round((renda * (c.pct || 0) / 100) * 100) / 100; });
-    else db.categorias.forEach(c => { c.pct = renda > 0 ? Math.round((c.abs || 0) / renda * 100) : 0; });
+    db.categorias.forEach(c => { const p = draft[c.id] || 0; c.pct = p; c.abs = Math.round(renda * p / 100 * 100) / 100; });
     this.commit(db);
-    this.setState({ distMode: mode });
+    this.setState({ distDraft: null, distDirty: false });
+    this.toast('Distribuição salva.');
   }
+  discardDist() { this.setState({ distDraft: null, distDirty: false }); }
   setDefaultMetas() {
     const defs = [{ nome: 'Liberdade Financeira', pct: 25 }, { nome: 'Custos Fixos', pct: 30 }, { nome: 'Conforto', pct: 15 }, { nome: 'Metas', pct: 15 }, { nome: 'Prazeres', pct: 10 }, { nome: 'Conhecimento', pct: 5 }];
     const s = this.state;
@@ -1565,6 +1576,7 @@ class Component extends DCLogic {
       if (c) { c.pct = d.pct; c.abs = abs; } else db.categorias.push({ id: this.uid(), nome: d.nome, pct: d.pct, abs: abs });
     });
     this.commit(db);
+    this.setState({ distDraft: null, distDirty: false });
     this.toast('Metas padrão aplicadas.');
   }
   toggleCfg(listKey, id) {
@@ -1766,33 +1778,39 @@ class Component extends DCLogic {
       del: () => this.del('fontes', f.id, 'Excluir a fonte "' + f.nome + '"?') }));
     vals.addFonte = () => this.openModal('fonte', null);
     vals.importFixos = () => this.openModal('importFixos', null);
-    vals.modePct = s.distMode === 'pct'; vals.modeAbs = s.distMode === 'abs';
-    vals.setModePct = () => this.switchDistMode('pct');
-    vals.setModeAbs = () => this.switchDistMode('abs');
-    vals.modePctBg = vals.modePct ? 'var(--surface)' : 'transparent'; vals.modePctFg = vals.modePct ? 'var(--text)' : 'var(--text2)';
-    vals.modeAbsBg = vals.modeAbs ? 'var(--surface)' : 'transparent'; vals.modeAbsFg = vals.modeAbs ? 'var(--text)' : 'var(--text2)';
-    const somaPct = db.categorias.reduce((t, c) => t + (c.pct || 0), 0);
-    const somaAbs = db.categorias.reduce((t, c) => t + (c.abs || 0), 0);
-    if (s.distMode === 'pct') {
-      vals.somaMsg = somaPct === 100 ? '100% da renda distribuída ✓' : somaPct + '% distribuído — ' + (somaPct < 100 ? (100 - somaPct) + '% livre' : (somaPct - 100) + '% acima da renda');
-      vals.somaColor = somaPct === 100 ? 'var(--green)' : somaPct > 100 ? 'var(--red)' : 'var(--amber)';
-    } else {
-      vals.somaMsg = this.fmt(somaAbs) + ' de ' + this.fmt(renda) + ' distribuídos' + (somaAbs > renda ? ' — acima da renda' : '');
-      vals.somaColor = somaAbs > renda ? 'var(--red)' : 'var(--text2)';
-    }
-    const catBudget = c => s.distMode === 'pct' ? renda * (c.pct || 0) / 100 : (c.abs || 0);
+    // distribuição da renda: edição em rascunho local, só grava ao clicar em "Salvar distribuição"
+    const distSeed = () => { const o = {}; db.categorias.forEach(c => { o[c.id] = (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)); }); return o; };
+    const draft = s.distDraft || distSeed();
+    const fmtPct = p => { const r = Math.round((p || 0) * 10000) / 10000; const str = (Math.round(r) === r) ? String(r) : r.toFixed(4).replace(/0+$/, ''); return str.replace('.', ','); };
+    const somaPct = db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
+    const leftover = Math.round((renda - renda * somaPct / 100) * 100) / 100;
+    const distOk = Math.abs(leftover) < 0.005;
+    vals.somaMsg = distOk ? '100% da renda distribuída ✓' : (leftover > 0 ? fmtPct(somaPct) + '% distribuído — faltam ' + this.fmt(leftover) + ' para alocar' : fmtPct(somaPct) + '% distribuído — ' + this.fmt(-leftover) + ' acima da renda');
+    vals.somaColor = distOk ? 'var(--green)' : leftover < 0 ? 'var(--red)' : 'var(--amber)';
+    vals.distDirty = !!s.distDirty;
+    vals.saveDistBg = distOk ? 'var(--accent)' : 'var(--surface2)';
+    vals.saveDistFg = distOk ? 'var(--on-accent)' : 'var(--text3)';
+    vals.saveDist = () => this.saveDist();
+    vals.discardDist = () => this.discardDist();
+    // a ordem usa os valores JÁ SALVOS (não o rascunho), para a lista não reordenar durante a edição
+    const catBudget = c => renda * (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)) / 100;
     const catOrder = db.categorias.map((c, oi) => ({ c, oi })).sort((x, y) => catBudget(y.c) - catBudget(x.c));
-    vals.cats = catOrder.map(({ c, oi }, i) => ({
-      id: c.id, nome: c.nome, pct: c.pct || 0, abs: c.abs || 0, dl: this.dl(i),
-      cor: this.CATCOLORS[oi % this.CATCOLORS.length],
-      trackBg: 'linear-gradient(90deg, ' + this.CATCOLORS[oi % this.CATCOLORS.length] + ' ' + (c.pct || 0) + '%, var(--surface2) ' + (c.pct || 0) + '%)',
-      pctLabel: s.distMode === 'pct' ? (c.pct || 0) + '%' : Math.round(catBudget(c) / (renda || 1) * 100) + '%',
-      valorFmt: this.fmt(catBudget(c)),
-      slide: e => this.setCatPct(c.id, e.target.value),
-      setAbs: e => this.setCatAbs(c.id, e.target.value),
-      edit: () => this.openModal('categoria', c),
-      del: () => this.del('categorias', c.id, 'Excluir a categoria "' + c.nome + '"? Os planejamentos dela também serão removidos.', (dbb) => { dbb.planejamentos = dbb.planejamentos.filter(p => p.catId !== c.id); })
-    }));
+    vals.cats = catOrder.map(({ c, oi }, i) => {
+      const p = draft[c.id] || 0;
+      const col = this.CATCOLORS[oi % this.CATCOLORS.length];
+      return {
+        id: c.id, nome: c.nome, dl: this.dl(i),
+        pct: Math.round(p), pctVal: Math.round(p * 100) / 100,
+        valInput: Math.round(renda * p / 100 * 100) / 100,
+        cor: col,
+        trackBg: 'linear-gradient(90deg, ' + col + ' ' + Math.round(p) + '%, var(--surface2) ' + Math.round(p) + '%)',
+        setPct: e => this.setDraftPct(c.id, e.target.value),
+        setVal: e => this.setDraftVal(c.id, e.target.value),
+        slide: e => this.setDraftPct(c.id, e.target.value),
+        edit: () => this.openModal('categoria', c),
+        del: () => this.del('categorias', c.id, 'Excluir a categoria "' + c.nome + '"? Os planejamentos dela também serão removidos.', (dbb) => { dbb.planejamentos = dbb.planejamentos.filter(p => p.catId !== c.id); })
+      };
+    });
     vals.addCategoria = () => this.openModal('categoria', null);
     vals.setDefaultMetas = () => this.setDefaultMetas();
     vals.planCards = catOrder.map(({ c, oi }, i) => {

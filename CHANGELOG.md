@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.3.0 - 2026-07-18
+- planejamento: "Distribuição da renda" reformulada. Removida a troca de aba Percentual/Valor — agora é uma visualização única onde a % e o valor são editáveis direto na linha, além do slider. O slider move apenas a %, e o valor acompanha (valor = renda × %/100); ao digitar um valor, a % correspondente é recalculada
+- planejamento: edição em rascunho local com botão "Salvar distribuição" (aparece quando há alterações não salvas, com opção Descartar). Nada é gravado no banco nem reordenado enquanto você edita — a lista só reordena e a sincronização só acontece ao salvar, o que elimina o "pulo" dos campos durante a digitação
+- planejamento: suporte a valores com centavos (ex.: R$ 1.711,53) sem arredondar; a % pode ser fracionária
+- planejamento: o total precisa somar exatamente 100% para salvar (validado ao centavo — não deixa faltar nem sobrar). O indicador continua mostrando se está abaixo/acima, agora informando quanto falta ou sobra em reais
+
 ## v1.2.4 - 2026-07-18
 - planejamento: fontes de renda ordenadas de forma decrescente pelo valor
 - planejamento: "Distribuição da renda" ordenada de forma decrescente pelo valor orçado (funciona em % ou em valor)
