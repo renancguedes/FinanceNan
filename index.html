@@ -1287,7 +1287,7 @@ class Component extends DCLogic {
     const byNome = (a, b) => a.nome.localeCompare(b.nome, 'pt-BR');
     const despCatOpts = db.catalogo.filter(c => c.tipo === 'Despesa' || c.tipo === 'Investimento').sort(byNome).map(c => ({ v: c.nome, l: c.nome + (c.tipo === 'Investimento' ? ' · Investimento' : '') }));
     const recCatOpts = db.catalogo.filter(c => c.tipo === 'Receita').sort(byNome).map(c => ({ v: c.nome, l: c.nome }));
-    const contaOpts = db.contas.filter(a => a.ativo).map(a => ({ v: a.id, l: a.nome }));
+    const contaOpts = db.contas.filter(a => a.ativo).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')).map(a => ({ v: a.id, l: a.nome }));
     const formaOpts = [...contaOpts.map(o => ({ v: 'a:' + o.v, l: o.l })), ...db.cartoes.filter(k => k.ativo).map(k => ({ v: 'k:' + k.id, l: 'Cartão ' + k.nome }))];
     const planCatOpts = db.categorias.map(c => ({ v: c.id, l: c.nome }));
     const hoje = this.dateFor(this.state.comp, new Date().getDate());
@@ -1819,7 +1819,7 @@ class Component extends DCLogic {
     // ---- Fixos ----
     vals.emptyFixos = db.fixos.length === 0;
     vals.addFixo = () => this.openModal('fixo', null);
-    vals.fixosList = [...db.fixos].sort((a, b) => ((b.ativo ? 1 : 0) - (a.ativo ? 1 : 0)) || a.venc - b.venc).map((g, i) => {
+    vals.fixosList = [...db.fixos].sort((a, b) => ((b.ativo ? 1 : 0) - (a.ativo ? 1 : 0)) || (b.valor - a.valor)).map((g, i) => {
       const pago = fixoPago(g);
       return {
         desc: g.desc, valorFmt: this.fmt(g.valor), dl: this.dl(i),

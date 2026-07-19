@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.2.3 - 2026-07-18
+- pop-ups: as contas de pagamento agora aparecem em ordem alfabética (respeitando acentos, pt-BR). Vale para os seletores "Conta de pagamento", "Conta de destino" e "Conta / Cartão" (os cartões continuam listados após as contas)
+- gastos fixos: a lista passa a mostrar os ativos primeiro e, dentro de cada grupo (ativos/inativos), ordenados de forma decrescente pelo valor (antes era por dia de vencimento)
+
 ## v1.2.2 - 2026-07-18
 - corrige o cálculo do vencimento da fatura no cartão (`calcVenc`): a comparação usava `>` (estritamente maior) em vez de `>=`. Pela regra, quando a data da compra é **igual ou superior** ao dia de fechamento, o vencimento vai para o mês seguinte. Uma compra no próprio dia do fechamento (ex.: compra 05/07 com fechamento dia 05) estava caindo na fatura do mês (venc. 12/07) quando deveria ir para a seguinte (venc. 12/08). Vale para lançamento individual, lançamento em massa e migração de dados, pois todos passam por `calcVenc`
 
