@@ -1010,12 +1010,12 @@ class Component extends DCLogic {
   fmtData(ds) { return ds ? ds.slice(8, 10) + '/' + ds.slice(5, 7) + '/' + ds.slice(2, 4) : '—'; }
   dl(i) { return Math.min(i * 45, 420) + 'ms'; }
 
-  // Compra após o fechamento cai na fatura seguinte
+  // Compra no dia do fechamento ou depois cai na fatura seguinte
   calcVenc(cartao, compra) {
     if (!cartao || !compra) return null;
     const p = compra.split('-').map(Number);
     let cy = p[0], cm = p[1];
-    if (p[2] > cartao.fecha) { cm++; if (cm > 12) { cm = 1; cy++; } }
+    if (p[2] >= cartao.fecha) { cm++; if (cm > 12) { cm = 1; cy++; } }
     if (cartao.vence <= cartao.fecha) { cm++; if (cm > 12) { cm = 1; cy++; } }
     return cy + '-' + String(cm).padStart(2, '0') + '-' + String(Math.min(cartao.vence, 28)).padStart(2, '0');
   }
