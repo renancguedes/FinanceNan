@@ -384,13 +384,13 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
                       <span style="width:10px;height:10px;border-radius:3px;background:{{c.cor}};flex:none"></span>
                       <span style="flex:1;font-weight:700;font-size:13.5px;min-width:90px">{{c.nome}}</span>
-                      <input type="number" min="0" max="100" step="0.01" value="{{c.pctVal}}" onChange="{{c.setPct}}" style="width:66px;padding:6px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
+                      <input type="number" min="0" max="{{c.pctMax}}" step="0.01" value="{{c.pctVal}}" onChange="{{c.setPct}}" style="width:66px;padding:6px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
                       <span style="font-size:12px;color:var(--text3);font-weight:700">%</span>
-                      <input type="number" step="0.01" value="{{c.valInput}}" onChange="{{c.setVal}}" placeholder="0,00" style="width:118px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
+                      <input type="number" min="0" max="{{c.valMax}}" step="0.01" value="{{c.valInput}}" onChange="{{c.setVal}}" placeholder="0,00" style="width:118px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
                       <button onClick="{{c.edit}}" title="Renomear" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
                       <button onClick="{{c.del}}" title="Excluir" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
                     </div>
-                    <input type="range" class="fn-slider" min="0" max="100" step="1" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;height:22px;cursor:grab;--fn-thumb:{{c.cor}};--fn-track:{{c.trackBg}}"/>
+                    <input type="range" class="fn-slider" min="0" max="{{c.pctMax}}" step="0.001" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;height:22px;cursor:grab;--fn-thumb:{{c.cor}};--fn-track:{{c.trackBg}}"/>
                   </div>
                 </sc-for>
               </div>
@@ -1005,6 +1005,12 @@ class Component extends DCLogic {
   isCur(c) { const n = new Date(); return c.m === n.getMonth() + 1 && c.y === n.getFullYear(); }
   dateFor(c, day) { return this.ck(c) + '-' + String(Math.min(day || 1, 28)).padStart(2, '0'); }
   parseNum(v) { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; }
+  // ---- precisão monetária (centavos) ----
+  // Trabalhar em centavos (inteiros) evita os erros de arredondamento de ponto
+  // flutuante que ocorrem ao operar diretamente com reais fracionados.
+  toCents(v) { return Math.round((v || 0) * 100); }
+  fromCents(c) { return (c || 0) / 100; }
+  rendaCents(fontes) { return (fontes || []).reduce((t, f) => t + this.toCents(f.valor), 0); }
   fmtDia(ds) { return ds ? ds.slice(8, 10) + '/' + ds.slice(5, 7) : '—'; }
   fmtData(ds) { return ds ? ds.slice(8, 10) + '/' + ds.slice(5, 7) + '/' + ds.slice(2, 4) : '—'; }
   dl(i) { return Math.min(i * 45, 420) + 'ms'; }
@@ -1532,34 +1538,64 @@ class Component extends DCLogic {
     this.commit(db);
     this.toast(it.ativo ? 'Ativado.' : 'Desativado.');
   }
+  // O rascunho de distribuição (distDraft) guarda o valor de CADA categoria em
+  // CENTAVOS (inteiros). Trabalhar em centavos — em vez de percentual — é o
+  // que garante que a soma das metas nunca "quase" bata 100%: toda a aritmética
+  // de alocação passa a ser feita com inteiros, sem resíduo de ponto flutuante.
   distSeedDraft() {
-    const renda = this.state.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const db = this.state.db;
+    const rc = this.rendaCents(db.fontes);
     const o = {};
-    this.state.db.categorias.forEach(c => { o[c.id] = (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)); });
+    db.categorias.forEach(c => {
+      o[c.id] = c.pct != null ? Math.round(rc * c.pct / 100) : this.toCents(c.abs || 0);
+    });
     return o;
   }
+  // Alocação disponível para a categoria `id`: o que ela já tem + o que ainda
+  // não foi distribuído por nenhuma categoria (o "leftover").
+  distMaxCentsFor(id, draft) {
+    const rc = this.rendaCents(this.state.db.fontes);
+    const others = this.state.db.categorias.reduce((t, c) => t + (c.id === id ? 0 : (draft[c.id] || 0)), 0);
+    return Math.max(0, rc - others);
+  }
   setDraftPct(id, v) {
+    const rc = this.rendaCents(this.state.db.fontes);
     const draft = { ...(this.state.distDraft || this.distSeedDraft()) };
     let p = this.parseNum(v); if (p < 0) p = 0; if (p > 100) p = 100;
-    draft[id] = p;
+    let cents = Math.round(rc * p / 100);
+    const max = this.distMaxCentsFor(id, draft);
+    // Arrastar a barra até o fim (ou digitar um percentual maior do que o
+    // disponível) completa a distribuição usando exatamente o valor restante,
+    // sem nunca ultrapassar 100%.
+    draft[id] = Math.min(Math.max(cents, 0), max);
     this.setState({ distDraft: draft, distDirty: true });
   }
   setDraftVal(id, v) {
-    const renda = this.state.db.fontes.reduce((t, f) => t + f.valor, 0);
     const draft = { ...(this.state.distDraft || this.distSeedDraft()) };
-    let val = this.parseNum(v); if (val < 0) val = 0;
-    draft[id] = renda > 0 ? val / renda * 100 : 0;
+    let cents = this.toCents(this.parseNum(v));
+    if (cents < 0) cents = 0;
+    const max = this.distMaxCentsFor(id, draft);
+    draft[id] = Math.min(cents, max);
     this.setState({ distDraft: draft, distDirty: true });
   }
   saveDist() {
     const s = this.state;
-    const renda = s.db.fontes.reduce((t, f) => t + f.valor, 0);
+    const rc = this.rendaCents(s.db.fontes);
     const draft = s.distDraft || this.distSeedDraft();
-    const soma = s.db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
-    const leftover = Math.round((renda - renda * soma / 100) * 100) / 100;
-    if (Math.abs(leftover) >= 0.005) { this.toast('É preciso alocar 100% da renda para salvar (' + (leftover > 0 ? 'faltam ' : 'sobram ') + this.fmt(Math.abs(leftover)) + ').', 'err'); return; }
+    const somaCents = s.db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
+    const leftoverCents = rc - somaCents;
+    // Comparação exata em centavos (inteiros): nunca deixa salvar acima ou
+    // abaixo de 100% da renda, sem depender de tolerância de ponto flutuante.
+    if (leftoverCents !== 0) {
+      this.toast('É preciso alocar 100% da renda para salvar (' + (leftoverCents > 0 ? 'faltam ' : 'sobram ') + this.fmt(this.fromCents(Math.abs(leftoverCents))) + ').', 'err');
+      return;
+    }
     const db = JSON.parse(JSON.stringify(s.db));
-    db.categorias.forEach(c => { const p = draft[c.id] || 0; c.pct = p; c.abs = Math.round(renda * p / 100 * 100) / 100; });
+    db.categorias.forEach(c => {
+      const cents = draft[c.id] || 0;
+      c.abs = this.fromCents(cents);
+      c.pct = rc > 0 ? cents / rc * 100 : 0;
+    });
     this.commit(db);
     this.setState({ distDraft: null, distDirty: false });
     this.toast('Distribuição salva.');
@@ -1644,6 +1680,7 @@ class Component extends DCLogic {
       ['contas', 'Contas', this.ICONS.conta], ['categorias', 'Categorias', this.ICONS.tag],
       ['config', 'Configurações', this.ICONS.cfg]
     ];
+    const rcTotal = this.rendaCents(db.fontes);
     const renda = db.fontes.reduce((t, f) => t + f.valor, 0);
     const excl = db.config.patrimonioExcl || [];
     const patrimonio = db.contas.filter(a => a.ativo && !(a.tipo === 'Investimento' && excl.includes(a.id))).reduce((t, a) => t + a.saldo, 0);
@@ -1779,14 +1816,18 @@ class Component extends DCLogic {
     vals.addFonte = () => this.openModal('fonte', null);
     vals.importFixos = () => this.openModal('importFixos', null);
     // distribuição da renda: edição em rascunho local, só grava ao clicar em "Salvar distribuição"
-    const distSeed = () => { const o = {}; db.categorias.forEach(c => { o[c.id] = (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)); }); return o; };
-    const draft = s.distDraft || distSeed();
+    // O rascunho (draft) e todo o cálculo abaixo trabalham em CENTAVOS (inteiros),
+    // não em percentual/reais fracionados — é isso que garante soma exata e
+    // permite completar a distribuição até 100% sem ajustes manuais de centavos.
+    const draft = s.distDraft || this.distSeedDraft();
     const fmtPct = p => { const r = Math.round((p || 0) * 10000) / 10000; const str = (Math.round(r) === r) ? String(r) : r.toFixed(4).replace(/0+$/, ''); return str.replace('.', ','); };
-    const somaPct = db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
-    const leftover = Math.round((renda - renda * somaPct / 100) * 100) / 100;
-    const distOk = Math.abs(leftover) < 0.005;
-    vals.somaMsg = distOk ? '100% da renda distribuída ✓' : (leftover > 0 ? fmtPct(somaPct) + '% distribuído — faltam ' + this.fmt(leftover) + ' para alocar' : fmtPct(somaPct) + '% distribuído — ' + this.fmt(-leftover) + ' acima da renda');
-    vals.somaColor = distOk ? 'var(--green)' : leftover < 0 ? 'var(--red)' : 'var(--amber)';
+    const somaCents = db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
+    const leftoverCents = rcTotal - somaCents;
+    const leftover = this.fromCents(leftoverCents);
+    const somaPct = rcTotal > 0 ? somaCents / rcTotal * 100 : 0;
+    const distOk = leftoverCents === 0;
+    vals.somaMsg = distOk ? '100% da renda distribuída ✓' : (leftoverCents > 0 ? fmtPct(somaPct) + '% distribuído — faltam ' + this.fmt(leftover) + ' para alocar' : fmtPct(somaPct) + '% distribuído — ' + this.fmt(-leftover) + ' acima da renda');
+    vals.somaColor = distOk ? 'var(--green)' : leftoverCents < 0 ? 'var(--red)' : 'var(--amber)';
     vals.distDirty = !!s.distDirty;
     vals.saveDistBg = distOk ? 'var(--accent)' : 'var(--surface2)';
     vals.saveDistFg = distOk ? 'var(--on-accent)' : 'var(--text3)';
@@ -1796,12 +1837,19 @@ class Component extends DCLogic {
     const catBudget = c => renda * (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)) / 100;
     const catOrder = db.categorias.map((c, oi) => ({ c, oi })).sort((x, y) => catBudget(y.c) - catBudget(x.c));
     vals.cats = catOrder.map(({ c, oi }, i) => {
-      const p = draft[c.id] || 0;
+      const cents = draft[c.id] || 0;
+      // Máximo que esta meta pode receber "arrastando até o fim": o que ela já
+      // tem + tudo que ainda sobra para alocar. Isso garante que arrastar
+      // qualquer barra até o final sempre fecha em exatamente 100%.
+      const maxCents = cents + Math.max(0, leftoverCents);
+      const p = rcTotal > 0 ? cents / rcTotal * 100 : 0;
+      const pMax = rcTotal > 0 ? maxCents / rcTotal * 100 : 100;
       const col = this.CATCOLORS[oi % this.CATCOLORS.length];
       return {
         id: c.id, nome: c.nome, dl: this.dl(i),
-        pct: Math.round(p), pctVal: Math.round(p * 100) / 100,
-        valInput: Math.round(renda * p / 100 * 100) / 100,
+        pct: Math.round(p * 1000) / 1000, pctMax: Math.round(pMax * 1000) / 1000,
+        pctVal: Math.round(p * 100) / 100,
+        valInput: this.fromCents(cents), valMax: this.fromCents(maxCents),
         cor: col,
         trackBg: 'linear-gradient(90deg, ' + col + ' ' + Math.round(p) + '%, var(--surface2) ' + Math.round(p) + '%)',
         setPct: e => this.setDraftPct(c.id, e.target.value),
