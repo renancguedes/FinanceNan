@@ -1566,26 +1566,17 @@ class Component extends DCLogic {
     let p = this.parseNum(v); if (p < 0) p = 0; if (p > 100) p = 100;
     let cents = Math.round(rc * p / 100);
     const max = this.distMaxCentsFor(id, draft);
-    // Arrastar a barra até o fim (ou digitar 100%) completa a distribuição
-    // usando exatamente o valor restante, sem nunca ultrapassar 100%.
-    // Se o valor pedido for menor que 100% mas ainda assim maior do que o
-    // espaço disponível, é porque o usuário tentou "forçar" um valor alto
-    // demais — nesse caso avisamos, em vez de simplesmente cortar em silêncio.
-    if (cents > max && p < 100) {
-      this.toast('Isso ultrapassaria 100% da renda alocada. Reduza outra meta antes de aumentar esta.', 'warn');
-    }
+    // Arrastar a barra até o fim (ou digitar um percentual maior do que o
+    // disponível) completa a distribuição usando exatamente o valor restante,
+    // sem nunca ultrapassar 100%.
     draft[id] = Math.min(Math.max(cents, 0), max);
     this.setState({ distDraft: draft, distDirty: true });
   }
   setDraftVal(id, v) {
-    const rc = this.rendaCents(this.state.db.fontes);
     const draft = { ...(this.state.distDraft || this.distSeedDraft()) };
     let cents = this.toCents(this.parseNum(v));
     if (cents < 0) cents = 0;
     const max = this.distMaxCentsFor(id, draft);
-    if (cents > max && cents < rc) {
-      this.toast('Isso ultrapassaria 100% da renda alocada. Reduza outra meta antes de aumentar esta.', 'warn');
-    }
     draft[id] = Math.min(cents, max);
     this.setState({ distDraft: draft, distDirty: true });
   }
@@ -1831,7 +1822,18 @@ class Component extends DCLogic {
     // não em percentual/reais fracionados — é isso que garante soma exata e
     // permite completar a distribuição até 100% sem ajustes manuais de centavos.
     const draft = s.distDraft || this.distSeedDraft();
-    const fmtPct = p => { const r = Math.round((p || 0) * 10000) / 10000; const str = (Math.round(r) === r) ? String(r) : r.toFixed(4).replace(/0+$/, ''); return str.replace('.', ','); };
+    // Porcentagens nesta tela aparecem sempre como número inteiro (ex: 12%).
+    // Única exceção: quando arredondar para 100% seria enganoso (o valor real
+    // não fechou em 100%, ou vice-versa) — nesse caso, mostra 1 casa decimal
+    // só para não passar a falsa impressão de que já está tudo distribuído.
+    const fmtPct = p => {
+      const v = p || 0;
+      const whole = Math.round(v);
+      if (whole === 100 && Math.abs(v - 100) > 0.000001) {
+        return (Math.round(v * 10) / 10).toFixed(1).replace('.', ',');
+      }
+      return String(whole);
+    };
     const somaCents = db.categorias.reduce((t, c) => t + (draft[c.id] || 0), 0);
     const leftoverCents = rcTotal - somaCents;
     const leftover = this.fromCents(leftoverCents);
@@ -1858,7 +1860,7 @@ class Component extends DCLogic {
       return {
         id: c.id, nome: c.nome, dl: this.dl(i),
         pct: pDisplay,
-        pctVal: Math.round(p * 100) / 100,
+        pctVal: fmtPct(p).replace(',', '.'),
         valInput: this.fromCents(cents),
         cor: col,
         trackBg: 'linear-gradient(90deg, ' + col + ' ' + pDisplay + '%, var(--surface2) ' + pDisplay + '%)',

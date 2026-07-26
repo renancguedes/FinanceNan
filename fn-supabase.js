@@ -40,7 +40,7 @@
       to: function (x) { return { id: x.id, nome: x.nome, bandeira: x.bandeira, fecha: N(x.fecha), vence: N(x.vence), cor: x.cor, ativo: x.ativo !== false }; },
       from: function (r) { return { id: r.id, nome: r.nome, bandeira: r.bandeira, fecha: r.fecha, vence: r.vence, cor: r.cor, ativo: r.ativo }; } },
     categorias: { table: 'fn_categorias',
-      to: function (x) { return { id: x.id, nome: x.nome, pct: N(x.pct), abs: C(x.abs) }; },
+      to: function (x) { return { id: x.id, nome: x.nome, pct: Number(x.pct) || 0, abs: C(x.abs) }; },
       from: function (r) { return { id: r.id, nome: r.nome, pct: r.pct, abs: R(r.abs) }; } },
     fontes: { table: 'fn_fontes',
       to: function (x) { return { id: x.id, nome: x.nome, valor: C(x.valor) }; },

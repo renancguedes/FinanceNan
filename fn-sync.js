@@ -73,7 +73,7 @@
       to: function (x) { return { nome: x.nome, tipo: CAT_TO[x.tipo] || 'despesa', cor: x.cor, icone: x.icone || 'tag' }; },
       from: function (x) { return { id: x.id, nome: x.nome, tipo: CAT_FROM[x.tipo] || 'Despesa', cor: x.cor, icone: x.icone }; } },
     categorias: { path: '/plan-categories', dep: false, fkRefs: [],
-      to: function (x) { return { nome: x.nome, pct: N(x.pct), abs: C(x.abs) }; },
+      to: function (x) { return { nome: x.nome, pct: Number(x.pct) || 0, abs: C(x.abs) }; },
       from: function (x) { return { id: x.id, nome: x.nome, pct: x.pct, abs: R(x.abs) }; } },
     fontes: { path: '/income-sources', dep: false, fkRefs: [],
       to: function (x) { return { nome: x.nome, valor: C(x.valor) }; },
