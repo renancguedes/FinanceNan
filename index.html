@@ -59,6 +59,8 @@ body *{transition:background-color .3s ease,border-color .3s ease,color .25s eas
 @keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @keyframes growW{from{width:0}}
 @keyframes pillPop{0%{transform:scale(.7);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+input.fn-noSpin::-webkit-outer-spin-button,input.fn-noSpin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input.fn-noSpin{-moz-appearance:textfield}
 input[type=range].fn-slider{-webkit-appearance:none;appearance:none;background:transparent;margin:0;padding:0}
 input[type=range].fn-slider::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:var(--fn-track);border:1px solid var(--border)}
 input[type=range].fn-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--fn-thumb);border:3px solid var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.3);margin-top:-6px;transition:transform .15s ease}
@@ -384,13 +386,13 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
                       <span style="width:10px;height:10px;border-radius:3px;background:{{c.cor}};flex:none"></span>
                       <span style="flex:1;font-weight:700;font-size:13.5px;min-width:90px">{{c.nome}}</span>
-                      <input type="number" min="0" max="{{c.pctMax}}" step="0.01" value="{{c.pctVal}}" onChange="{{c.setPct}}" style="width:66px;padding:6px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
+                      <input type="number" min="0" max="100" step="0.01" value="{{c.pctVal}}" onChange="{{c.setPct}}" class="fn-noSpin" style="width:80px;padding:6px 6px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
                       <span style="font-size:12px;color:var(--text3);font-weight:700">%</span>
-                      <input type="number" min="0" max="{{c.valMax}}" step="0.01" value="{{c.valInput}}" onChange="{{c.setVal}}" placeholder="0,00" style="width:118px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
+                      <input type="number" min="0" step="0.01" value="{{c.valInput}}" onChange="{{c.setVal}}" placeholder="0,00" class="fn-noSpin" style="width:118px;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13px;text-align:right;outline:none;font-family:Sora;font-weight:600" style-focus="border-color:var(--accent)"/>
                       <button onClick="{{c.edit}}" title="Renomear" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
                       <button onClick="{{c.del}}" title="Excluir" style="width:24px;height:24px;border:none;background:none;border-radius:6px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
                     </div>
-                    <input type="range" class="fn-slider" min="0" max="{{c.pctMax}}" step="0.001" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;height:22px;cursor:grab;--fn-thumb:{{c.cor}};--fn-track:{{c.trackBg}}"/>
+                    <input type="range" class="fn-slider" min="0" max="100" step="0.001" value="{{c.pct}}" onChange="{{c.slide}}" style="width:100%;height:22px;cursor:grab;--fn-thumb:{{c.cor}};--fn-track:{{c.trackBg}}"/>
                   </div>
                 </sc-for>
               </div>
@@ -1564,17 +1566,26 @@ class Component extends DCLogic {
     let p = this.parseNum(v); if (p < 0) p = 0; if (p > 100) p = 100;
     let cents = Math.round(rc * p / 100);
     const max = this.distMaxCentsFor(id, draft);
-    // Arrastar a barra até o fim (ou digitar um percentual maior do que o
-    // disponível) completa a distribuição usando exatamente o valor restante,
-    // sem nunca ultrapassar 100%.
+    // Arrastar a barra até o fim (ou digitar 100%) completa a distribuição
+    // usando exatamente o valor restante, sem nunca ultrapassar 100%.
+    // Se o valor pedido for menor que 100% mas ainda assim maior do que o
+    // espaço disponível, é porque o usuário tentou "forçar" um valor alto
+    // demais — nesse caso avisamos, em vez de simplesmente cortar em silêncio.
+    if (cents > max && p < 100) {
+      this.toast('Isso ultrapassaria 100% da renda alocada. Reduza outra meta antes de aumentar esta.', 'warn');
+    }
     draft[id] = Math.min(Math.max(cents, 0), max);
     this.setState({ distDraft: draft, distDirty: true });
   }
   setDraftVal(id, v) {
+    const rc = this.rendaCents(this.state.db.fontes);
     const draft = { ...(this.state.distDraft || this.distSeedDraft()) };
     let cents = this.toCents(this.parseNum(v));
     if (cents < 0) cents = 0;
     const max = this.distMaxCentsFor(id, draft);
+    if (cents > max && cents < rc) {
+      this.toast('Isso ultrapassaria 100% da renda alocada. Reduza outra meta antes de aumentar esta.', 'warn');
+    }
     draft[id] = Math.min(cents, max);
     this.setState({ distDraft: draft, distDirty: true });
   }
@@ -1838,20 +1849,19 @@ class Component extends DCLogic {
     const catOrder = db.categorias.map((c, oi) => ({ c, oi })).sort((x, y) => catBudget(y.c) - catBudget(x.c));
     vals.cats = catOrder.map(({ c, oi }, i) => {
       const cents = draft[c.id] || 0;
-      // Máximo que esta meta pode receber "arrastando até o fim": o que ela já
-      // tem + tudo que ainda sobra para alocar. Isso garante que arrastar
-      // qualquer barra até o final sempre fecha em exatamente 100%.
-      const maxCents = cents + Math.max(0, leftoverCents);
       const p = rcTotal > 0 ? cents / rcTotal * 100 : 0;
-      const pMax = rcTotal > 0 ? maxCents / rcTotal * 100 : 100;
+      // valor usado tanto pelo atributo "value" do slider/input quanto pelo
+      // preenchimento colorido (trackBg) — precisam ser o MESMO número,
+      // senão a bolinha do slider e a cor da barra ficam desalinhadas.
+      const pDisplay = Math.round(p * 10000) / 10000;
       const col = this.CATCOLORS[oi % this.CATCOLORS.length];
       return {
         id: c.id, nome: c.nome, dl: this.dl(i),
-        pct: Math.round(p * 1000) / 1000, pctMax: Math.round(pMax * 1000) / 1000,
+        pct: pDisplay,
         pctVal: Math.round(p * 100) / 100,
-        valInput: this.fromCents(cents), valMax: this.fromCents(maxCents),
+        valInput: this.fromCents(cents),
         cor: col,
-        trackBg: 'linear-gradient(90deg, ' + col + ' ' + Math.round(p) + '%, var(--surface2) ' + Math.round(p) + '%)',
+        trackBg: 'linear-gradient(90deg, ' + col + ' ' + pDisplay + '%, var(--surface2) ' + pDisplay + '%)',
         setPct: e => this.setDraftPct(c.id, e.target.value),
         setVal: e => this.setDraftVal(c.id, e.target.value),
         slide: e => this.setDraftPct(c.id, e.target.value),
