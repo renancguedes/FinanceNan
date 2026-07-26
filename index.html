@@ -1877,13 +1877,18 @@ class Component extends DCLogic {
       const orc = catBudget(c);
       const itens = db.planejamentos.filter(p => p.catId === c.id).sort((a, b) => b.valor - a.valor);
       const usado = itens.reduce((t, p) => t + p.valor, 0);
-      const rest = orc - usado;
-      const over = usado > orc;
+      // Compara em centavos (inteiros) para não sobrar resíduo de ponto
+      // flutuante (ex: orc - usado = -0.000000002), que fazia aparecer
+      // "Restam R$ 0,00" / "Excesso de R$ 0,00" quando os valores eram,
+      // na prática, exatamente iguais.
+      const restCents = this.toCents(orc) - this.toCents(usado);
+      const rest = this.fromCents(restCents);
+      const over = restCents < 0;
       return {
         nome: c.nome, cor: this.CATCOLORS[oi % this.CATCOLORS.length], dl: this.dl(i),
         orcFmt: this.fmt(orc), usadoFmt: this.fmt(usado),
-        restMsg: rest >= 0 ? 'Restam ' + this.fmt(rest) : 'Excesso de ' + this.fmt(-rest),
-        restColor: rest >= 0 ? 'var(--green)' : 'var(--red)',
+        restMsg: restCents === 0 ? 'Orçamento batido ✓' : (restCents > 0 ? 'Restam ' + this.fmt(rest) : 'Excesso de ' + this.fmt(-rest)),
+        restColor: restCents < 0 ? 'var(--red)' : 'var(--green)',
         barW: Math.min(100, orc > 0 ? Math.round(usado / orc * 100) : (usado > 0 ? 100 : 0)) + '%',
         barColor: over ? 'var(--red)' : this.CATCOLORS[oi % this.CATCOLORS.length],
         borderC: over ? 'var(--amber)' : 'var(--border)',
