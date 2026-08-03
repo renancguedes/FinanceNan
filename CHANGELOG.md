@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.0 - 2026-08-02
+- nova tela "Análise" (menu lateral, logo abaixo do Dashboard): análise das despesas da competência agrupadas pela categoria do catálogo. Três cards no topo — categoria que mais gastou (com nome, valor, % do total e nº de lançamentos), total gasto na competência e total gasto em cartão de crédito (com o % que representa do mês)
+- ranking de categorias em ordem decrescente, com barra proporcional à maior categoria, % do total do mês e comparativo com o mês anterior (▲/▼ em reais, verde quando caiu, vermelho quando subiu; avisa quando não houve gasto na categoria no mês anterior)
+- cada categoria expande em accordion (clique na linha) e lista as despesas vinculadas, ordenadas do maior para o menor valor, com status Paga/Pendente, data, conta/cartão e atalho para editar a despesa. Botões "Expandir todas" / "Recolher todas"
+- sinalização de cartão de crédito em dois níveis: badge no cabeçalho da categoria com o subtotal em cartão ("Cartão R$ X") e ícone de cartão em cada despesa, com a meta mostrando a data da compra e a data da fatura ("Compra 14/08 · fatura 07/09 · Cartão Ametista")
+- badge de valor em aberto por categoria, para separar o que já foi pago do que ainda vai sair
+- filtro "Todas as formas" / "Só cartão de crédito" para isolar o gasto de fatura
+- a tela respeita a competência selecionada no cabeçalho e usa a mesma regra do resto do app: despesa de cartão entra no mês da fatura (vencimento), não no da compra
+
 ## v1.3.0 - 2026-07-18
 - planejamento: "Distribuição da renda" reformulada. Removida a troca de aba Percentual/Valor — agora é uma visualização única onde a % e o valor são editáveis direto na linha, além do slider. O slider move apenas a %, e o valor acompanha (valor = renda × %/100); ao digitar um valor, a % correspondente é recalculada
 - planejamento: edição em rascunho local com botão "Salvar distribuição" (aparece quando há alterações não salvas, com opção Descartar). Nada é gravado no banco nem reordenado enquanto você edita — a lista só reordena e a sincronização só acontece ao salvar, o que elimina o "pulo" dos campos durante a digitação

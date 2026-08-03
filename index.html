@@ -343,6 +343,127 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
         </div>
       </sc-if>
 
+      <!-- ===== ANÁLISE POR CATEGORIA ===== -->
+      <sc-if value="{{showAna}}" hint-placeholder-val="{{false}}">
+        <div data-screen-label="Análise" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);animation:fadeUp .45s cubic-bezier(.3,.7,.3,1) both" style-hover="transform:translateY(-3px);box-shadow:var(--lift)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:32px;height:32px;border-radius:9px;background:{{anaLiderCorSoft}};color:{{anaLiderCor}};display:flex;align-items:center;justify-content:center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{anaLiderIcon}}"></path></svg>
+                </div>
+                <div style="font-size:12.5px;font-weight:700;color:var(--text2)">Categoria que mais gastou</div>
+              </div>
+              <div style="font-family:Sora;font-weight:600;font-size:19px;letter-spacing:-.02em;margin-bottom:2px">{{anaLiderNome}}</div>
+              <div style="font-family:Sora;font-weight:600;font-size:24px;letter-spacing:-.02em;color:var(--red)">{{anaLiderFmt}}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">{{anaLiderSub}}</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);animation:fadeUp .45s cubic-bezier(.3,.7,.3,1) .07s both" style-hover="transform:translateY(-3px);box-shadow:var(--lift)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l6 6 4-4 8 8M15 17h6v-6"></path></svg>
+                </div>
+                <div style="font-size:12.5px;font-weight:700;color:var(--text2)">Total gasto na competência</div>
+              </div>
+              <div style="font-family:Sora;font-weight:600;font-size:26px;letter-spacing:-.02em">{{anaTotalFmt}}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">{{anaQtd}} em {{anaCatCount}}</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);animation:fadeUp .45s cubic-bezier(.3,.7,.3,1) .14s both" style-hover="transform:translateY(-3px);box-shadow:var(--lift)">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+                <div style="width:32px;height:32px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h20v13H2zM2 10h20"></path></svg>
+                </div>
+                <div style="font-size:12.5px;font-weight:700;color:var(--text2)">Gasto em cartão de crédito</div>
+              </div>
+              <div style="font-family:Sora;font-weight:600;font-size:26px;letter-spacing:-.02em;color:var(--accent)">{{anaCartaoFmt}}</div>
+              <div style="font-size:12px;color:var(--text3);margin-top:4px">{{anaCartaoSub}}</div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{anaFiltros}}" as="f" hint-placeholder-count="2">
+                <button onClick="{{f.pick}}" style="padding:8px 15px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:12.5px;cursor:pointer" style-hover="transform:translateY(-1px)">{{f.label}}</button>
+              </sc-for>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{anaExpandAll}}" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent)">Expandir todas</button>
+              <button onClick="{{anaCollapseAll}}" style="padding:8px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:700;font-size:12.5px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent)">Recolher todas</button>
+            </div>
+          </div>
+
+          <sc-if value="{{anaEmpty}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nada para analisar ainda</div>
+              <div style="font-size:13px">Nenhuma despesa em {{compLabel}} com esse filtro.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{anaHas}}" hint-placeholder-val="{{true}}">
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{anaCats}}" as="c" hint-placeholder-count="5">
+                <div style="background:{{c.rowBg}};border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1) both;animation-delay:{{c.dl}}">
+                  <button onClick="{{c.toggle}}" style="width:100%;border:none;background:none;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:14px;text-align:left;font-family:inherit;color:var(--text)" style-hover="background:var(--surface2)">
+                    <div style="width:36px;height:36px;flex:none;border-radius:10px;background:{{c.corSoft}};color:{{c.cor}};display:flex;align-items:center;justify-content:center">
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{c.icon}}"></path></svg>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+                        <span style="font-weight:800;font-size:14px">{{c.nome}}</span>
+                        <span style="font-size:11.5px;color:var(--text3);font-weight:600">{{c.qtd}}</span>
+                        <sc-if value="{{c.temCartao}}" hint-placeholder-val="{{true}}">
+                          <span title="Parte do gasto foi no cartão de crédito" style="display:flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 6h20v13H2zM2 10h20"></path></svg>
+                            {{c.cartaoTxt}}
+                          </span>
+                        </sc-if>
+                        <sc-if value="{{c.temAberto}}" hint-placeholder-val="{{false}}">
+                          <span style="padding:2px 9px;border-radius:99px;font-size:10.5px;font-weight:800;background:var(--amber-soft);color:var(--amber);flex:none">{{c.abertoTxt}}</span>
+                        </sc-if>
+                      </div>
+                      <div style="height:8px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);overflow:hidden">
+                        <div style="height:100%;border-radius:99px;background:{{c.cor}};width:{{c.barW}};animation:growW .8s cubic-bezier(.3,.7,.3,1);transition:width .5s cubic-bezier(.3,.7,.3,1)"></div>
+                      </div>
+                    </div>
+                    <div style="flex:none;text-align:right">
+                      <div style="font-family:Sora;font-weight:600;font-size:16px;color:var(--red)">{{c.valorFmt}}</div>
+                      <div style="font-size:11.5px;color:var(--text3);font-weight:700">{{c.pctTxt}} do mês</div>
+                      <sc-if value="{{c.temDelta}}" hint-placeholder-val="{{true}}">
+                        <div style="font-size:11px;font-weight:700;color:{{c.deltaFg}};margin-top:2px">{{c.deltaTxt}}</div>
+                      </sc-if>
+                      <sc-if value="{{c.semPrev}}" hint-placeholder-val="{{false}}">
+                        <div style="font-size:11px;color:var(--text3);margin-top:2px">Sem gasto no mês anterior</div>
+                      </sc-if>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;transform:{{c.chevFlip}};transition:transform .25s ease"><path d="M6 9l6 6 6-6"></path></svg>
+                  </button>
+                  <sc-if value="{{c.aberta}}" hint-placeholder-val="{{false}}">
+                    <div style="border-top:1px solid var(--border);padding:12px 18px 16px;display:flex;flex-direction:column;gap:7px;animation:fadeIn .25s ease">
+                      <sc-for list="{{c.itens}}" as="i" hint-placeholder-count="3">
+                        <div style="display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:11px;background:var(--surface);border:1px solid var(--border);animation:fadeUp .3s ease both;animation-delay:{{i.dl}}" style-hover="transform:translateX(2px);border-color:var(--border2)">
+                          <div style="flex:1;min-width:0">
+                            <div style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px;min-width:0">
+                              <sc-if value="{{i.isCard}}" hint-placeholder-val="{{true}}">
+                                <span title="Gasto no cartão de crédito" style="flex:none;display:flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M2 6h20v13H2zM2 10h20"></path></svg></span>
+                              </sc-if>
+                              <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{i.desc}}</span>
+                            </div>
+                            <div style="font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{i.meta}}</div>
+                          </div>
+                          <span style="padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:800;background:{{i.stBg}};color:{{i.stFg}};flex:none">{{i.stLabel}}</span>
+                          <div style="font-family:Sora;font-weight:600;font-size:13.5px;color:var(--red);flex:none">{{i.valorFmt}}</div>
+                          <button onClick="{{i.edit}}" title="Editar despesa" style="width:26px;height:26px;flex:none;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
       <!-- ===== PLANEJAMENTO ===== -->
       <sc-if value="{{showPlan}}" hint-placeholder-val="{{false}}">
         <div data-screen-label="Planejamento" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
@@ -984,6 +1105,7 @@ class Component extends DCLogic {
       reservaMeses: 6, distDraft: null, distDirty: false,
       recFilter: 'todas', despFilter: 'todas', formaFilter: 'todas',
       despSort: { k: 'data', dir: -1 },
+      anaExp: [], anaSoCartao: false,
       modal: null, confirm: null, detail: null, toasts: [], adminUsers: [], adminLoading: false
     };
   })();
@@ -1039,6 +1161,7 @@ class Component extends DCLogic {
     conta: 'M3 8h18v12H3zM3 8l2-4h12l2 4M15 14h3',
     tag: 'M3 3h8l10 10-8 8L3 11V3Zm5 5h.01',
     cfg: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8-3c0 .6-.1 1.2-.2 1.8l2 1.6-2 3.4-2.4-1a8 8 0 0 1-3 1.8L14 22h-4l-.4-2.4a8 8 0 0 1-3-1.8l-2.4 1-2-3.4 2-1.6A8 8 0 0 1 4 12c0-.6.1-1.2.2-1.8l-2-1.6 2-3.4 2.4 1a8 8 0 0 1 3-1.8L10 2h4l.4 2.4a8 8 0 0 1 3 1.8l2.4-1 2 3.4-2 1.6c.1.6.2 1.2.2 1.8Z',
+    pie: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 3v9h9',
     check: 'M5 13l4 4L19 7',
     alert: 'M12 8v4m0 4h.01M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z',
     coin: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5h-2.5a1.75 1.75 0 0 0 0 3.5H15'
@@ -1667,16 +1790,17 @@ class Component extends DCLogic {
         authMainLabel: s.authTab === 'cadastro' ? 'Criar minha conta' : 'Entrar',
         doAuthMain: s.authTab === 'cadastro' ? this.doCadastro : this.doLogin,
         doRecuperar: this.doRecuperar, doVisitante: this.doVisitante,
-        isVisitor: false, loading: false, showDash: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, showAdmin: false, modalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
+        isVisitor: false, loading: false, showDash: false, showAna: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, showAdmin: false, modalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
       };
     }
 
     // ===== APP =====
     const db = s.db;
     const comp = s.comp;
-    const titles = { dashboard: 'Dashboard', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio', categorias: 'Categorias', config: 'Configurações', admin: 'Admin' };
+    const titles = { dashboard: 'Dashboard', analise: 'Análise por Categoria', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio', categorias: 'Categorias', config: 'Configurações', admin: 'Admin' };
     const navDefs = [
-      ['dashboard', 'Dashboard', this.ICONS.dash], ['planejamento', 'Planejamento', this.ICONS.plan],
+      ['dashboard', 'Dashboard', this.ICONS.dash], ['analise', 'Análise', this.ICONS.pie],
+      ['planejamento', 'Planejamento', this.ICONS.plan],
       ['fixos', 'Gastos Fixos', this.ICONS.fixo], ['receitas', 'Receitas', this.ICONS.rec],
       ['despesas', 'Despesas', this.ICONS.desp], ['cartoes', 'Cartões', this.ICONS.card],
       ['contas', 'Contas', this.ICONS.conta], ['categorias', 'Categorias', this.ICONS.tag],
@@ -1725,6 +1849,7 @@ class Component extends DCLogic {
       themeIcon: s.theme === 'dark' ? 'M12 4V2m0 20v-2m8-8h2M2 12h2m13.6-5.6 1.4-1.4M4.9 19.1l1.4-1.4m0-11.4L4.9 4.9m14.2 14.2-1.4-1.4M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z' : 'M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z',
       loading: s.loading,
       showDash: !s.loading && s.screen === 'dashboard',
+      showAna: !s.loading && s.screen === 'analise',
       showPlan: !s.loading && s.screen === 'planejamento',
       showFixos: !s.loading && s.screen === 'fixos',
       showRec: !s.loading && s.screen === 'receitas',
@@ -1808,6 +1933,85 @@ class Component extends DCLogic {
     ].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 7).map((l, i) => ({ ...l, dl: this.dl(i) }));
     vals.ultimos = lanc;
     vals.emptyLanc = lanc.length === 0;
+
+    // ---- Análise por categoria ----
+    // Agrupa as despesas da competência pela categoria do catálogo (campo `cat`).
+    // Cartão de crédito entra pela data de vencimento da fatura (compDate), igual ao resto do app.
+    const anaPrev = this.shiftComp(comp, -1);
+    const despPrevComp = db.despesas.filter(d => this.inComp(this.compDate(d), anaPrev));
+    const anaBase = s.anaSoCartao ? despComp.filter(d => d.cartaoId) : despComp;
+    const anaTotal = anaBase.reduce((t, d) => t + d.valor, 0);
+    const anaTotalCartao = anaBase.filter(d => d.cartaoId).reduce((t, d) => t + d.valor, 0);
+    const catKey = d => (d.cat || '').trim() || 'Sem categoria';
+    const groupBy = list => list.reduce((m, d) => { const k = catKey(d); (m[k] = m[k] || []).push(d); return m; }, {});
+    const anaGroups = groupBy(anaBase);
+    const anaPrevGroups = groupBy(s.anaSoCartao ? despPrevComp.filter(d => d.cartaoId) : despPrevComp);
+    const anaRows = Object.keys(anaGroups).map(nome => {
+      const itens = anaGroups[nome];
+      const total = itens.reduce((t, d) => t + d.valor, 0);
+      const cartao = itens.filter(d => d.cartaoId).reduce((t, d) => t + d.valor, 0);
+      const aberto = itens.filter(d => !d.paga).reduce((t, d) => t + d.valor, 0);
+      const prev = (anaPrevGroups[nome] || []).reduce((t, d) => t + d.valor, 0);
+      return { nome, itens, total, cartao, aberto, prev };
+    }).sort((a, b) => b.total - a.total);
+    const anaMax = anaRows.length ? anaRows[0].total : 0;
+    const anaPct = v => anaTotal > 0 ? Math.round(v / anaTotal * 1000) / 10 : 0;
+    const anaPctTxt = v => String(anaPct(v)).replace('.', ',') + '%';
+    const anaCat = nome => db.catalogo.find(x => x.nome === nome);
+    vals.anaEmpty = anaRows.length === 0;
+    vals.anaHas = anaRows.length > 0;
+    vals.anaTotalFmt = this.fmt(anaTotal);
+    vals.anaQtd = anaBase.length + (anaBase.length === 1 ? ' lançamento' : ' lançamentos');
+    vals.anaCatCount = anaRows.length + (anaRows.length === 1 ? ' categoria' : ' categorias');
+    vals.anaCartaoFmt = this.fmt(anaTotalCartao);
+    vals.anaCartaoSub = anaTotal > 0 ? anaPctTxt(anaTotalCartao) + ' do total do mês' : 'Nenhum gasto no mês';
+    vals.anaLiderNome = anaRows.length ? anaRows[0].nome : '—';
+    vals.anaLiderFmt = anaRows.length ? this.fmt(anaRows[0].total) : this.fmt(0);
+    vals.anaLiderSub = anaRows.length ? anaPctTxt(anaRows[0].total) + ' do total · ' + anaRows[0].itens.length + (anaRows[0].itens.length === 1 ? ' lançamento' : ' lançamentos') : 'Sem despesas em ' + this.monthName(comp.m);
+    vals.anaLiderCor = anaRows.length ? ((anaCat(anaRows[0].nome) || {}).cor || '#8a8f98') : 'var(--text3)';
+    vals.anaLiderCorSoft = 'color-mix(in oklab, ' + vals.anaLiderCor + ', var(--bg) 84%)';
+    vals.anaLiderIcon = anaRows.length ? this.catIcon((anaCat(anaRows[0].nome) || {}).icone) : this.ICONS.tag;
+    vals.anaFiltros = [[false, 'Todas as formas'], [true, 'Só cartão de crédito']].map(f => ({
+      label: f[1], pick: () => this.setState({ anaSoCartao: f[0], anaExp: [] }),
+      bg: s.anaSoCartao === f[0] ? 'var(--accent)' : 'var(--surface)',
+      fg: s.anaSoCartao === f[0] ? 'var(--on-accent)' : 'var(--text2)',
+      bc: s.anaSoCartao === f[0] ? 'var(--accent)' : 'var(--border2)'
+    }));
+    vals.anaExpandAll = () => this.setState({ anaExp: anaRows.map(r => r.nome) });
+    vals.anaCollapseAll = () => this.setState({ anaExp: [] });
+    vals.anaCats = anaRows.map((r, i) => {
+      const cat = anaCat(r.nome);
+      const cor = (cat && cat.cor) || '#8a8f98';
+      const aberta = (s.anaExp || []).includes(r.nome);
+      const delta = r.total - r.prev;
+      const temPrev = r.prev > 0;
+      return {
+        nome: r.nome, cor, corSoft: 'color-mix(in oklab, ' + cor + ', var(--bg) 84%)',
+        icon: this.catIcon(cat && cat.icone), dl: this.dl(i),
+        valorFmt: this.fmt(r.total), pctTxt: anaPctTxt(r.total),
+        barW: (anaMax > 0 ? Math.max(2, Math.round(r.total / anaMax * 100)) : 0) + '%',
+        qtd: r.itens.length + (r.itens.length === 1 ? ' lançamento' : ' lançamentos'),
+        temCartao: r.cartao > 0,
+        cartaoTxt: 'Cartão ' + this.fmt(r.cartao),
+        temAberto: r.aberto > 0,
+        abertoTxt: this.fmt(r.aberto) + ' em aberto',
+        temDelta: temPrev,
+        deltaTxt: (delta === 0 ? '= igual a ' : (delta > 0 ? '▲ ' : '▼ ') + this.fmt(Math.abs(delta)) + ' vs ') + this.monthShort(anaPrev.m),
+        deltaFg: delta === 0 ? 'var(--text3)' : (delta > 0 ? 'var(--red)' : 'var(--green)'),
+        semPrev: !temPrev,
+        aberta, chevFlip: aberta ? 'rotate(180deg)' : 'none',
+        rowBg: aberta ? 'var(--surface2)' : 'var(--surface)',
+        toggle: () => this.setState(st => ({ anaExp: (st.anaExp || []).includes(r.nome) ? st.anaExp.filter(x => x !== r.nome) : [...(st.anaExp || []), r.nome] })),
+        itens: [...r.itens].sort((a, b) => b.valor - a.valor).map((d, j) => ({
+          desc: d.desc, isCard: !!d.cartaoId, dl: this.dl(j),
+          meta: (d.cartaoId ? 'Compra ' + this.fmtData(d.data) + ' · fatura ' + this.fmtData(d.venc) : this.fmtData(d.data)) + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.fixoId ? ' · Fixo' : ''),
+          valorFmt: this.fmt(d.valor),
+          stLabel: d.paga ? 'Paga' : 'Pendente',
+          stBg: d.paga ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: d.paga ? 'var(--green)' : 'var(--amber)',
+          edit: () => this.openModal('despesa', { ...d, forma: d.cartaoId ? 'k:' + d.cartaoId : 'a:' + (d.contaId || '') })
+        }))
+      };
+    });
 
     // ---- Planejamento ----
     vals.rendaFmt = this.fmt(renda);
