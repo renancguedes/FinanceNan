@@ -1421,6 +1421,18 @@ class Component extends DCLogic {
     const formaOpts = [...contaOpts.map(o => ({ v: 'a:' + o.v, l: o.l })), ...db.cartoes.filter(k => k.ativo).map(k => ({ v: 'k:' + k.id, l: 'Cartão ' + k.nome }))];
     const planCatOpts = db.categorias.map(c => ({ v: c.id, l: c.nome }));
     const hoje = this.dateFor(this.state.comp, new Date().getDate());
+    // ---- pagamento de fatura: opções de conta para o débito ----
+    const mExtra = (this.state.modal && this.state.modal.extra) || {};
+    const cartaoFat = mExtra.cardId ? db.cartoes.find(k => k.id === mExtra.cardId) : null;
+    const totalFat = mExtra.total || 0;
+    const reservaIdsM = (db.config && db.config.reservaIds) || [];
+    const tagConta = a => (reservaIdsM.includes(a.id) ? ' · Reserva de emergência' : '') + (a.tipo === 'Investimento' ? ' · Investimento' : '');
+    const contaDebOpts = db.contas.filter(a => a.ativo).sort((a, b) => (b.saldo - a.saldo) || a.nome.localeCompare(b.nome, 'pt-BR'))
+      .map(a => ({ v: a.id, l: a.nome + ' — saldo ' + this.fmt(a.saldo) + tagConta(a) }));
+    const contaDebPref = a => a.ativo && a.tipo !== 'Investimento' && !reservaIdsM.includes(a.id);
+    const contaDebDefault = (db.contas.find(a => contaDebPref(a) && a.saldo >= totalFat)
+      || db.contas.filter(contaDebPref).sort((a, b) => b.saldo - a.saldo)[0]
+      || db.contas.find(a => a.ativo) || {}).id || '';
     return {
       conta: { title: n => n ? 'Editar conta' : 'Nova conta', fields: [
         { k: 'nome', label: 'Nome', t: 'text', ph: 'Ex: Conta Corrente', span: 2 },
@@ -1499,7 +1511,16 @@ class Component extends DCLogic {
       importFixos: { title: () => 'Importar gastos fixos', submitLabel: 'Importar selecionados', hint: 'Itens com o mesmo nome já existentes na categoria de destino não serão duplicados.', fields: [
         { k: 'catId', label: 'Categoria de destino', t: 'select', options: planCatOpts, span: 2 },
         { k: 'sel', label: 'Gastos fixos', t: 'checklist', span: 2 }
-      ], defaults: { catId: (db.categorias.find(c => c.nome === 'Custos Fixos') || db.categorias[0] || {}).id, sel: {} } }
+      ], defaults: { catId: (db.categorias.find(c => c.nome === 'Custos Fixos') || db.categorias[0] || {}).id, sel: {} } },
+      pagarFatura: {
+        title: () => 'Pagar fatura' + (cartaoFat ? ' · ' + cartaoFat.nome : ''),
+        submitLabel: 'Confirmar pagamento',
+        hint: 'Valor em aberto: ' + this.fmt(totalFat) + '. Escolha de qual conta o dinheiro vai sair — o saldo dela será debitado.',
+        fields: [
+          { k: 'contaId', label: 'Debitar da conta', t: 'select', options: contaDebOpts, span: 2 }
+        ],
+        defaults: { contaId: contaDebDefault }
+      }
     };
   }
 
@@ -1516,6 +1537,24 @@ class Component extends DCLogic {
     const def = this.modalDefs()[m.type];
     const d = { ...def.defaults, ...m.draft };
     const num = k => { d[k] = this.parseNum(d[k]); };
+
+    if (m.type === 'pagarFatura') {
+      const cardId = (m.extra && m.extra.cardId) || null;
+      const cartao = db.cartoes.find(k => k.id === cardId);
+      const conta = db.contas.find(a => a.id === d.contaId && a.ativo);
+      if (!conta) { this.toast('Escolha a conta de onde o valor será debitado.', 'err'); return; }
+      let total = 0;
+      db.despesas.forEach(dd => { if (dd.cartaoId === cardId && this.inComp(this.compDate(dd), this.state.comp) && !dd.paga) { dd.paga = true; total += dd.valor; } });
+      if (total <= 0) { this.setState({ modal: null }); this.toast('Esta fatura não tem valor em aberto.', 'err'); return; }
+      const saldoAntes = conta.saldo;
+      conta.saldo -= total;
+      this.commit(db);
+      this.setState({ modal: null });
+      const alvo = 'Fatura' + (cartao ? ' do cartão ' + cartao.nome : '') + ' paga: ' + this.fmt(total) + ' debitados de ' + conta.nome;
+      if (saldoAntes < total) this.toast(alvo + '. Atenção: a conta ficou com saldo negativo (' + this.fmt(conta.saldo) + ').', 'err');
+      else this.toast(alvo + '.');
+      return;
+    }
 
     if (m.type === 'importFixos') {
       const sel = d.sel || {};
@@ -1647,14 +1686,11 @@ class Component extends DCLogic {
     this.commit(db);
     this.toast(g.desc + ' pago' + (conta ? ' com ' + conta.nome : '') + '.');
   }
-  pagarFatura(cardId) {
-    const db = JSON.parse(JSON.stringify(this.state.db));
-    const conta = db.contas.find(a => a.ativo);
-    let total = 0;
-    db.despesas.forEach(dd => { if (dd.cartaoId === cardId && this.inComp(this.compDate(dd), this.state.comp) && !dd.paga) { dd.paga = true; total += dd.valor; } });
-    if (conta) conta.saldo -= total;
-    this.commit(db);
-    this.toast('Fatura paga: ' + this.fmt(total) + (conta ? ' debitados de ' + conta.nome : '') + '.');
+  pagarFatura(cardId, total) {
+    const db = this.state.db;
+    if (!db.contas.some(a => a.ativo)) { this.toast('Cadastre uma conta ativa antes de pagar a fatura.', 'err'); return; }
+    // abre o modal para o usuário escolher de qual conta o valor será debitado
+    this.openModal('pagarFatura', null, { cardId, total: total || 0 });
   }
   toggleAtivo(collName, id) {
     const db = JSON.parse(JSON.stringify(this.state.db));
@@ -2226,7 +2262,7 @@ class Component extends DCLogic {
         faturaFmt: this.fmt(fatura), pagoFmt: this.fmt(pago), abertoFmt: this.fmt(aberto), compFmt: this.fmt(comprometido),
         abertoColor: aberto > 0 ? 'var(--red)' : 'var(--text)',
         temAberto: aberto > 0,
-        pagarFatura: () => this.pagarFatura(k.id),
+        pagarFatura: () => this.pagarFatura(k.id, aberto),
         edit: () => this.openModal('cartao', k),
         del: () => this.del('cartoes', k.id, 'Excluir o cartão "' + k.nome + '"? As despesas lançadas nele serão mantidas.')
       };

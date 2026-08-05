@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.0 - 2026-08-05
+- cartões: "Pagar fatura" agora abre um pop-up para escolher de qual conta o valor será debitado, em vez de debitar automaticamente a primeira conta ativa da lista. Era esse comportamento que fazia o pagamento cair na conta errada (por exemplo, na Reserva de emergência, deixando-a negativa)
+- cartões: o pop-up mostra o valor em aberto da fatura no cabeçalho e lista as contas ativas ordenadas pelo maior saldo, exibindo o saldo de cada uma e marcando as que são "Reserva de emergência" e/ou "Investimento", para não escolher por engano
+- cartões: a conta sugerida por padrão é a primeira conta ativa que não é investimento nem reserva de emergência e que tenha saldo suficiente para cobrir a fatura; se nenhuma cobrir, sugere a de maior saldo dentro desse mesmo critério
+- cartões: ao confirmar, se o saldo da conta escolhida não cobrir a fatura, o app avisa que a conta ficou negativa e informa o novo saldo. A confirmação também passou a citar o cartão e a conta debitada
+- cartões: se não houver nenhuma conta ativa cadastrada, o app avisa em vez de tentar pagar a fatura sem destino
+
 ## v1.5.0 - 2026-08-05
 - dashboard: o card "A pagar este mês" agora soma também os gastos fixos ativos que ainda não foram pagos na competência, além das despesas em aberto. Antes o card só considerava despesas lançadas, ignorando os fixos que ainda não haviam gerado despesa
 - dashboard: o total é recalculado automaticamente conforme cada item é pago — ao pagar um gasto fixo, ele sai da conta e o valor do card diminui
