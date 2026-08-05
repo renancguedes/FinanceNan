@@ -1813,12 +1813,16 @@ class Component extends DCLogic {
     const custoFixo = db.fixos.filter(g => g.ativo).reduce((t, g) => t + g.valor, 0);
     const despComp = db.despesas.filter(d => this.inComp(this.compDate(d), comp));
     const recComp = db.receitas.filter(r => this.inComp(r.data, comp));
-    const aPagar = despComp.filter(d => !d.paga).reduce((t, d) => t + d.valor, 0);
+    const fixoPago = g => db.despesas.some(d => d.fixoId === g.id && this.inComp(d.data, comp));
+    // gastos fixos ativos que ainda não geraram despesa nesta competência
+    const fixosPend = db.fixos.filter(g => g.ativo && !fixoPago(g)).sort((a, b) => (a.venc || 0) - (b.venc || 0) || b.valor - a.valor);
+    const aPagarDesp = despComp.filter(d => !d.paga).reduce((t, d) => t + d.valor, 0);
+    const aPagarFixos = fixosPend.reduce((t, g) => t + g.valor, 0);
+    const aPagar = aPagarDesp + aPagarFixos;
     const next = this.shiftComp(comp, 1);
     const prevNext = custoFixo + db.despesas.filter(d => this.inComp(this.compDate(d), next) && !d.paga && !d.fixoId).reduce((t, d) => t + d.valor, 0);
     const contaNome = id => { const a = db.contas.find(x => x.id === id); return a ? a.nome : '—'; };
     const cartaoNome = id => { const k = db.cartoes.find(x => x.id === id); return k ? 'Cartão ' + k.nome : '—'; };
-    const fixoPago = g => db.despesas.some(d => d.fixoId === g.id && this.inComp(d.data, comp));
     const catColor = nome => { const c = db.catalogo.find(x => x.nome === nome); return c ? c.cor : '#8a8f98'; };
 
     const vals = { ...base,
@@ -1882,20 +1886,27 @@ class Component extends DCLogic {
     }
     if (s.detail && s.detail.kind === 'apagar') {
       vals.detailTitle = 'A pagar em ' + this.monthName(comp.m);
-      vals.detailSub = 'Despesas em aberto desta competência.';
-      vals.detailItems = despAbertas.map((d, i) => ({
+      vals.detailSub = 'Gastos fixos e despesas em aberto desta competência.';
+      const fixoRows = fixosPend.map(g => ({
+        nome: g.desc, meta: 'Vence dia ' + (g.venc || 1) + ' · ' + g.cat + ' · Gasto fixo',
+        valorFmt: this.fmt(g.valor), valorColor: 'var(--red)',
+        cor: catColor(g.cat), corSoft: 'color-mix(in oklab, ' + catColor(g.cat) + ', var(--bg) 84%)',
+        icon: this.ICONS.fixo, podePagar: true, pagar: () => this.pagarFixo(g.id)
+      }));
+      const despRows = despAbertas.map(d => ({
         nome: d.desc, meta: this.fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)),
         valorFmt: this.fmt(d.valor), valorColor: 'var(--red)',
         cor: catColor(d.cat), corSoft: 'color-mix(in oklab, ' + catColor(d.cat) + ', var(--bg) 84%)',
-        icon: d.cartaoId ? this.ICONS.card : this.ICONS.desp, dl: this.dl(i),
+        icon: d.cartaoId ? this.ICONS.card : this.ICONS.desp,
         podePagar: true, pagar: () => this.toggleDespesa(d.id)
       }));
+      vals.detailItems = [...fixoRows, ...despRows].map((r, i) => ({ ...r, dl: this.dl(i) }));
       vals.detailEmpty = vals.detailItems.length === 0;
       vals.detailTotalFmt = this.fmt(aPagar); vals.detailTotalColor = 'var(--red)';
     }
     vals.dashCards = [
       { label: 'Patrimônio total', value: this.fmt(patrimonio), sub: patrContas.length + ' contas ativas', icon: this.ICONS.conta, iconBg: 'var(--accent-soft)', iconFg: 'var(--accent)', valueColor: 'var(--text)', dl: '0ms', clickable: true, plain: false, showDetail: showPatrDetail },
-      { label: 'A pagar este mês', value: this.fmt(aPagar), sub: despAbertas.length + ' despesas em aberto', icon: this.ICONS.desp, iconBg: 'var(--red-soft)', iconFg: 'var(--red)', valueColor: aPagar > 0 ? 'var(--red)' : 'var(--text)', dl: '70ms', clickable: true, plain: false, showDetail: showAPagarDetail },
+      { label: 'A pagar este mês', value: this.fmt(aPagar), sub: (() => { const nf = fixosPend.length, nd = despAbertas.length, tot = nf + nd; if (tot === 0) return 'Nada em aberto'; return tot + (tot === 1 ? ' item em aberto' : ' itens em aberto') + (nf ? ' · ' + nf + ' fixo' + (nf > 1 ? 's' : '') : ''); })(), icon: this.ICONS.desp, iconBg: 'var(--red-soft)', iconFg: 'var(--red)', valueColor: aPagar > 0 ? 'var(--red)' : 'var(--text)', dl: '70ms', clickable: true, plain: false, showDetail: showAPagarDetail },
       { label: 'Previsão próximo mês', value: this.fmt(prevNext), sub: 'Fixos + parcelas já agendadas', icon: this.ICONS.fixo, iconBg: 'var(--amber-soft)', iconFg: 'var(--amber)', valueColor: 'var(--text)', dl: '140ms', clickable: false, plain: true }
     ];
     const reservaMeta = custoFixo * s.reservaMeses;

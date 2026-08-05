@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.0 - 2026-08-05
+- dashboard: o card "A pagar este mês" agora soma também os gastos fixos ativos que ainda não foram pagos na competência, além das despesas em aberto. Antes o card só considerava despesas lançadas, ignorando os fixos que ainda não haviam gerado despesa
+- dashboard: o total é recalculado automaticamente conforme cada item é pago — ao pagar um gasto fixo, ele sai da conta e o valor do card diminui
+- dashboard: o detalhe do card (painel "A pagar em <mês>") passa a listar os gastos fixos pendentes junto com as despesas em aberto, com o dia de vencimento, a categoria e a marcação "Gasto fixo", e cada fixo tem botão "Pagar" que gera a despesa e debita a conta vinculada — o mesmo comportamento da tela Gastos Fixos
+- dashboard: os gastos fixos pendentes aparecem primeiro, ordenados pelo dia de vencimento, e o subtítulo do card mostra o total de itens em aberto destacando quantos são fixos (ex.: "5 itens em aberto · 4 fixos"); quando não há nada pendente, exibe "Nada em aberto"
+
 ## v1.4.0 - 2026-08-02
 - nova tela "Análise" (menu lateral, logo abaixo do Dashboard): análise das despesas da competência agrupadas pela categoria do catálogo. Três cards no topo — categoria que mais gastou (com nome, valor, % do total e nº de lançamentos), total gasto na competência e total gasto em cartão de crédito (com o % que representa do mês)
 - ranking de categorias em ordem decrescente, com barra proporcional à maior categoria, % do total do mês e comparativo com o mês anterior (▲/▼ em reais, verde quando caiu, vermelho quando subiu; avisa quando não houve gasto na categoria no mês anterior)
