@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.7.0 - 2026-08-08
+- análise: a tela passa a agrupar as despesas pela **data da compra**, e não mais pela data de vencimento da fatura. Uma compra feita em agosto no cartão aparece na análise de agosto, mesmo que a fatura só vença em setembro. O comparativo com o mês anterior segue a mesma regra
+- análise: o resto do app (dashboard, despesas, faturas) continua usando o vencimento da fatura para o cartão — a mudança é exclusiva da tela de Análise
+- análise: a linha de cada despesa dentro da categoria agora mostra sempre "Compra dd/mm/aa" e, quando houver vencimento, "· fatura dd/mm/aa" (cartão) ou "· venc dd/mm/aa" (demais formas)
+- gastos fixos: ao clicar em "Pagar", a data da compra da despesa gerada passa a ser **o dia em que o pagamento foi feito** (hoje), em vez do dia de vencimento do gasto fixo
+- gastos fixos: o dia de vencimento configurado no gasto fixo é gravado no campo "Vencimento" da despesa, dentro da competência selecionada (ex.: Streaming vence dia 20 → compra 08/08/26, vencimento 20/08/26), preservando o rastro do vencimento original
+- gastos fixos: o controle de "Pago / Em aberto" na competência passou a considerar o vencimento da despesa gerada, então o status continua correto mesmo quando o pagamento é feito em outro mês
+- despesas: o campo "Vencimento" deixou de ser exclusivo de cartão e agora aparece em todas as despesas, como campo **opcional** (rótulo "Vencimento (opcional)"). Serve para boletos, faturas de consumo e qualquer conta com data de vencimento própria
+- despesas: em compras no cartão o vencimento continua sendo calculado automaticamente pela regra de fechamento da fatura, e é recalculado quando a data da compra muda
+- despesas: ao trocar a forma de pagamento de cartão para conta, o vencimento calculado pela fatura é limpo; editar apenas a data da compra não apaga mais um vencimento digitado à mão
+- despesas: a coluna "Vencimento" da listagem mostra a data de qualquer despesa que tenha vencimento (antes exibia "—" para tudo que não fosse cartão)
+
 ## v1.6.0 - 2026-08-05
 - cartões: "Pagar fatura" agora abre um pop-up para escolher de qual conta o valor será debitado, em vez de debitar automaticamente a primeira conta ativa da lista. Era esse comportamento que fazia o pagamento cair na conta errada (por exemplo, na Reserva de emergência, deixando-a negativa)
 - cartões: o pop-up mostra o valor em aberto da fatura no cabeçalho e lista as contas ativas ordenadas pelo maior saldo, exibindo o saldo de cada uma e marcando as que são "Reserva de emergência" e/ou "Investimento", para não escolher por engano

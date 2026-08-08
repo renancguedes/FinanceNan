@@ -1128,6 +1128,8 @@ class Component extends DCLogic {
   }
   isCur(c) { const n = new Date(); return c.m === n.getMonth() + 1 && c.y === n.getFullYear(); }
   dateFor(c, day) { return this.ck(c) + '-' + String(Math.min(day || 1, 28)).padStart(2, '0'); }
+  // data de hoje no formato ISO (yyyy-mm-dd), em horário local
+  hojeISO() { const n = new Date(); return n.getFullYear() + '-' + String(n.getMonth() + 1).padStart(2, '0') + '-' + String(n.getDate()).padStart(2, '0'); }
   parseNum(v) { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; }
   // ---- precisão monetária (centavos) ----
   // Trabalhar em centavos (inteiros) evita os erros de arredondamento de ponto
@@ -1266,7 +1268,7 @@ class Component extends DCLogic {
       if (i % 2 === 0) db.receitas.push({ id: this.uid(), desc: 'Projeto freelance', cat: 'Freelance', contaId: 'a2', data: this.dateFor(c, 18), valor: 900 + i * 180, obs: '', recorrente: false, recebida: past });
       db.fixos.forEach((g, gi) => {
         const paidNow = i === 0 ? gi < 2 : true;
-        if (paidNow) db.despesas.push({ id: this.uid(), desc: g.desc, cat: g.cat, contaId: g.contaId, cartaoId: null, data: this.dateFor(c, g.venc), venc: null, valor: g.valor, obs: '', paga: true, fixoId: g.id });
+        if (paidNow) db.despesas.push({ id: this.uid(), desc: g.desc, cat: g.cat, contaId: g.contaId, cartaoId: null, data: this.dateFor(c, g.venc), venc: this.dateFor(c, g.venc), valor: g.valor, obs: '', paga: true, fixoId: g.id });
       });
       db.despesas.push({ id: this.uid(), desc: 'Mercado', cat: 'Alimentação', contaId: 'a1', cartaoId: null, data: this.dateFor(c, 9), venc: null, valor: 620 + (i % 3) * 60, obs: '', paga: past, fixoId: null });
       const dRest = this.dateFor(c, 14);
@@ -1405,7 +1407,11 @@ class Component extends DCLogic {
           const kk = s.db.cartoes.find(x => x.id === f.slice(2));
           const dataVal = draft.data || this.modalDefs()[type].defaults.data;
           if (kk && dataVal) draft.venc = this.calcVenc(kk, dataVal);
-        } else if (type === 'despesa') draft.venc = null;
+        } else if (type === 'despesa' && k === 'forma') {
+          // saiu do cartão: limpa o vencimento que havia sido calculado pela fatura.
+          // Só ao trocar a forma — editar a data não apaga um vencimento digitado à mão.
+          draft.venc = null;
+        }
       }
       return { modal: { ...s.modal, draft } };
     });
@@ -1468,12 +1474,12 @@ class Component extends DCLogic {
         { k: 'recebida', label: 'Já recebida', t: 'toggle', span: 1 },
         { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
       ], defaults: { desc: '', cat: recCatOpts.length ? recCatOpts[0].v : '', contaId: contaOpts.length ? contaOpts[0].v : '', data: hoje, valor: 0, obs: '', recorrente: false, recebida: false } },
-      despesa: { title: n => n ? 'Editar despesa' : 'Nova despesa', hint: 'Em compras no cartão, o vencimento é calculado automaticamente pelo fechamento da fatura.', fields: [
+      despesa: { title: n => n ? 'Editar despesa' : 'Nova despesa', hint: 'O vencimento é opcional e pode ser preenchido em qualquer despesa. Em compras no cartão, ele é calculado automaticamente pelo fechamento da fatura.', fields: [
         { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Mercado', span: 2 },
         { k: 'cat', label: 'Categoria', t: 'select', options: despCatOpts, span: 1 },
         { k: 'forma', label: 'Conta / Cartão', t: 'select', options: formaOpts, span: 1 },
         { k: 'data', label: 'Data da compra', t: 'date', span: 1 },
-        { k: 'venc', label: 'Vencimento (cartão)', t: 'date', span: 1 },
+        { k: 'venc', label: 'Vencimento (opcional)', t: 'date', span: 1 },
         { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
         { k: 'paga', label: 'Já paga', t: 'toggle', span: 1 },
         { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
@@ -1607,8 +1613,10 @@ class Component extends DCLogic {
       const f = d.forma || '';
       d.contaId = f.startsWith('a:') ? f.slice(2) : null;
       d.cartaoId = f.startsWith('k:') ? f.slice(2) : null;
+      // cartão: vencimento sempre calculado pela regra da fatura quando não informado.
+      // demais formas: o vencimento é livre e opcional (vazio vira null).
       if (d.cartaoId && !d.venc) { const k = db.cartoes.find(x => x.id === d.cartaoId); d.venc = this.calcVenc(k, d.data); }
-      if (!d.cartaoId) d.venc = null;
+      if (!d.venc) d.venc = null;
       delete d.forma;
     }
     const req = { conta: 'nome', cartao: 'nome', fixo: 'desc', receita: 'desc', despesa: 'desc', fonte: 'nome', categoria: 'nome', catalogo: 'nome', plano: 'nome' }[m.type];
@@ -1681,7 +1689,9 @@ class Component extends DCLogic {
     const db = JSON.parse(JSON.stringify(this.state.db));
     const g = db.fixos.find(x => x.id === id); if (!g) return;
     const conta = db.contas.find(a => a.id === g.contaId && a.ativo) || db.contas.find(a => a.ativo);
-    db.despesas.push({ id: this.uid(), desc: g.desc, cat: g.cat, contaId: conta ? conta.id : null, cartaoId: null, data: this.dateFor(this.state.comp, g.venc), venc: null, valor: g.valor, obs: 'Gerada pelo gasto fixo', paga: true, fixoId: g.id });
+    // a data da compra é o dia em que o pagamento foi feito (hoje); o vencimento
+    // guarda o dia configurado no gasto fixo dentro da competência selecionada
+    db.despesas.push({ id: this.uid(), desc: g.desc, cat: g.cat, contaId: conta ? conta.id : null, cartaoId: null, data: this.hojeISO(), venc: this.dateFor(this.state.comp, g.venc), valor: g.valor, obs: 'Gerada pelo gasto fixo', paga: true, fixoId: g.id });
     if (conta) conta.saldo -= g.valor;
     this.commit(db);
     this.toast(g.desc + ' pago' + (conta ? ' com ' + conta.nome : '') + '.');
@@ -1849,7 +1859,8 @@ class Component extends DCLogic {
     const custoFixo = db.fixos.filter(g => g.ativo).reduce((t, g) => t + g.valor, 0);
     const despComp = db.despesas.filter(d => this.inComp(this.compDate(d), comp));
     const recComp = db.receitas.filter(r => this.inComp(r.data, comp));
-    const fixoPago = g => db.despesas.some(d => d.fixoId === g.id && this.inComp(d.data, comp));
+    // o vínculo do fixo com a competência é o vencimento (a data da compra passou a ser o dia do pagamento)
+    const fixoPago = g => db.despesas.some(d => d.fixoId === g.id && this.inComp(d.venc || d.data, comp));
     // gastos fixos ativos que ainda não geraram despesa nesta competência
     const fixosPend = db.fixos.filter(g => g.ativo && !fixoPago(g)).sort((a, b) => (a.venc || 0) - (b.venc || 0) || b.valor - a.valor);
     const aPagarDesp = despComp.filter(d => !d.paga).reduce((t, d) => t + d.valor, 0);
@@ -1983,10 +1994,12 @@ class Component extends DCLogic {
 
     // ---- Análise por categoria ----
     // Agrupa as despesas da competência pela categoria do catálogo (campo `cat`).
-    // Cartão de crédito entra pela data de vencimento da fatura (compDate), igual ao resto do app.
+    // A referência aqui é sempre a DATA DA COMPRA (d.data), inclusive para cartão
+    // de crédito — diferente do resto do app, que usa o vencimento da fatura.
     const anaPrev = this.shiftComp(comp, -1);
-    const despPrevComp = db.despesas.filter(d => this.inComp(this.compDate(d), anaPrev));
-    const anaBase = s.anaSoCartao ? despComp.filter(d => d.cartaoId) : despComp;
+    const anaComp = db.despesas.filter(d => this.inComp(d.data, comp));
+    const despPrevComp = db.despesas.filter(d => this.inComp(d.data, anaPrev));
+    const anaBase = s.anaSoCartao ? anaComp.filter(d => d.cartaoId) : anaComp;
     const anaTotal = anaBase.reduce((t, d) => t + d.valor, 0);
     const anaTotalCartao = anaBase.filter(d => d.cartaoId).reduce((t, d) => t + d.valor, 0);
     const catKey = d => (d.cat || '').trim() || 'Sem categoria';
@@ -2051,7 +2064,7 @@ class Component extends DCLogic {
         toggle: () => this.setState(st => ({ anaExp: (st.anaExp || []).includes(r.nome) ? st.anaExp.filter(x => x !== r.nome) : [...(st.anaExp || []), r.nome] })),
         itens: [...r.itens].sort((a, b) => b.valor - a.valor).map((d, j) => ({
           desc: d.desc, isCard: !!d.cartaoId, dl: this.dl(j),
-          meta: (d.cartaoId ? 'Compra ' + this.fmtData(d.data) + ' · fatura ' + this.fmtData(d.venc) : this.fmtData(d.data)) + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.fixoId ? ' · Fixo' : ''),
+          meta: 'Compra ' + this.fmtData(d.data) + (d.venc ? (d.cartaoId ? ' · fatura ' : ' · venc ') + this.fmtData(d.venc) : '') + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.fixoId ? ' · Fixo' : ''),
           valorFmt: this.fmt(d.valor),
           stLabel: d.paga ? 'Paga' : 'Pendente',
           stBg: d.paga ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: d.paga ? 'var(--green)' : 'var(--amber)',
@@ -2234,8 +2247,8 @@ class Component extends DCLogic {
       desc: d.desc, paga: d.paga, deFixo: !!d.fixoId, isCard: !!d.cartaoId, dl: this.dl(i),
       meta: d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.obs ? ' · ' + d.obs : ''),
       compra: this.fmtData(d.data),
-      venc: d.cartaoId ? this.fmtData(d.venc) : '—',
-      vencFg: d.cartaoId ? 'var(--text)' : 'var(--text3)',
+      venc: d.venc ? this.fmtData(d.venc) : '—',
+      vencFg: d.venc ? 'var(--text)' : 'var(--text3)',
       valorFmt: this.fmt(d.valor),
       stLabel: d.paga ? 'Paga' : 'Pendente',
       stBg: d.paga ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: d.paga ? 'var(--green)' : 'var(--amber)',
@@ -2344,7 +2357,6 @@ class Component extends DCLogic {
       vals.modalHint = def.hint || false;
       vals.modalSubmitLabel = def.submitLabel || 'Salvar';
       let fields = def.fields;
-      if (m.type === 'despesa' && !(draft.forma || '').startsWith('k:')) fields = fields.filter(f => f.k !== 'venc');
       vals.modalFields = fields.map(f => {
         const v = draft[f.k];
         const field = { label: f.label, span: String(f.span || 2) };
