@@ -467,6 +467,13 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
       <!-- ===== PLANEJAMENTO ===== -->
       <sc-if value="{{showPlan}}" hint-placeholder-val="{{false}}">
         <div data-screen-label="Planejamento" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div style="font-family:Sora;font-weight:600;font-size:16px">Resumo do planejamento</div>
+            <button onClick="{{exportPlanejamento}}" style="padding:9px 16px;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;display:flex;align-items:center;gap:7px" style-hover="background:var(--accent);color:var(--on-accent);transform:translateY(-1px)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 12 4-4m-4 4-4-4M4 21h16"></path></svg>
+              Exportar resumo
+            </button>
+          </div>
           <div class="fn-grid-23" style="display:grid;grid-template-columns:2fr 3fr;gap:20px;align-items:start">
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)" style-hover="box-shadow:var(--lift)">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1793,6 +1800,368 @@ class Component extends DCLogic {
     this.commit(db);
   }
 
+  // ---------- exportação do planejamento em PNG ----------
+  // Gera um ou mais PNGs com o resumo visual do planejamento selecionado,
+  // usando exclusivamente dados já calculados/armazenados (fontes, categorias,
+  // distribuição salva e planejamentos de gastos). Nenhuma lógica de cálculo
+  // nova é criada aqui — apenas leitura e apresentação.
+  async exportarPlanejamento() {
+    if (this._exportBusy) return;
+    const s = this.state;
+    if (!s.db) return;
+    this._exportBusy = true;
+    this.toast('Gerando resumo em PNG...');
+    try {
+      if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+      await this._gerarPngsPlanejamento();
+    } catch (e) {
+      console.error(e);
+      this.toast('Não foi possível gerar o resumo.', 'err');
+    } finally {
+      this._exportBusy = false;
+    }
+  }
+
+  async _gerarPngsPlanejamento() {
+    const s = this.state, db = s.db;
+    const root = this.rootRef.current;
+    const cs = getComputedStyle(root || document.documentElement);
+    const gv = n => cs.getPropertyValue(n).trim();
+    const C = {
+      bg: gv('--bg'), surface: gv('--surface'), surface2: gv('--surface2'),
+      text: gv('--text'), text2: gv('--text2'), text3: gv('--text3'),
+      border: gv('--border'), border2: gv('--border2'),
+      accent: gv('--accent'), onAccent: gv('--on-accent'),
+      green: gv('--green'), red: gv('--red'), amber: gv('--amber')
+    };
+
+    // ---- dados (somente leitura do que já existe) ----
+    const renda = db.fontes.reduce((t, f) => t + f.valor, 0);
+    const fontes = [...db.fontes].sort((a, b) => b.valor - a.valor);
+    const catBudget = c => renda * (c.pct != null ? c.pct : (renda > 0 ? (c.abs || 0) / renda * 100 : 0)) / 100;
+    const catOrder = db.categorias.map((c, oi) => ({ c, oi })).sort((x, y) => catBudget(y.c) - catBudget(x.c));
+    const cats = catOrder.map(({ c, oi }) => {
+      const orc = catBudget(c);
+      return { nome: c.nome, cor: this.CATCOLORS[oi % this.CATCOLORS.length], pct: renda > 0 ? orc / renda * 100 : 0, valor: orc };
+    });
+    const gastosCats = catOrder.map(({ c, oi }) => {
+      const orc = catBudget(c);
+      const itens = db.planejamentos.filter(p => p.catId === c.id).sort((a, b) => b.valor - a.valor);
+      const usado = itens.reduce((t, p) => t + p.valor, 0);
+      return { nome: c.nome, cor: this.CATCOLORS[oi % this.CATCOLORS.length], orc, usado, itens };
+    });
+
+    const compLabel = this.monthName(s.comp.m) + ' ' + s.comp.y;
+    const userName = s.user ? s.user.name : '';
+
+    // ---- paginação: página 1 fixa (identificação + fontes + distribuição);
+    // demais páginas = gastos por categoria, agrupados sem nunca cortar uma
+    // categoria no meio ----
+    const gastosPaginas = this._planejarPaginasGastos(gastosCats);
+    const totalPaginas = 1 + gastosPaginas.length;
+
+    const canvases = [];
+    canvases.push(this._gerarPagIdentFontesDist(C, { compLabel, userName, renda, fontes, cats, pageIdx: 1, totalPaginas }));
+    gastosPaginas.forEach((catsPage, i) => {
+      canvases.push(this._gerarPagGastos(C, { compLabel, userName, catsPage, pageIdx: i + 2, totalPaginas }));
+    });
+
+    const base = 'planejamento-' + this._slug(compLabel);
+    for (let i = 0; i < canvases.length; i++) {
+      await this._baixarCanvas(canvases[i], base + '-' + (i + 1) + '.png');
+      if (i < canvases.length - 1) await new Promise(r => setTimeout(r, 260));
+    }
+    this.toast('Resumo exportado (' + canvases.length + (canvases.length === 1 ? ' imagem' : ' imagens') + ').', 'ok');
+  }
+
+  // altura (em px lógicos) do cartão de uma categoria de gastos — usada tanto
+  // para decidir a paginação quanto (implicitamente) pelo desenho do cartão
+  _alturaCardCategoria(cat) {
+    const itensH = cat.itens.length ? (cat.itens.length * (30 + 6) - 6) : 24;
+    return 93 + itensH; // 2×padding(16) + cabeçalho(20) + barra+gap(19) + usado/restante(22) + itens
+  }
+
+  _planejarPaginasGastos(gastosCats) {
+    const MAX_H = 1500; // teto alvo de conteúdo por página (não conta cabeçalho/rodapé)
+    const CARD_GAP = 18;
+    const pages = [];
+    let atual = [], usado = 0;
+    gastosCats.forEach(cat => {
+      const ch = this._alturaCardCategoria(cat);
+      if (atual.length && usado + CARD_GAP + ch > MAX_H) { pages.push(atual); atual = []; usado = 0; }
+      usado += (atual.length ? CARD_GAP : 0) + ch;
+      atual.push(cat);
+    });
+    if (atual.length) pages.push(atual);
+    return pages;
+  }
+
+  // desenha (ou apenas mede, se ctx vier de um canvas descartável) o cabeçalho
+  // padrão presente em toda página exportada; retorna o próximo y disponível
+  _desenharCabecalhoPag(ctx, C, x, y, w, opts) {
+    this._roundRect(ctx, x, y, 34, 34, 10);
+    ctx.fillStyle = C.accent; ctx.fill();
+    ctx.fillStyle = C.onAccent;
+    ctx.font = '700 17px Sora, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('F', x + 17, y + 18);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+    ctx.fillStyle = C.text; ctx.font = '700 17px Sora, sans-serif';
+    ctx.fillText('FinanceNan', x + 46, y + 15);
+    ctx.fillStyle = C.text3; ctx.font = '600 12px Manrope, sans-serif';
+    ctx.fillText('Planejamento Financeiro', x + 46, y + 31);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = C.text; ctx.font = '700 15px Sora, sans-serif';
+    ctx.fillText(opts.compLabel, x + w, y + 15);
+    ctx.fillStyle = C.text3; ctx.font = '600 12px Manrope, sans-serif';
+    ctx.fillText(opts.userName || ' ', x + w, y + 31);
+    ctx.textAlign = 'left';
+
+    const ly = y + 50;
+    ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, ly); ctx.lineTo(x + w, ly); ctx.stroke();
+    return ly + 26;
+  }
+
+  _desenharRodapePag(ctx, C, x, y, w, pageIdx, totalPaginas) {
+    ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke();
+    ctx.fillStyle = C.text3; ctx.font = '600 11px Manrope, sans-serif';
+    const dt = new Date();
+    const dtStr = String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + '/' + dt.getFullYear();
+    ctx.textAlign = 'left';
+    ctx.fillText('Gerado por FinanceNan em ' + dtStr, x, y + 20);
+    ctx.textAlign = 'right';
+    ctx.fillText('Página ' + pageIdx + ' de ' + totalPaginas, x + w, y + 20);
+    ctx.textAlign = 'left';
+    return y + 40;
+  }
+
+  _fmtPctExport(v) {
+    const r = Math.round(v);
+    if (Math.abs(v - r) < 0.05) return String(r);
+    return (Math.round(v * 10) / 10).toFixed(1).replace('.', ',');
+  }
+
+  _gerarPagIdentFontesDist(C, data) {
+    const W = 840, PAD = 40, x = PAD, w = W - PAD * 2;
+    const FONTE_H = 46, GAP = 8, DIST_ROW_H = 46;
+    const corpo = ctx => {
+      let y = this._desenharCabecalhoPag(ctx, C, x, PAD, w, data);
+
+      ctx.fillStyle = C.text; ctx.font = '700 15px Sora, sans-serif';
+      ctx.fillText('Fontes de renda', x, y + 12);
+      y += 30;
+
+      if (!data.fontes.length) {
+        ctx.fillStyle = C.text3; ctx.font = '600 12.5px Manrope, sans-serif';
+        ctx.fillText('Nenhuma fonte de renda cadastrada.', x, y + 16);
+        y += 40;
+      } else {
+        data.fontes.forEach(f => {
+          this._roundRect(ctx, x, y, w, FONTE_H, 10);
+          ctx.fillStyle = C.surface2; ctx.fill();
+          ctx.strokeStyle = C.border; ctx.lineWidth = 1; ctx.stroke();
+          ctx.fillStyle = C.text; ctx.font = '700 13px Manrope, sans-serif'; ctx.textBaseline = 'middle';
+          ctx.fillText(this._truncar(ctx, f.nome, w - 180), x + 16, y + FONTE_H / 2);
+          ctx.textAlign = 'right'; ctx.font = '600 13px Sora, sans-serif';
+          ctx.fillText(this.fmt(f.valor), x + w - 16, y + FONTE_H / 2);
+          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+          y += FONTE_H + GAP;
+        });
+        y -= GAP;
+      }
+      y += 20;
+
+      ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + w, y); ctx.stroke();
+      y += 22;
+      ctx.fillStyle = C.text2; ctx.font = '700 13px Manrope, sans-serif'; ctx.textBaseline = 'middle';
+      ctx.fillText('Renda mensal', x, y);
+      ctx.textAlign = 'right'; ctx.fillStyle = C.accent; ctx.font = '700 20px Sora, sans-serif';
+      ctx.fillText(this.fmt(data.renda), x + w, y);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      y += 34;
+
+      y += 30;
+      ctx.fillStyle = C.text; ctx.font = '700 15px Sora, sans-serif';
+      ctx.fillText('Distribuição da renda', x, y + 12);
+      y += 30;
+
+      const barH = 22;
+      this._roundRect(ctx, x, y, w, barH, 8); ctx.fillStyle = C.surface2; ctx.fill();
+      let bx = x;
+      data.cats.forEach(c => {
+        const segW = w * Math.max(0, Math.min(100, c.pct)) / 100;
+        if (segW > 0.5) { ctx.fillStyle = c.cor; ctx.fillRect(bx, y, segW, barH); bx += segW; }
+      });
+      ctx.strokeStyle = C.border; ctx.lineWidth = 1;
+      this._roundRect(ctx, x, y, w, barH, 8); ctx.stroke();
+      y += barH + 22;
+
+      if (!data.cats.length) {
+        ctx.fillStyle = C.text3; ctx.font = '600 12.5px Manrope, sans-serif';
+        ctx.fillText('Nenhuma categoria cadastrada.', x, y + 16);
+        y += 40;
+      } else {
+        data.cats.forEach(c => {
+          const ry = y;
+          ctx.fillStyle = c.cor; this._roundRect(ctx, x, ry + 6, 11, 11, 3); ctx.fill();
+          ctx.fillStyle = C.text; ctx.font = '700 13px Manrope, sans-serif'; ctx.textBaseline = 'middle';
+          ctx.fillText(this._truncar(ctx, c.nome, w - 260), x + 22, ry + 12);
+          ctx.textAlign = 'right';
+          ctx.fillStyle = C.text2; ctx.font = '600 12.5px Sora, sans-serif';
+          ctx.fillText(this._fmtPctExport(c.pct) + '%', x + w - 110, ry + 12);
+          ctx.fillStyle = C.text; ctx.font = '700 13px Sora, sans-serif';
+          ctx.fillText(this.fmt(c.valor), x + w, ry + 12);
+          ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+          const trackY = ry + 26, trackW = w;
+          this._roundRect(ctx, x, trackY, trackW, 5, 3); ctx.fillStyle = C.surface2; ctx.fill();
+          const fillW = trackW * Math.max(0, Math.min(100, c.pct)) / 100;
+          if (fillW > 0.5) { this._roundRect(ctx, x, trackY, fillW, 5, 3); ctx.fillStyle = c.cor; ctx.fill(); }
+          y += DIST_ROW_H;
+        });
+      }
+
+      y += 12;
+      y = this._desenharRodapePag(ctx, C, x, y, w, data.pageIdx, data.totalPaginas);
+      return y + PAD;
+    };
+    return this._medirOuDesenhar(C, W, corpo);
+  }
+
+  _desenharCardCategoria(ctx, C, cat, x, y, w) {
+    const h = this._alturaCardCategoria(cat);
+    const over = cat.usado > cat.orc;
+    this._roundRect(ctx, x, y, w, h, 12);
+    ctx.fillStyle = C.surface; ctx.fill();
+    ctx.strokeStyle = over ? C.amber : C.border; ctx.lineWidth = 1; ctx.stroke();
+    const pad = 16;
+    let cy = y + pad;
+
+    ctx.fillStyle = cat.cor; this._roundRect(ctx, x + pad, cy + 3, 10, 10, 3); ctx.fill();
+    ctx.fillStyle = C.text; ctx.font = '800 13.5px Manrope, sans-serif'; ctx.textBaseline = 'middle';
+    ctx.fillText(this._truncar(ctx, cat.nome, w - pad * 2 - 162), x + pad + 20, cy + 8);
+    ctx.textAlign = 'right'; ctx.fillStyle = C.text2; ctx.font = '700 12px Manrope, sans-serif';
+    ctx.fillText('Orçamento: ' + this.fmt(cat.orc), x + w - pad, cy + 8);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    cy += 20;
+
+    const barY = cy + 2, barH = 7, barW = w - pad * 2;
+    this._roundRect(ctx, x + pad, barY, barW, barH, 4); ctx.fillStyle = C.surface2; ctx.fill();
+    const pctUsado = cat.orc > 0 ? Math.min(100, cat.usado / cat.orc * 100) : (cat.usado > 0 ? 100 : 0);
+    const usadoBarW = barW * pctUsado / 100;
+    if (usadoBarW > 0.5) {
+      this._roundRect(ctx, x + pad, barY, usadoBarW, barH, 4);
+      ctx.fillStyle = over ? C.red : cat.cor; ctx.fill();
+    }
+    cy += barH + 12;
+
+    ctx.font = '600 11.5px Manrope, sans-serif'; ctx.fillStyle = C.text2; ctx.textBaseline = 'middle';
+    ctx.fillText('Usado: ' + this.fmt(cat.usado), x + pad, cy);
+    const rest = cat.orc - cat.usado;
+    ctx.textAlign = 'right'; ctx.font = '700 11.5px Manrope, sans-serif';
+    ctx.fillStyle = over ? C.red : C.green;
+    ctx.fillText(over ? ('Excesso de ' + this.fmt(-rest)) : ('Restam ' + this.fmt(rest)), x + w - pad, cy);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    cy += 22;
+
+    if (!cat.itens.length) {
+      ctx.fillStyle = C.text3; ctx.font = '600 12px Manrope, sans-serif';
+      ctx.fillText('Nenhum gasto planejado nesta categoria.', x + pad, cy + 16);
+    } else {
+      cat.itens.forEach((it, i) => {
+        const ry = cy + i * (30 + 6);
+        this._roundRect(ctx, x + pad, ry, w - pad * 2, 30, 8); ctx.fillStyle = C.surface2; ctx.fill();
+        ctx.fillStyle = C.text; ctx.font = '600 12.5px Manrope, sans-serif'; ctx.textBaseline = 'middle';
+        ctx.fillText(this._truncar(ctx, it.nome, w - pad * 2 - 150), x + pad + 12, ry + 15);
+        ctx.textAlign = 'right'; ctx.font = '600 12.5px Sora, sans-serif';
+        ctx.fillText(this.fmt(it.valor), x + w - pad - 12, ry + 15);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      });
+    }
+    return y + h;
+  }
+
+  _gerarPagGastos(C, data) {
+    const W = 840, PAD = 40, x = PAD, w = W - PAD * 2, CARD_GAP = 18;
+    const corpo = ctx => {
+      let y = this._desenharCabecalhoPag(ctx, C, x, PAD, w, data);
+      ctx.fillStyle = C.text; ctx.font = '700 15px Sora, sans-serif';
+      ctx.fillText('Planejamento de gastos por categoria' + (data.pageIdx > 1 ? ' (continuação)' : ''), x, y + 12);
+      y += 30;
+      data.catsPage.forEach(cat => { y = this._desenharCardCategoria(ctx, C, cat, x, y, w) + CARD_GAP; });
+      y += 2;
+      y = this._desenharRodapePag(ctx, C, x, y, w, data.pageIdx, data.totalPaginas);
+      return y + PAD;
+    };
+    return this._medirOuDesenhar(C, W, corpo);
+  }
+
+  // executa `corpo(ctx)` uma vez num canvas descartável só para medir a altura
+  // total (o retorno de corpo é o próximo y == altura), e uma segunda vez
+  // desenhando de verdade num canvas com o tamanho exato — evita duplicar a
+  // aritmética de layout entre "medir" e "desenhar"
+  _medirOuDesenhar(C, w, corpo) {
+    const scratch = document.createElement('canvas').getContext('2d');
+    const totalH = Math.ceil(corpo(scratch));
+    const { canvas, ctx } = this._novoCanvas(w, totalH);
+    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, w, totalH);
+    corpo(ctx);
+    return canvas;
+  }
+
+  _novoCanvas(w, h) {
+    const dpr = 2; // resolução boa o suficiente para compartilhamento (WhatsApp etc.)
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.ceil(w * dpr));
+    canvas.height = Math.max(1, Math.ceil(h * dpr));
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return { canvas, ctx };
+  }
+
+  _roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  _truncar(ctx, text, maxW) {
+    text = text || '';
+    if (ctx.measureText(text).width <= maxW) return text;
+    let t = text;
+    while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+    return t + '…';
+  }
+
+  _slug(t) {
+    return (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  _baixarCanvas(canvas, filename) {
+    return new Promise(resolve => {
+      canvas.toBlob(blob => {
+        if (!blob) { resolve(); return; }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => { URL.revokeObjectURL(url); resolve(); }, 150);
+      }, 'image/png');
+    });
+  }
+
   // ---------- render ----------
   renderVals() {
     const s = this.state;
@@ -2081,6 +2450,7 @@ class Component extends DCLogic {
       del: () => this.del('fontes', f.id, 'Excluir a fonte "' + f.nome + '"?') }));
     vals.addFonte = () => this.openModal('fonte', null);
     vals.importFixos = () => this.openModal('importFixos', null);
+    vals.exportPlanejamento = () => this.exportarPlanejamento();
     // distribuição da renda: edição em rascunho local, só grava ao clicar em "Salvar distribuição"
     // O rascunho (draft) e todo o cálculo abaixo trabalham em CENTAVOS (inteiros),
     // não em percentual/reais fracionados — é isso que garante soma exata e
