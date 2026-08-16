@@ -2019,10 +2019,18 @@ class Component extends DCLogic {
     return y + 40;
   }
 
+  // Mesma regra de arredondamento de percentual usada na tela de
+  // Planejamentos (fmtPct): sempre número inteiro (ex: 12%). Única exceção
+  // é quando arredondar daria 100% mas o valor real não chega lá (ou vice-
+  // versa) — nesse caso mostra 1 casa decimal para não passar a falsa
+  // impressão de que já está tudo distribuído.
   _fmtPctExport(v) {
-    const r = Math.round(v);
-    if (Math.abs(v - r) < 0.05) return String(r);
-    return (Math.round(v * 10) / 10).toFixed(1).replace('.', ',');
+    const p = v || 0;
+    const whole = Math.round(p);
+    if (whole === 100 && Math.abs(p - 100) > 0.000001) {
+      return (Math.round(p * 10) / 10).toFixed(1).replace('.', ',');
+    }
+    return String(whole);
   }
 
   _gerarPagIdentFontesDist(C, data) {
