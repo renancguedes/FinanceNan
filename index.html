@@ -1031,6 +1031,38 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
   </div>
 </sc-if>
 
+<!-- ===== EXPORTAR RESUMO (prévia + download por imagem) ===== -->
+<sc-if value="{{exportModalOpen}}" hint-placeholder-val="{{false}}">
+  <div onClick="{{fecharExportModal}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease">
+    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:460px;max-height:88vh;overflow:auto;animation:popIn .3s cubic-bezier(.3,.9,.4,1)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0">
+        <h3 style="font-family:Sora;font-weight:600;font-size:17px;margin:0;letter-spacing:-.02em">Resumo do planejamento</h3>
+        <button onClick="{{fecharExportModal}}" style="width:30px;height:30px;border:none;background:var(--surface2);border-radius:9px;cursor:pointer;color:var(--text2);font-size:15px" style-hover="color:var(--red);transform:rotate(90deg)">✕</button>
+      </div>
+      <p style="margin:8px 24px 0;color:var(--text2);font-size:12.5px">{{exportPngsCount}} imagem(ns) geradas. Baixe cada uma individualmente.</p>
+      <div style="padding:16px 24px 22px;display:flex;flex-direction:column;gap:12px">
+        <sc-for list="{{exportPngsList}}" as="p" hint-placeholder-count="0">
+          <div style="display:flex;gap:14px;align-items:center;padding:12px;border-radius:14px;background:var(--surface2);border:1px solid var(--border)">
+            <img src="{{p.url}}" style="width:64px;height:88px;object-fit:cover;object-position:top;border-radius:9px;border:1px solid var(--border2);background:var(--surface);flex:none"/>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:800;font-size:13.5px">{{p.titulo}}</div>
+              <div style="font-size:11.5px;color:var(--text3);margin-top:2px">{{p.legenda}}</div>
+            </div>
+            <button onClick="{{p.baixar}}" title="Baixar PNG" style="width:38px;height:38px;flex:none;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--accent);color:var(--on-accent)">
+              <sc-if value="{{p.baixado}}" hint-placeholder-val="{{false}}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg>
+              </sc-if>
+              <sc-if value="{{p.pendente}}" hint-placeholder-val="{{true}}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 12 4-4m-4 4-4-4M4 21h16"></path></svg>
+              </sc-if>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
 <!-- ===== DETALHE (composição) ===== -->
 <sc-if value="{{detailOpen}}" hint-placeholder-val="{{false}}">
   <div onClick="{{detailClose}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:105;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
@@ -1113,7 +1145,7 @@ class Component extends DCLogic {
       recFilter: 'todas', despFilter: 'todas', formaFilter: 'todas',
       despSort: { k: 'data', dir: -1 },
       anaExp: [], anaSoCartao: false,
-      modal: null, confirm: null, detail: null, toasts: [], adminUsers: [], adminLoading: false
+      modal: null, confirm: null, detail: null, exportPngs: null, toasts: [], adminUsers: [], adminLoading: false
     };
   })();
 
@@ -1805,6 +1837,13 @@ class Component extends DCLogic {
   // usando exclusivamente dados já calculados/armazenados (fontes, categorias,
   // distribuição salva e planejamentos de gastos). Nenhuma lógica de cálculo
   // nova é criada aqui — apenas leitura e apresentação.
+  //
+  // As imagens NÃO são baixadas automaticamente: navegadores bloqueiam (ou
+  // pedem permissão para) downloads múltiplos disparados por script sem um
+  // clique do usuário entre eles, o que fazia algumas imagens não chegarem a
+  // salvar. Em vez disso, abrimos um modal com uma prévia de cada imagem e um
+  // botão de download individual — cada clique é um gesto do usuário, então
+  // o navegador nunca bloqueia.
   async exportarPlanejamento() {
     if (this._exportBusy) return;
     const s = this.state;
@@ -1866,16 +1905,57 @@ class Component extends DCLogic {
       canvases.push(this._gerarPagGastos(C, { compLabel, userName, catsPage, pageIdx: i + 2, totalPaginas }));
     });
 
+    // limpa prévias de uma exportação anterior, se houver, antes de criar as novas
+    this._liberarExportPngs();
+
     const base = 'planejamento-' + this._slug(compLabel);
+    const itens = [];
     for (let i = 0; i < canvases.length; i++) {
-      await this._baixarCanvas(canvases[i], base + '-' + (i + 1) + '.png');
-      if (i < canvases.length - 1) await new Promise(r => setTimeout(r, 260));
+      const blob = await this._canvasParaBlob(canvases[i]);
+      itens.push({
+        idx: i + 1, total: canvases.length,
+        titulo: 'Imagem ' + (i + 1) + ' de ' + canvases.length,
+        legenda: i === 0 ? 'Identificação, fontes de renda e distribuição' : 'Planejamento de gastos por categoria' + (gastosPaginas.length > 1 ? ' (parte ' + i + ' de ' + gastosPaginas.length + ')' : ''),
+        filename: base + '-' + (i + 1) + '.png',
+        url: URL.createObjectURL(blob),
+        baixado: false,
+        pendente: true,
+        baixar: null // preenchido abaixo, depois que `itens` existe
+      });
     }
-    this.toast('Resumo exportado (' + canvases.length + (canvases.length === 1 ? ' imagem' : ' imagens') + ').', 'ok');
+    itens.forEach(it => { it.baixar = () => this.baixarExportPng(it); });
+
+    this.setState({ exportPngs: itens });
+    this.toast('Resumo pronto — escolha as imagens para baixar.', 'ok');
+  }
+
+  _canvasParaBlob(canvas) {
+    return new Promise(resolve => canvas.toBlob(blob => resolve(blob), 'image/png'));
+  }
+
+  // download de UMA imagem, disparado diretamente pelo clique do usuário no
+  // modal — por ser uma resposta direta a um gesto do usuário, o navegador
+  // nunca bloqueia, ao contrário de downloads múltiplos disparados por script
+  baixarExportPng(item) {
+    const a = document.createElement('a');
+    a.href = item.url; a.download = item.filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    const exportPngs = (this.state.exportPngs || []).map(it => it === item ? { ...it, baixado: true, pendente: false } : it);
+    this.setState({ exportPngs });
+  }
+
+  _liberarExportPngs() {
+    (this.state.exportPngs || []).forEach(it => { try { URL.revokeObjectURL(it.url); } catch (e) {} });
+  }
+
+  fecharExportModal() {
+    this._liberarExportPngs();
+    this.setState({ exportPngs: null });
   }
 
   // altura (em px lógicos) do cartão de uma categoria de gastos — usada tanto
   // para decidir a paginação quanto (implicitamente) pelo desenho do cartão
+
   _alturaCardCategoria(cat) {
     const itensH = cat.itens.length ? (cat.itens.length * (30 + 6) - 6) : 24;
     return 93 + itensH; // 2×padding(16) + cabeçalho(20) + barra+gap(19) + usado/restante(22) + itens
@@ -2149,19 +2229,6 @@ class Component extends DCLogic {
     return (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 
-  _baixarCanvas(canvas, filename) {
-    return new Promise(resolve => {
-      canvas.toBlob(blob => {
-        if (!blob) { resolve(); return; }
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => { URL.revokeObjectURL(url); resolve(); }, 150);
-      }, 'image/png');
-    });
-  }
-
   // ---------- render ----------
   renderVals() {
     const s = this.state;
@@ -2205,7 +2272,7 @@ class Component extends DCLogic {
         authMainLabel: s.authTab === 'cadastro' ? 'Criar minha conta' : 'Entrar',
         doAuthMain: s.authTab === 'cadastro' ? this.doCadastro : this.doLogin,
         doRecuperar: this.doRecuperar, doVisitante: this.doVisitante,
-        isVisitor: false, loading: false, showDash: false, showAna: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, showAdmin: false, modalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
+        isVisitor: false, loading: false, showDash: false, showAna: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, showAdmin: false, modalOpen: false, exportModalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
       };
     }
 
@@ -2716,6 +2783,12 @@ class Component extends DCLogic {
       canApprove: !u.approved, canDelete: u.role !== 'admin',
       approve: () => this.approveUser(u.id), reset: () => this.resetUserPwd(u.id, u.name || u.email || 'usuário'), del: () => this.delAdminUser(u.id, u.name || u.email || 'usuário')
     }));
+
+    // ---- Modal de exportação do planejamento (prévia + download por imagem) ----
+    vals.exportModalOpen = !!s.exportPngs;
+    vals.exportPngsList = s.exportPngs || [];
+    vals.exportPngsCount = s.exportPngs ? s.exportPngs.length : 0;
+    vals.fecharExportModal = () => this.fecharExportModal();
 
     // ---- Modal ----
     const m = s.modal;
