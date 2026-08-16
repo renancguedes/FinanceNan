@@ -2114,7 +2114,14 @@ class Component extends DCLogic {
 
   _desenharCardCategoria(ctx, C, cat, x, y, w) {
     const h = this._alturaCardCategoria(cat);
-    const over = cat.usado > cat.orc;
+    // Compara em centavos (inteiros), igual à tela de Planejamentos, para não
+    // sobrar resíduo de ponto flutuante (ex: orc - usado = -0.000000002) que
+    // fazia aparecer "Excesso de R$ 0,00" quando os valores eram, na
+    // prática, exatamente iguais.
+    const restCents = this.toCents(cat.orc) - this.toCents(cat.usado);
+    const rest = this.fromCents(restCents);
+    const over = restCents < 0;
+    const bateu = restCents === 0;
     this._roundRect(ctx, x, y, w, h, 12);
     ctx.fillStyle = C.surface; ctx.fill();
     ctx.strokeStyle = over ? C.amber : C.border; ctx.lineWidth = 1; ctx.stroke();
@@ -2141,10 +2148,10 @@ class Component extends DCLogic {
 
     ctx.font = '600 11.5px Manrope, sans-serif'; ctx.fillStyle = C.text2; ctx.textBaseline = 'middle';
     ctx.fillText('Usado: ' + this.fmt(cat.usado), x + pad, cy);
-    const rest = cat.orc - cat.usado;
     ctx.textAlign = 'right'; ctx.font = '700 11.5px Manrope, sans-serif';
     ctx.fillStyle = over ? C.red : C.green;
-    ctx.fillText(over ? ('Excesso de ' + this.fmt(-rest)) : ('Restam ' + this.fmt(rest)), x + w - pad, cy);
+    const restMsg = bateu ? 'Orçamento batido ✓' : (over ? ('Excesso de ' + this.fmt(-rest)) : ('Restam ' + this.fmt(rest)));
+    ctx.fillText(restMsg, x + w - pad, cy);
     ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
     cy += 22;
 
