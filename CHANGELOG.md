@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.10.0 - 2026-10-12
+- parcelas: o "Parcela X/N" deixou de aparecer como texto no fim da descrição e passou a ser exibido como um badge ao lado do nome da compra — na lista de despesas, na Análise, no dashboard (últimos lançamentos e painel "A pagar") e na lista da importação de extrato. A descrição gravada não muda, então a pesquisa e a importação continuam funcionando igual
+
 ## v1.9.0 - 2026-10-12
 - despesas e receitas: nova barra de pesquisa por nome. Não diferencia maiúsculas nem acentos, aceita várias palavras em qualquer ordem e funciona junto com os filtros existentes; mostra quantos lançamentos foram encontrados e o total em R$
 - despesas e receitas: botão "Todos os meses" ao lado da pesquisa para procurar fora da competência atual (nas receitas, a data passa a exibir o ano nesse modo)

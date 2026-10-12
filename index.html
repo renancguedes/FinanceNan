@@ -332,7 +332,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{l.icon}}"></path></svg>
                   </div>
                   <div style="flex:1;min-width:0">
-                    <div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{l.desc}}</div>
+                    <div style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px;min-width:0"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{l.desc}}</span><sc-if value="{{l.parc}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none;white-space:nowrap;letter-spacing:.01em">{{l.parc}}</span></sc-if></div>
                     <div style="font-size:11.5px;color:var(--text3)">{{l.meta}}</div>
                   </div>
                   <div style="font-family:Sora;font-weight:600;font-size:14px;color:{{l.color}}">{{l.valor}}</div>
@@ -447,6 +447,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                                 <span title="Gasto no cartão de crédito" style="flex:none;display:flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M2 6h20v13H2zM2 10h20"></path></svg></span>
                               </sc-if>
                               <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{i.desc}}</span>
+                              <sc-if value="{{i.parc}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none;white-space:nowrap;letter-spacing:.01em">{{i.parc}}</span></sc-if>
                             </div>
                             <div style="font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{i.meta}}</div>
                           </div>
@@ -733,7 +734,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                         </sc-if>
                         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{d.desc}}</span>
                         <sc-if value="{{d.deFixo}}" hint-placeholder-val="{{false}}"><span style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none">Fixo</span></sc-if>
-                        <sc-if value="{{d.parcLabel}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada — editar ou excluir permite aplicar a todas as parcelas" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);flex:none">{{d.parcLabel}}</span></sc-if>
+                        <sc-if value="{{d.parc}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none;white-space:nowrap;letter-spacing:.01em">{{d.parc}}</span></sc-if>
                       </div>
                       <div style="font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{d.meta}}</div>
                     </div>
@@ -1037,7 +1038,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                     <span style="width:20px;height:20px;flex:none;border-radius:6px;border:2px solid {{it.chkBc}};background:{{it.chkBg}};color:#fff;display:flex;align-items:center;justify-content:center">
                       <sc-if value="{{it.on}}" hint-placeholder-val="{{false}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
                     </span>
-                    <span style="flex:1;font-weight:700;font-size:13px;color:var(--text)">{{it.nome}}</span>
+                    <span style="flex:1;font-weight:700;font-size:13px;color:var(--text);display:flex;align-items:center;gap:7px;flex-wrap:wrap">{{it.nome}}<sc-if value="{{it.parc}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none;white-space:nowrap;letter-spacing:.01em">{{it.parc}}</span></sc-if></span>
                     <sc-if value="{{it.tag}}" hint-placeholder-val="{{false}}"><span style="font-size:10.5px;font-weight:800;color:var(--text3)">{{it.tag}}</span></sc-if>
                     <span style="font-family:Sora;font-weight:600;font-size:12.5px;color:var(--text2)">{{it.valorFmt}}</span>
                   </button>
@@ -1103,7 +1104,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{i.icon}}"></path></svg>
             </div>
             <div style="flex:1;min-width:0">
-              <div style="font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{i.nome}}</div>
+              <div style="font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:7px;min-width:0"><span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{i.nome}}</span><sc-if value="{{i.parc}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none;white-space:nowrap;letter-spacing:.01em">{{i.parc}}</span></sc-if></div>
               <div style="font-size:11.5px;color:var(--text3)">{{i.meta}}</div>
             </div>
             <div style="font-family:Sora;font-weight:600;font-size:13.5px;color:{{i.valorColor}}">{{i.valorFmt}}</div>
@@ -1634,7 +1635,7 @@ class Component extends DCLogic {
                 const on = sel[t.id] !== undefined ? sel[t.id] : !dup;
                 const venc = cartao ? this.calcVenc(cartao, t.data) : null;
                 return {
-                  nome: t.desc, valorFmt: this.fmt(t.valor), on,
+                  nome: this.parcView(t).nome, parc: this.parcView(t).parc, valorFmt: this.fmt(t.valor), on,
                   tag: this.fmtData(t.data) + (venc ? ' · fatura ' + this.fmtData(venc) : '') + (dup ? ' · já lançada' : '') +
                     (on && draft.futuras && t.parc && t.parc.n > t.parc.x ? ' · +' + (t.parc.n - t.parc.x) + ' futura(s)' : ''),
                   bc: on ? 'var(--accent)' : 'var(--border)', bg: on ? 'var(--accent-soft)' : 'var(--surface2)',
@@ -1679,6 +1680,13 @@ class Component extends DCLogic {
       : (todos ? 'Nada por aqui com esse filtro.' : 'Nada por aqui em ' + vals.compLabel + ' com esse filtro.');
   }
 
+  // Exibição: separa o nome da compra do "Parcela X/N", que vira um badge na interface
+  parcView(d) {
+    const info = this.parcInfo(d.desc);
+    if (info) return { nome: this.parcBase(d.desc) || d.desc, parc: 'Parcela ' + info.x + '/' + info.n };
+    if (d.grupoId && d.parcela && d.parcelas) return { nome: d.desc, parc: 'Parcela ' + d.parcela + '/' + d.parcelas };
+    return { nome: d.desc, parc: false };
+  }
   parcBase(desc) { return String(desc || '').replace(this.PARC_RE, '').trim(); }
   // sufixo de parcela de uma despesa (" - Parcela 9/10", " (2/3)"); se a descrição não tiver,
   // mas a despesa pertencer a um grupo, monta a partir dos campos parcela/parcelas
@@ -2758,7 +2766,7 @@ class Component extends DCLogic {
         icon: this.ICONS.fixo, podePagar: true, pagar: () => this.pagarFixo(g.id)
       }));
       const despRows = despAbertas.map(d => ({
-        nome: d.desc, meta: this.fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)),
+        nome: this.parcView(d).nome, parc: this.parcView(d).parc, meta: this.fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)),
         valorFmt: this.fmt(d.valor), valorColor: 'var(--red)',
         cor: catColor(d.cat), corSoft: 'color-mix(in oklab, ' + catColor(d.cat) + ', var(--bg) 84%)',
         icon: d.cartaoId ? this.ICONS.card : this.ICONS.desp,
@@ -2803,8 +2811,8 @@ class Component extends DCLogic {
       dl: (i * 60) + 'ms', dl2: (i * 60 + 40) + 'ms'
     }));
     const lanc = [
-      ...recComp.map(r => ({ d: r.data, desc: r.desc, meta: this.fmtDia(r.data) + ' · ' + r.cat + ' · ' + contaNome(r.contaId), valor: '+ ' + this.fmt(r.valor), color: 'var(--green)', icon: this.ICONS.rec, iconBg: 'var(--green-soft)', iconFg: 'var(--green)' })),
-      ...despComp.map(d => ({ d: d.data, desc: d.desc, meta: this.fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)), valor: '- ' + this.fmt(d.valor), color: 'var(--red)', icon: this.ICONS.desp, iconBg: 'var(--red-soft)', iconFg: 'var(--red)' }))
+      ...recComp.map(r => ({ d: r.data, desc: r.desc, parc: false, meta: this.fmtDia(r.data) + ' · ' + r.cat + ' · ' + contaNome(r.contaId), valor: '+ ' + this.fmt(r.valor), color: 'var(--green)', icon: this.ICONS.rec, iconBg: 'var(--green-soft)', iconFg: 'var(--green)' })),
+      ...despComp.map(d => ({ d: d.data, desc: this.parcView(d).nome, parc: this.parcView(d).parc, meta: this.fmtDia(d.data) + ' · ' + d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)), valor: '- ' + this.fmt(d.valor), color: 'var(--red)', icon: this.ICONS.desp, iconBg: 'var(--red-soft)', iconFg: 'var(--red)' }))
     ].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 7).map((l, i) => ({ ...l, dl: this.dl(i) }));
     vals.ultimos = lanc;
     vals.emptyLanc = lanc.length === 0;
@@ -2880,7 +2888,7 @@ class Component extends DCLogic {
         rowBg: aberta ? 'var(--surface2)' : 'var(--surface)',
         toggle: () => this.setState(st => ({ anaExp: (st.anaExp || []).includes(r.nome) ? st.anaExp.filter(x => x !== r.nome) : [...(st.anaExp || []), r.nome] })),
         itens: [...r.itens].sort((a, b) => b.valor - a.valor).map((d, j) => ({
-          desc: d.desc, isCard: !!d.cartaoId, dl: this.dl(j),
+          desc: this.parcView(d).nome, parc: this.parcView(d).parc, isCard: !!d.cartaoId, dl: this.dl(j),
           meta: 'Compra ' + this.fmtData(d.data) + (d.venc ? (d.cartaoId ? ' · fatura ' : ' · venc ') + this.fmtData(d.venc) : '') + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.fixoId ? ' · Fixo' : ''),
           valorFmt: this.fmt(d.valor),
           stLabel: d.paga ? 'Paga' : 'Pendente',
@@ -3067,8 +3075,7 @@ class Component extends DCLogic {
     vals.importExtrato = () => this.importarExtrato();
     vals.despTotalFmt = this.fmt(despFiltered.reduce((t, d) => t + d.valor, 0));
     vals.despList = despFiltered.map((d, i) => ({
-      desc: d.desc, paga: d.paga, deFixo: !!d.fixoId, isCard: !!d.cartaoId, dl: this.dl(i),
-      parcLabel: d.grupoId && d.parcela && d.parcelas && !this.parcInfo(d.desc) ? d.parcela + '/' + d.parcelas : (d.grupoId ? 'Parcelada' : false),
+      desc: this.parcView(d).nome, parc: this.parcView(d).parc, paga: d.paga, deFixo: !!d.fixoId, isCard: !!d.cartaoId, dl: this.dl(i),
       meta: d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.obs ? ' · ' + d.obs : ''),
       compra: this.fmtData(d.data),
       venc: d.venc ? this.fmtData(d.venc) : '—',
