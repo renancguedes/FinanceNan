@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.2.0"></script>
+<script src="./fn-supabase.js?v=1.3.0"></script>
 </head>
 <body>
 <x-dc>
@@ -94,6 +94,71 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
   .app-header .app-title{flex:1 1 100% !important;font-size:17px !important;}
   .fn-grid-3{grid-template-columns:1fr !important;}
   .fn-grid-11{grid-template-columns:1fr !important;}
+}
+
+/* ---------- celular e tablet estreito (v1.10.1): mesmo limite do menu recolhido ---------- */
+@media (max-width:820px){
+  /* barras de ferramentas: filtros em faixa rolável, ações em grade */
+  .fn-toolbar{flex-direction:column !important;align-items:stretch !important;gap:12px !important;}
+  .fn-filters{width:100%;min-width:0;}
+  .fn-chips{flex-wrap:nowrap !important;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin:0 -14px;padding:2px 14px;}
+  .fn-chips::-webkit-scrollbar{display:none;}
+  .fn-chips > *{flex:none !important;}
+  .fn-actions{display:grid !important;grid-template-columns:1fr 1fr;gap:8px !important;}
+  .fn-actions > button{width:100%;padding:11px 10px !important;}
+  .fn-primary{width:100%;order:-1;}
+  .fn-actions .fn-primary{grid-column:1 / -1;}
+  .fn-search-row .fn-search{flex:1 1 100% !important;max-width:none !important;min-width:0 !important;}
+
+  /* despesas: a tabela vira lista de cartões */
+  .fn-dt-wrap{overflow:visible !important;}
+  .fn-dt{min-width:0 !important;}
+  .fn-dt-head{display:none !important;}
+  .fn-dt-row{grid-template-columns:24px auto minmax(0,1fr) auto auto !important;
+    grid-template-areas:"chk desc desc val val" "chk compra venc st acts";
+    column-gap:10px !important;row-gap:6px !important;padding:13px 14px !important;}
+  .fn-dt-chk{grid-area:chk;align-self:start;margin-top:2px;}
+  .fn-dt-desc{grid-area:desc;}
+  .fn-dt-val{grid-area:val;align-self:start;white-space:nowrap;}
+  .fn-dt-compra{grid-area:compra;font-size:11.5px !important;white-space:nowrap;}
+  .fn-dt-venc{grid-area:venc;font-size:11.5px !important;white-space:nowrap;}
+  .fn-dt-compra::before{content:"Compra ";color:var(--text3);font-weight:600;}
+  .fn-dt-venc::before{content:"Venc. ";color:var(--text3);font-weight:600;}
+  .fn-dt-st{grid-area:st;justify-self:end !important;font-size:10.5px !important;padding:3px 9px !important;}
+  .fn-dt-acts{grid-area:acts;margin-right:-6px;}
+
+  /* receitas: nome + valor em cima, status + ações embaixo */
+  .fn-rc-row{display:grid !important;grid-template-columns:26px auto auto minmax(0,1fr) auto;
+    grid-template-areas:"chk info info info val" "chk st rec . acts";gap:8px 10px !important;padding:14px !important;}
+  .fn-rc-chk{grid-area:chk;align-self:start;}
+  .fn-rc-info{grid-area:info;min-width:0 !important;}
+  .fn-rc-val{grid-area:val;min-width:0 !important;align-self:start;white-space:nowrap;}
+  .fn-rc-st{grid-area:st;justify-self:start;}
+  .fn-rc-rec{grid-area:rec;justify-self:start;}
+  .fn-rc-acts{grid-area:acts;margin-right:-6px;}
+
+  /* gastos fixos: nome + valor em cima, status + pagar + ações embaixo */
+  .fn-fx-row{display:grid !important;grid-template-columns:auto auto minmax(0,1fr) auto;
+    grid-template-areas:"info info info val" "st pay . acts";gap:10px !important;padding:14px !important;}
+  .fn-fx-info{grid-area:info;min-width:0 !important;}
+  .fn-fx-val{grid-area:val;min-width:0 !important;align-self:start;white-space:nowrap;}
+  .fn-fx-st{grid-area:st;min-width:0 !important;align-self:center;}
+  .fn-fx-pay{grid-area:pay;padding:6px 14px !important;}
+  .fn-fx-acts{grid-area:acts;margin-right:-6px;}
+
+  /* janelas: abrem como painel inferior, com campos em coluna única */
+  .fn-modal-ov{align-items:flex-end !important;padding:0 !important;}
+  .fn-modal{max-width:100% !important;width:100% !important;border-radius:20px 20px 0 0 !important;max-height:92vh !important;
+    border-bottom:none !important;padding-bottom:env(safe-area-inset-bottom,0px);}
+  .fn-grid-11{padding:16px 18px !important;}
+  .fn-grid-11 > *{grid-column:1 / -1 !important;}
+  .fn-cfg-tipo{display:none;}
+}
+@media (min-width:480px) and (max-width:820px){
+  /* em telas um pouco maiores, campos curtos voltam a ficar lado a lado */
+  .fn-grid-11{grid-template-columns:1fr 1fr !important;}
+  .fn-grid-11 > *{grid-column:auto !important;}
+  .fn-grid-11 > [style*="span 2"]{grid-column:1 / -1 !important;}
 }
 </style>
 </helmet>
@@ -585,9 +650,9 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
       <!-- ===== GASTOS FIXOS ===== -->
       <sc-if value="{{showFixos}}" hint-placeholder-val="{{false}}">
         <div data-screen-label="Gastos Fixos" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <div class="fn-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
             <div style="color:var(--text2);font-size:13.5px">Total de gastos fixos ativos: <b style="font-family:Sora;color:var(--text)">{{custoFixoFmt}}</b> / mês</div>
-            <button onClick="{{addFixo}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Novo gasto fixo</button>
+            <button class="fn-primary" onClick="{{addFixo}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Novo gasto fixo</button>
           </div>
           <sc-if value="{{emptyFixos}}" hint-placeholder-val="{{false}}">
             <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
@@ -597,17 +662,17 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
           </sc-if>
           <div style="display:flex;flex-direction:column;gap:10px">
             <sc-for list="{{fixosList}}" as="g" hint-placeholder-count="0">
-              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap;opacity:{{g.op}};animation:fadeUp .4s ease both;animation-delay:{{g.dl}}" style-hover="transform:translateY(-2px);box-shadow:var(--lift)">
-                <div style="flex:1;min-width:180px">
+              <div class="fn-fx-row" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap;opacity:{{g.op}};animation:fadeUp .4s ease both;animation-delay:{{g.dl}}" style-hover="transform:translateY(-2px);box-shadow:var(--lift)">
+                <div class="fn-fx-info" style="flex:1;min-width:180px">
                   <div style="font-weight:800;font-size:14px">{{g.desc}}</div>
                   <div style="font-size:12px;color:var(--text3)">{{g.meta}}</div>
                 </div>
-                <div style="font-family:Sora;font-weight:600;font-size:15px;min-width:100px;text-align:right">{{g.valorFmt}}</div>
-                <div style="padding:5px 12px;border-radius:99px;font-size:11.5px;font-weight:800;background:{{g.stBg}};color:{{g.stFg}};min-width:82px;text-align:center;animation:pillPop .3s cubic-bezier(.3,.9,.4,1)">{{g.stLabel}}</div>
+                <div class="fn-fx-val" style="font-family:Sora;font-weight:600;font-size:15px;min-width:100px;text-align:right">{{g.valorFmt}}</div>
+                <div class="fn-fx-st" style="padding:5px 12px;border-radius:99px;font-size:11.5px;font-weight:800;background:{{g.stBg}};color:{{g.stFg}};min-width:82px;text-align:center;animation:pillPop .3s cubic-bezier(.3,.9,.4,1)">{{g.stLabel}}</div>
                 <sc-if value="{{g.podePagar}}" hint-placeholder-val="{{false}}">
-                  <button onClick="{{g.pagar}}" style="padding:9px 16px;border-radius:10px;border:1px solid var(--green);background:var(--green-soft);color:var(--green);font-weight:800;font-size:12.5px;cursor:pointer" style-hover="background:var(--green);color:#fff;transform:translateY(-1px)">Pagar</button>
+                  <button class="fn-fx-pay" onClick="{{g.pagar}}" style="padding:9px 16px;border-radius:10px;border:1px solid var(--green);background:var(--green-soft);color:var(--green);font-weight:800;font-size:12.5px;cursor:pointer" style-hover="background:var(--green);color:#fff;transform:translateY(-1px)">Pagar</button>
                 </sc-if>
-                <div style="display:flex;gap:4px">
+                <div class="fn-fx-acts" style="display:flex;gap:4px">
                   <button onClick="{{g.toggle}}" title="{{g.toggleTip}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="{{g.toggleIcon}}"></path></svg></button>
                   <button onClick="{{g.edit}}" title="Editar" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
                   <button onClick="{{g.del}}" title="Excluir" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
@@ -622,16 +687,16 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
       <!-- ===== RECEITAS ===== -->
       <sc-if value="{{showRec}}" hint-placeholder-val="{{false}}">
         <div data-screen-label="Receitas" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="fn-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div class="fn-chips" style="display:flex;gap:6px;flex-wrap:wrap">
               <sc-for list="{{recFilters}}" as="f" hint-placeholder-count="4">
                 <button onClick="{{f.pick}}" style="padding:8px 15px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:12.5px;cursor:pointer" style-hover="transform:translateY(-1px)">{{f.label}}</button>
               </sc-for>
             </div>
-            <button onClick="{{addReceita}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova receita</button>
+            <button class="fn-primary" onClick="{{addReceita}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova receita</button>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="position:relative;flex:1;min-width:220px;max-width:440px">
+          <div class="fn-search-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="fn-search" style="position:relative;flex:1;min-width:220px;max-width:440px">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm10 3-5.2-5.2"></path></svg>
               <input type="text" value="{{recBusca}}" onChange="{{recBuscaOn}}" placeholder="{{recBuscaPh}}" style="width:100%;padding:10px 36px 10px 37px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent)"/>
               <sc-if value="{{recBuscaAtiva}}" hint-placeholder-val="{{false}}">
@@ -649,18 +714,18 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
           </sc-if>
           <div style="display:flex;flex-direction:column;gap:10px">
             <sc-for list="{{recList}}" as="r" hint-placeholder-count="0">
-              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap;animation:fadeUp .4s ease both;animation-delay:{{r.dl}}" style-hover="transform:translateY(-2px);box-shadow:var(--lift)">
-                <button onClick="{{r.toggle}}" title="{{r.toggleTip}}" style="width:26px;height:26px;flex:none;border-radius:8px;border:2px solid {{r.chkBc}};background:{{r.chkBg}};color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="transform:scale(1.1)">
+              <div class="fn-rc-row" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;flex-wrap:wrap;animation:fadeUp .4s ease both;animation-delay:{{r.dl}}" style-hover="transform:translateY(-2px);box-shadow:var(--lift)">
+                <button class="fn-rc-chk" onClick="{{r.toggle}}" title="{{r.toggleTip}}" style="width:26px;height:26px;flex:none;border-radius:8px;border:2px solid {{r.chkBc}};background:{{r.chkBg}};color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="transform:scale(1.1)">
                   <sc-if value="{{r.recebida}}" hint-placeholder-val="{{false}}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation:pillPop .25s ease"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
                 </button>
-                <div style="flex:1;min-width:180px">
+                <div class="fn-rc-info" style="flex:1;min-width:180px">
                   <div style="font-weight:800;font-size:14px">{{r.desc}}</div>
                   <div style="font-size:12px;color:var(--text3)">{{r.meta}}</div>
                 </div>
-                <sc-if value="{{r.recorrente}}" hint-placeholder-val="{{false}}"><span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:var(--accent-soft);color:var(--accent)">Recorrente</span></sc-if>
-                <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:{{r.stBg}};color:{{r.stFg}};animation:pillPop .3s cubic-bezier(.3,.9,.4,1)">{{r.stLabel}}</span>
-                <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--green);min-width:110px;text-align:right">{{r.valorFmt}}</div>
-                <div style="display:flex;gap:4px">
+                <sc-if value="{{r.recorrente}}" hint-placeholder-val="{{false}}"><span class="fn-rc-rec" style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:var(--accent-soft);color:var(--accent)">Recorrente</span></sc-if>
+                <span class="fn-rc-st" style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:{{r.stBg}};color:{{r.stFg}};animation:pillPop .3s cubic-bezier(.3,.9,.4,1)">{{r.stLabel}}</span>
+                <div class="fn-rc-val" style="font-family:Sora;font-weight:600;font-size:15px;color:var(--green);min-width:110px;text-align:right">{{r.valorFmt}}</div>
+                <div class="fn-rc-acts" style="display:flex;gap:4px">
                   <button onClick="{{r.edit}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
                   <button onClick="{{r.del}}" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
                 </div>
@@ -674,28 +739,28 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
       <!-- ===== DESPESAS ===== -->
       <sc-if value="{{showDesp}}" hint-placeholder-val="{{false}}">
         <div data-screen-label="Despesas" style="display:flex;flex-direction:column;gap:16px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div class="fn-toolbar" style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div class="fn-filters" style="display:flex;flex-direction:column;gap:8px">
+              <div class="fn-chips" style="display:flex;gap:6px;flex-wrap:wrap">
                 <sc-for list="{{despFilters}}" as="f" hint-placeholder-count="4">
                   <button onClick="{{f.pick}}" style="padding:8px 15px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:12.5px;cursor:pointer" style-hover="transform:translateY(-1px)">{{f.label}}</button>
                 </sc-for>
               </div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+              <div class="fn-chips" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
                 <span style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-right:2px">Forma:</span>
                 <sc-for list="{{formaFilters}}" as="f" hint-placeholder-count="5">
                   <button onClick="{{f.pick}}" style="padding:6px 12px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:11.5px;cursor:pointer" style-hover="transform:translateY(-1px)">{{f.label}}</button>
                 </sc-for>
               </div>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <div class="fn-actions" style="display:flex;gap:8px;flex-wrap:wrap">
               <button onClick="{{importExtrato}}" title="Importar lançamentos de um arquivo OFX ou CSV do banco" style="padding:11px 16px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent);transform:translateY(-1px)">Importar OFX / CSV</button>
               <button onClick="{{addMassa}}" style="padding:11px 16px;border-radius:11px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="background:var(--accent);color:var(--on-accent);transform:translateY(-1px)">Lançar em massa</button>
-              <button onClick="{{addDespesa}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova despesa</button>
+              <button class="fn-primary" onClick="{{addDespesa}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova despesa</button>
             </div>
           </div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <div style="position:relative;flex:1;min-width:220px;max-width:440px">
+          <div class="fn-search-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="fn-search" style="position:relative;flex:1;min-width:220px;max-width:440px">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm10 3-5.2-5.2"></path></svg>
               <input type="text" value="{{despBusca}}" onChange="{{despBuscaOn}}" placeholder="{{despBuscaPh}}" style="width:100%;padding:10px 36px 10px 37px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent)"/>
               <sc-if value="{{despBuscaAtiva}}" hint-placeholder-val="{{false}}">
@@ -712,9 +777,9 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
             </div>
           </sc-if>
           <sc-if value="{{hasDesp}}" hint-placeholder-val="{{false}}">
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow-x:auto">
-              <div style="min-width:820px">
-                <div style="display:grid;grid-template-columns:34px minmax(200px,1fr) 100px 110px 110px 110px 72px;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2)">
+            <div class="fn-dt-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow-x:auto">
+              <div class="fn-dt" style="min-width:820px">
+                <div class="fn-dt-head" style="display:grid;grid-template-columns:34px minmax(200px,1fr) 100px 110px 110px 110px 72px;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);background:var(--surface2)">
                   <span></span>
                   <sc-for list="{{despSortCols}}" as="h" hint-placeholder-count="4">
                     <button onClick="{{h.pick}}" style="border:none;background:none;padding:0;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800;color:{{h.fg}};text-transform:uppercase;letter-spacing:.05em;text-align:left;justify-content:{{h.just}}" style-hover="color:var(--accent)">{{h.label}}<span style="font-size:10px">{{h.arrow}}</span></button>
@@ -723,11 +788,11 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                   <span></span>
                 </div>
                 <sc-for list="{{despList}}" as="d" hint-placeholder-count="0">
-                  <div style="display:grid;grid-template-columns:34px minmax(200px,1fr) 100px 110px 110px 110px 72px;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);animation:fadeUp .35s ease both;animation-delay:{{d.dl}}" style-hover="background:var(--surface2)">
-                    <button onClick="{{d.toggle}}" title="{{d.toggleTip}}" style="width:24px;height:24px;flex:none;border-radius:7px;border:2px solid {{d.chkBc}};background:{{d.chkBg}};color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="transform:scale(1.12)">
+                  <div class="fn-dt-row" style="display:grid;grid-template-columns:34px minmax(200px,1fr) 100px 110px 110px 110px 72px;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);animation:fadeUp .35s ease both;animation-delay:{{d.dl}}" style-hover="background:var(--surface2)">
+                    <button class="fn-dt-chk" onClick="{{d.toggle}}" title="{{d.toggleTip}}" style="width:24px;height:24px;flex:none;border-radius:7px;border:2px solid {{d.chkBc}};background:{{d.chkBg}};color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="transform:scale(1.12)">
                       <sc-if value="{{d.paga}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation:pillPop .25s ease"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
                     </button>
-                    <div style="min-width:0">
+                    <div class="fn-dt-desc" style="min-width:0">
                       <div style="font-weight:800;font-size:13.5px;display:flex;align-items:center;gap:7px;min-width:0">
                         <sc-if value="{{d.isCard}}" hint-placeholder-val="{{false}}">
                           <span title="Cartão de crédito" style="flex:none;display:flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><path d="M2 6h20v13H2zM2 10h20"></path></svg></span>
@@ -738,11 +803,11 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                       </div>
                       <div style="font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{d.meta}}</div>
                     </div>
-                    <div style="font-size:12.5px;font-weight:600;color:var(--text2)">{{d.compra}}</div>
-                    <div style="font-size:12.5px;font-weight:600;color:{{d.vencFg}}">{{d.venc}}</div>
-                    <div style="font-family:Sora;font-weight:600;font-size:14px;color:var(--red);text-align:right">{{d.valorFmt}}</div>
-                    <span style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:{{d.stBg}};color:{{d.stFg}};text-align:center;animation:pillPop .3s cubic-bezier(.3,.9,.4,1);justify-self:start">{{d.stLabel}}</span>
-                    <div style="display:flex;gap:2px;justify-content:flex-end">
+                    <div class="fn-dt-compra" style="font-size:12.5px;font-weight:600;color:var(--text2)">{{d.compra}}</div>
+                    <div class="fn-dt-venc" style="font-size:12.5px;font-weight:600;color:{{d.vencFg}}">{{d.venc}}</div>
+                    <div class="fn-dt-val" style="font-family:Sora;font-weight:600;font-size:14px;color:var(--red);text-align:right">{{d.valorFmt}}</div>
+                    <span class="fn-dt-st" style="padding:4px 10px;border-radius:99px;font-size:11px;font-weight:800;background:{{d.stBg}};color:{{d.stFg}};text-align:center;animation:pillPop .3s cubic-bezier(.3,.9,.4,1);justify-self:start">{{d.stLabel}}</span>
+                    <div class="fn-dt-acts" style="display:flex;gap:2px;justify-content:flex-end">
                       <button onClick="{{d.edit}}" style="width:28px;height:28px;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
                       <button onClick="{{d.del}}" style="width:28px;height:28px;border:none;background:none;border-radius:7px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
                     </div>
@@ -918,7 +983,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                     <sc-if value="{{i.on}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation:pillPop .25s ease"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
                   </span>
                   <span style="flex:1;font-weight:700;font-size:13.5px;color:var(--text)">{{i.nome}}</span>
-                  <span style="font-size:11.5px;color:var(--text3);font-weight:600">{{i.tipo}}</span>
+                  <span class="fn-cfg-tipo" style="font-size:11.5px;color:var(--text3);font-weight:600">{{i.tipo}}</span>
                   <span style="font-family:Sora;font-weight:600;font-size:13px;color:var(--text2)">{{i.saldoFmt}}</span>
                 </button>
               </sc-for>
@@ -987,8 +1052,8 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
 
 <!-- ===== MODAL ===== -->
 <sc-if value="{{modalOpen}}" hint-placeholder-val="{{false}}">
-  <div onClick="{{modalClose}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease">
-    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:480px;max-height:88vh;overflow:auto;animation:popIn .3s cubic-bezier(.3,.9,.4,1)">
+  <div class="fn-modal-ov" onClick="{{modalClose}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease">
+    <div class="fn-modal" onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:480px;max-height:88vh;overflow:auto;animation:popIn .3s cubic-bezier(.3,.9,.4,1)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0">
         <h3 style="font-family:Sora;font-weight:600;font-size:17px;margin:0;letter-spacing:-.02em">{{modalTitle}}</h3>
         <button onClick="{{modalClose}}" style="width:30px;height:30px;border:none;background:var(--surface2);border-radius:9px;cursor:pointer;color:var(--text2);font-size:15px" style-hover="color:var(--red);transform:rotate(90deg)">✕</button>
@@ -1058,8 +1123,8 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
 
 <!-- ===== EXPORTAR RESUMO (prévia + download por imagem) ===== -->
 <sc-if value="{{exportModalOpen}}" hint-placeholder-val="{{false}}">
-  <div onClick="{{fecharExportModal}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease">
-    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:460px;max-height:88vh;overflow:auto;animation:popIn .3s cubic-bezier(.3,.9,.4,1)">
+  <div class="fn-modal-ov" onClick="{{fecharExportModal}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease">
+    <div class="fn-modal" onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:460px;max-height:88vh;overflow:auto;animation:popIn .3s cubic-bezier(.3,.9,.4,1)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0">
         <h3 style="font-family:Sora;font-weight:600;font-size:17px;margin:0;letter-spacing:-.02em">Resumo do planejamento</h3>
         <button onClick="{{fecharExportModal}}" style="width:30px;height:30px;border:none;background:var(--surface2);border-radius:9px;cursor:pointer;color:var(--text2);font-size:15px" style-hover="color:var(--red);transform:rotate(90deg)">✕</button>
@@ -1090,8 +1155,8 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
 
 <!-- ===== DETALHE (composição) ===== -->
 <sc-if value="{{detailOpen}}" hint-placeholder-val="{{false}}">
-  <div onClick="{{detailClose}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:105;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
-    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:420px;max-height:80vh;overflow:auto;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
+  <div class="fn-modal-ov" onClick="{{detailClose}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:105;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
+    <div class="fn-modal" onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:420px;max-height:80vh;overflow:auto;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 4px">
         <h3 style="font-family:Sora;font-weight:600;font-size:17px;margin:0;letter-spacing:-.02em">{{detailTitle}}</h3>
         <button onClick="{{detailClose}}" style="width:30px;height:30px;border:none;background:var(--surface2);border-radius:9px;cursor:pointer;color:var(--text2);font-size:15px" style-hover="color:var(--red);transform:rotate(90deg)">✕</button>
@@ -1127,8 +1192,8 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
 
 <!-- ===== CONFIRM ===== -->
 <sc-if value="{{confirmOpen}}" hint-placeholder-val="{{false}}">
-  <div onClick="{{confirmCancel}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
-    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:26px;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
+  <div class="fn-modal-ov" onClick="{{confirmCancel}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
+    <div class="fn-modal" onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:26px;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
       <div style="width:42px;height:42px;border-radius:12px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg>
       </div>

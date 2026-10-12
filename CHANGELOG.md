@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.10.1 - 2026-10-12
+- celular: a tabela de despesas virou uma lista de cartões (nome e valor em cima; data da compra, vencimento, status e ações embaixo), sem rolagem lateral e sem esconder o valor
+- celular: receitas e gastos fixos reorganizados no mesmo padrão (nome e valor na 1ª linha, status, "Pagar" e ações na 2ª)
+- celular: filtros de despesas e receitas viraram faixas roláveis na horizontal; "+ Nova despesa" ocupa a largura toda e "Importar OFX / CSV" e "Lançar em massa" ficam lado a lado logo abaixo; a pesquisa ocupa a linha inteira
+- celular: o botão do menu (☰) deixou de ficar fixo no topo cobrindo a faixa do modo visitante e das janelas; agora acompanha o cabeçalho, ao lado do título
+- celular: janelas (nova despesa, lançamento em massa, importação, confirmações) abrem como painel inferior de largura total, com campos em coluna única até 480px; o problema que mantinha duas colunas apertadas nos formulários foi corrigido
+- celular: em Configurações, o tipo da conta some nas telas estreitas para o nome não quebrar em várias linhas
+- os ajustes passam a valer até 820px, o mesmo limite em que o menu lateral vira gaveta; no computador nada muda
+
 ## v1.10.0 - 2026-10-12
 - parcelas: o "Parcela X/N" deixou de aparecer como texto no fim da descrição e passou a ser exibido como um badge ao lado do nome da compra — na lista de despesas, na Análise, no dashboard (últimos lançamentos e painel "A pagar") e na lista da importação de extrato. A descrição gravada não muda, então a pesquisa e a importação continuam funcionando igual
 

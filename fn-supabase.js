@@ -296,9 +296,9 @@
     'html.fn-mobile .app-sidebar .sb-toggle{display:none!important}',
     '#fn-drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;opacity:0;visibility:hidden;transition:opacity .25s}',
     'html.fn-drawer-open #fn-drawer-backdrop{opacity:1;visibility:visible}',
-    '#fn-hamb{display:none;position:fixed;top:9px;left:10px;z-index:1001;width:44px;height:44px;border-radius:12px;align-items:center;justify-content:center;background:#7c5cbf;border:none;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.28);cursor:pointer;padding:0}',
+    '#fn-hamb{display:none;position:fixed;top:9px;left:12px;z-index:21;width:40px;height:40px;border-radius:12px;align-items:center;justify-content:center;background:#7c5cbf;border:none;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.28);cursor:pointer;padding:0}',
     'html.fn-mobile.fn-app #fn-hamb{display:flex}',
-    'html.fn-mobile.fn-app .app-header{padding-left:62px!important}',
+    'html.fn-mobile.fn-app .app-header .app-title{padding-left:50px!important}',
     // Menu: itens alinhados a esquerda (sobrepoe o center do CSS antigo <=760).
     'html.fn-mobile .app-sidebar nav button{justify-content:flex-start!important;padding:10px 14px!important;gap:12px!important;text-align:left!important}',
     'html.fn-mobile .app-sidebar .sb-logo{justify-content:flex-start!important;padding:6px 10px!important}',
@@ -333,6 +333,16 @@
       if (!document.getElementById('fn-drawer-backdrop')) { var bd = document.createElement('div'); bd.id = 'fn-drawer-backdrop'; bd.addEventListener('click', closeDrawer); document.body.appendChild(bd); }
       if (!document.getElementById('fn-hamb')) { var h = document.createElement('button'); h.id = 'fn-hamb'; h.type = 'button'; h.setAttribute('aria-label', 'Abrir menu'); h.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"></path></svg>'; h.addEventListener('click', function (e) { e.stopPropagation(); toggleDrawer(); }); document.body.appendChild(h); }
     } catch (e) {} }
+  // Botão do menu acompanha a 1a linha do cabeçalho (antes ficava fixo no topo e
+  // cobria a faixa do modo visitante). z-index 21: acima do cabeçalho, abaixo das janelas.
+  function placeHamb() {
+    try {
+      var h = document.getElementById('fn-hamb'); if (!h) return;
+      var t = document.querySelector('.app-header .app-title'); if (!t) return;
+      var r = t.getBoundingClientRect(); if (!r.height) return;
+      h.style.top = Math.max(6, Math.round(r.top + r.height / 2 - 20)) + 'px';
+    } catch (e) {}
+  }
   function syncAppState() { var hasApp = !!document.querySelector('.app-sidebar'); HTML.classList.toggle('fn-app', hasApp); if (!hasApp) closeDrawer(); }
 
   function themeAccent() { try { var root = document.querySelector('[data-theme]'); if (root) { var a = getComputedStyle(root).getPropertyValue('--accent'); if (a && a.trim()) return a.trim(); } } catch (e) {} return '#7c5cbf'; }
@@ -368,15 +378,16 @@
   function applyResponsive() {
     try { if (!document.getElementById('fn-responsive-style')) { var st = document.createElement('style'); st.id = 'fn-responsive-style'; st.textContent = FN_RESP_CSS; (document.head || document.documentElement).appendChild(st); }
       var w = window.innerWidth; HTML.classList.toggle('fn-mobile', w <= 820); HTML.classList.toggle('fn-tablet', w > 820 && w <= 1100);
-      if (w > 820) closeDrawer(); ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser();
+      if (w > 820) closeDrawer(); ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser(); placeHamb();
     } catch (e) {} }
   applyResponsive();
   window.addEventListener('resize', applyResponsive);
   window.addEventListener('orientationchange', applyResponsive);
   document.addEventListener('DOMContentLoaded', function () { ensureDrawerEls(); applyResponsive(); });
-  var _sq = false; function queueSync() { if (_sq) return; _sq = true; requestAnimationFrame(function () { _sq = false; ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser(); }); }
+  var _sq = false; function queueSync() { if (_sq) return; _sq = true; requestAnimationFrame(function () { _sq = false; ensureDrawerEls(); syncAppState(); applyHambColor(); tagHeader(); drawerUser(); placeHamb(); }); }
+  document.addEventListener('scroll', function () { requestAnimationFrame(placeHamb); }, true);
   try { new MutationObserver(queueSync).observe(HTML, { childList: true, subtree: true }); } catch (e) {}
 
-  window.__FN_SUPABASE_VER = '1.1.0';
+  window.__FN_SUPABASE_VER = '1.3.0';
   log('carregado v1.1.0, url=', URL);
 })();
