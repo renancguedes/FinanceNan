@@ -629,10 +629,21 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
             </div>
             <button onClick="{{addReceita}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova receita</button>
           </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="position:relative;flex:1;min-width:220px;max-width:440px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm10 3-5.2-5.2"></path></svg>
+              <input type="text" value="{{recBusca}}" onChange="{{recBuscaOn}}" placeholder="{{recBuscaPh}}" style="width:100%;padding:10px 36px 10px 37px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent)"/>
+              <sc-if value="{{recBuscaAtiva}}" hint-placeholder-val="{{false}}">
+                <button onClick="{{recBuscaLimpar}}" title="Limpar pesquisa" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;border-radius:7px;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px" style-hover="color:var(--red)">✕</button>
+              </sc-if>
+            </div>
+            <button onClick="{{recBuscaTodosToggle}}" title="Pesquisar em todos os meses, não só na competência atual" style="padding:7px 13px;border-radius:99px;border:1px solid {{recBuscaTodosBc}};background:{{recBuscaTodosBg}};color:{{recBuscaTodosFg}};font-weight:700;font-size:11.5px;cursor:pointer" style-hover="transform:translateY(-1px)">Todos os meses</button>
+            <sc-if value="{{recBuscaAtiva}}" hint-placeholder-val="{{false}}"><span style="font-size:12px;font-weight:700;color:var(--text3)">{{recBuscaInfo}}</span></sc-if>
+          </div>
           <sc-if value="{{emptyRec}}" hint-placeholder-val="{{false}}">
             <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
               <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhuma receita encontrada</div>
-              <div style="font-size:13px">Nada por aqui em {{compLabel}} com esse filtro.</div>
+              <div style="font-size:13px">{{recEmptyMsg}}</div>
             </div>
           </sc-if>
           <div style="display:flex;flex-direction:column;gap:10px">
@@ -682,10 +693,21 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               <button onClick="{{addDespesa}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova despesa</button>
             </div>
           </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="position:relative;flex:1;min-width:220px;max-width:440px">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm10 3-5.2-5.2"></path></svg>
+              <input type="text" value="{{despBusca}}" onChange="{{despBuscaOn}}" placeholder="{{despBuscaPh}}" style="width:100%;padding:10px 36px 10px 37px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent)"/>
+              <sc-if value="{{despBuscaAtiva}}" hint-placeholder-val="{{false}}">
+                <button onClick="{{despBuscaLimpar}}" title="Limpar pesquisa" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;border-radius:7px;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px" style-hover="color:var(--red)">✕</button>
+              </sc-if>
+            </div>
+            <button onClick="{{despBuscaTodosToggle}}" title="Pesquisar em todos os meses, não só na competência atual" style="padding:7px 13px;border-radius:99px;border:1px solid {{despBuscaTodosBc}};background:{{despBuscaTodosBg}};color:{{despBuscaTodosFg}};font-weight:700;font-size:11.5px;cursor:pointer" style-hover="transform:translateY(-1px)">Todos os meses</button>
+            <sc-if value="{{despBuscaAtiva}}" hint-placeholder-val="{{false}}"><span style="font-size:12px;font-weight:700;color:var(--text3)">{{despBuscaInfo}}</span></sc-if>
+          </div>
           <sc-if value="{{emptyDesp}}" hint-placeholder-val="{{false}}">
             <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px;text-align:center;color:var(--text3)">
               <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Nenhuma despesa encontrada</div>
-              <div style="font-size:13px">Nada por aqui em {{compLabel}} com esse filtro.</div>
+              <div style="font-size:13px">{{despEmptyMsg}}</div>
             </div>
           </sc-if>
           <sc-if value="{{hasDesp}}" hint-placeholder-val="{{false}}">
@@ -1148,6 +1170,7 @@ class Component extends DCLogic {
       comp: { m: now.getMonth() + 1, y: now.getFullYear() },
       reservaMeses: 6, distDraft: null, distDirty: false,
       recFilter: 'todas', despFilter: 'todas', formaFilter: 'todas',
+      recBusca: '', despBusca: '', recBuscaTodos: false, despBuscaTodos: false,
       despSort: { k: 'data', dir: -1 },
       anaExp: [], anaSoCartao: false,
       modal: null, confirm: null, detail: null, exportPngs: null, toasts: [], adminUsers: [], adminLoading: false
@@ -1535,7 +1558,7 @@ class Component extends DCLogic {
         { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
       ], defaults: { desc: '', cat: recCatOpts.length ? recCatOpts[0].v : '', contaId: contaOpts.length ? contaOpts[0].v : '', data: hoje, valor: 0, obs: '', recorrente: false, recebida: false } },
       despesa: { title: n => n ? 'Editar despesa' : 'Nova despesa', hint: 'O vencimento é opcional e pode ser preenchido em qualquer despesa. Em compras no cartão, ele é calculado automaticamente pelo fechamento da fatura.', fields: [
-        { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Mercado', span: 2 },
+        { k: 'desc', label: mDraft._suf ? 'Descrição · ' + mDraft._suf.replace(/^\s*[-–]?\s*/, '').replace(/^\(\s*(\d+\s*\/\s*\d+)\s*\)$/, 'Parcela $1') + ' (o número é mantido automaticamente)' : 'Descrição', t: 'text', ph: 'Ex: Mercado', span: 2 },
         { k: 'cat', label: 'Categoria', t: 'select', options: despCatOpts, span: 1 },
         { k: 'forma', label: 'Conta / Cartão', t: 'select', options: formaOpts, span: 1 },
         { k: 'data', label: 'Data da compra', t: 'date', span: 1 },
@@ -1636,7 +1659,42 @@ class Component extends DCLogic {
     const x = +nums[1], n = +nums[2];
     return x >= 1 && n >= x && n <= 360 ? { x, n } : null;
   }
+  // ---------- pesquisa por nome (despesas / receitas) ----------
+  normBusca(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
+  // todas as palavras digitadas precisam aparecer na descrição, em qualquer ordem, sem diferenciar acento/maiúscula
+  bateBusca(desc, termo) { const d = this.normBusca(desc); return this.normBusca(termo).split(' ').every(p => !p || d.includes(p)); }
+  buscaVals(vals, px, termo, todos, qtd, total, nomeSing, nomePlural) {
+    const ativa = !!this.normBusca(termo);
+    vals[px + 'Busca'] = termo;
+    vals[px + 'BuscaPh'] = 'Pesquisar ' + nomeSing + ' pelo nome...';
+    vals[px + 'BuscaOn'] = e => this.setState({ [px + 'Busca']: e.target.value });
+    vals[px + 'BuscaLimpar'] = () => this.setState({ [px + 'Busca']: '' });
+    vals[px + 'BuscaAtiva'] = ativa;
+    vals[px + 'BuscaTodosToggle'] = () => this.setState(st => ({ [px + 'BuscaTodos']: !st[px + 'BuscaTodos'] }));
+    vals[px + 'BuscaTodosBg'] = todos ? 'var(--accent)' : 'var(--surface)';
+    vals[px + 'BuscaTodosFg'] = todos ? 'var(--on-accent)' : 'var(--text2)';
+    vals[px + 'BuscaTodosBc'] = todos ? 'var(--accent)' : 'var(--border2)';
+    vals[px + 'BuscaInfo'] = qtd + ' ' + (qtd === 1 ? nomeSing : nomePlural) + ' · ' + this.fmt(total) + (todos ? ' · todos os meses' : '');
+    vals[px + 'EmptyMsg'] = ativa ? 'Nada encontrado para "' + termo.trim() + '"' + (todos ? ' em nenhum mês.' : ' em ' + vals.compLabel + '. Tente "Todos os meses".')
+      : (todos ? 'Nada por aqui com esse filtro.' : 'Nada por aqui em ' + vals.compLabel + ' com esse filtro.');
+  }
+
   parcBase(desc) { return String(desc || '').replace(this.PARC_RE, '').trim(); }
+  // sufixo de parcela de uma despesa (" - Parcela 9/10", " (2/3)"); se a descrição não tiver,
+  // mas a despesa pertencer a um grupo, monta a partir dos campos parcela/parcelas
+  parcSufixo(x) {
+    const m = String(x.desc || '').match(this.PARC_RE);
+    if (m) return m[0];
+    return x.grupoId && x.parcela && x.parcelas ? ' - Parcela ' + x.parcela + '/' + x.parcelas : '';
+  }
+  // Abre a edição da despesa. Em parcelas, o campo Descrição mostra só o nome da compra;
+  // o "Parcela X/N" fica guardado à parte (_suf) e é recolocado automaticamente ao salvar.
+  editDespesa(d) {
+    const draft = { ...d, forma: d.cartaoId ? 'k:' + d.cartaoId : 'a:' + (d.contaId || '') };
+    const suf = this.parcSufixo(d);
+    if (suf) { draft.desc = this.parcBase(d.desc); draft._suf = suf; }
+    this.openModal('despesa', draft);
+  }
   // troca o número da parcela mantendo o mesmo formato do sufixo (importante para não duplicar
   // quando a próxima fatura for importada com a mesma descrição)
   parcDesc(desc, i) { return String(desc).replace(/(\d+)(\s*\/\s*\d+\s*\)?\s*)$/, i + '$2'); }
@@ -1949,6 +2007,10 @@ class Component extends DCLogic {
     // edição de parcela: opcionalmente replica descrição, categoria e observações para todo o grupo
     const aplicarGrupo = m.type === 'despesa' && m.id && d.grupoId && d.aplicarGrupo;
     delete d.aplicarGrupo;
+    // parcela: o usuário editou só o nome; recoloca o "Parcela X/N" desta despesa
+    // (parcBase também remove um número que tenha sido digitado de novo por engano)
+    if (m.type === 'despesa' && d._suf) { const base = this.parcBase(d.desc); d.desc = base ? base + d._suf : ''; }
+    delete d._suf;
     const req = { conta: 'nome', cartao: 'nome', fixo: 'desc', receita: 'desc', despesa: 'desc', fonte: 'nome', categoria: 'nome', catalogo: 'nome', plano: 'nome' }[m.type];
     if (!String(d[req] || '').trim()) { this.toast('Preencha a descrição/nome.', 'err'); return; }
     const coll = db[collMap[m.type]];
@@ -1973,8 +2035,7 @@ class Component extends DCLogic {
         let nGrp = 0;
         coll.forEach(x => {
           if (x.grupoId !== d.grupoId || x.id === m.id) return;
-          const suf = (String(x.desc).match(this.PARC_RE) || [''])[0] || (x.parcela && x.parcelas ? ' - Parcela ' + x.parcela + '/' + x.parcelas : '');
-          x.desc = novoBase + suf; x.cat = d.cat; x.obs = d.obs || '';
+          x.desc = novoBase + this.parcSufixo(x); x.cat = d.cat; x.obs = d.obs || '';
           nGrp++;
         });
         this.toast('Alterações salvas nesta e em mais ' + nGrp + ' parcela(s).');
@@ -2824,7 +2885,7 @@ class Component extends DCLogic {
           valorFmt: this.fmt(d.valor),
           stLabel: d.paga ? 'Paga' : 'Pendente',
           stBg: d.paga ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: d.paga ? 'var(--green)' : 'var(--amber)',
-          edit: () => this.openModal('despesa', { ...d, forma: d.cartaoId ? 'k:' + d.cartaoId : 'a:' + (d.contaId || '') })
+          edit: () => this.editDespesa(d)
         }))
       };
     });
@@ -2947,13 +3008,15 @@ class Component extends DCLogic {
     const recFilterDefs = [['todas', 'Todas'], ['recebidas', 'Recebidas'], ['pendentes', 'Pendentes'], ['recorrentes', 'Recorrentes']];
     vals.recFilters = recFilterDefs.map(fd => ({ label: fd[1], pick: () => this.setState({ recFilter: fd[0] }),
       bg: s.recFilter === fd[0] ? 'var(--accent)' : 'var(--surface)', fg: s.recFilter === fd[0] ? 'var(--on-accent)' : 'var(--text2)', bc: s.recFilter === fd[0] ? 'var(--accent)' : 'var(--border2)' }));
-    const recFiltered = recComp.filter(r => s.recFilter === 'todas' || (s.recFilter === 'recebidas' && r.recebida) || (s.recFilter === 'pendentes' && !r.recebida) || (s.recFilter === 'recorrentes' && r.recorrente)).sort((a, b) => b.data.localeCompare(a.data));
+    const recBase = s.recBuscaTodos ? db.receitas : recComp;
+    const recFiltered = recBase.filter(r => this.bateBusca(r.desc, s.recBusca)).filter(r => s.recFilter === 'todas' || (s.recFilter === 'recebidas' && r.recebida) || (s.recFilter === 'pendentes' && !r.recebida) || (s.recFilter === 'recorrentes' && r.recorrente)).sort((a, b) => b.data.localeCompare(a.data));
     vals.emptyRec = recFiltered.length === 0;
+    this.buscaVals(vals, 'rec', s.recBusca, s.recBuscaTodos, recFiltered.length, recFiltered.reduce((t, r) => t + r.valor, 0), 'receita', 'receitas');
     vals.addReceita = () => this.openModal('receita', null);
     vals.recTotalFmt = this.fmt(recFiltered.reduce((t, r) => t + r.valor, 0));
     vals.recList = recFiltered.map((r, i) => ({
       desc: r.desc, recebida: r.recebida, recorrente: r.recorrente, dl: this.dl(i),
-      meta: this.fmtDia(r.data) + ' · ' + r.cat + ' · ' + contaNome(r.contaId) + (r.obs ? ' · ' + r.obs : ''),
+      meta: (s.recBuscaTodos ? this.fmtData(r.data) : this.fmtDia(r.data)) + ' · ' + r.cat + ' · ' + contaNome(r.contaId) + (r.obs ? ' · ' + r.obs : ''),
       valorFmt: this.fmt(r.valor),
       stLabel: r.recebida ? 'Recebida' : 'Pendente',
       stBg: r.recebida ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: r.recebida ? 'var(--green)' : 'var(--amber)',
@@ -2978,7 +3041,8 @@ class Component extends DCLogic {
     const formaFilterDefs = [['todas', 'Todas'], ['cartao', 'Cartão de crédito'], ['dinheiro', 'Dinheiro'], ['pix', 'PIX / Carteira'], ['banco', 'Conta bancária']];
     vals.formaFilters = formaFilterDefs.map(fd => ({ label: fd[1], pick: () => this.setState({ formaFilter: fd[0] }),
       bg: s.formaFilter === fd[0] ? 'var(--accent)' : 'var(--surface)', fg: s.formaFilter === fd[0] ? 'var(--on-accent)' : 'var(--text2)', bc: s.formaFilter === fd[0] ? 'var(--accent)' : 'var(--border2)' }));
-    let despFiltered = despComp.filter(d => s.despFilter === 'todas' || (s.despFilter === 'pagas' && d.paga) || (s.despFilter === 'pendentes' && !d.paga) || (s.despFilter === 'fixas' && d.fixoId));
+    const despBase = s.despBuscaTodos ? db.despesas : despComp;
+    let despFiltered = despBase.filter(d => this.bateBusca(d.desc, s.despBusca)).filter(d => s.despFilter === 'todas' || (s.despFilter === 'pagas' && d.paga) || (s.despFilter === 'pendentes' && !d.paga) || (s.despFilter === 'fixas' && d.fixoId));
     despFiltered = despFiltered.filter(d => s.formaFilter === 'todas' || tipoDeForma(d) === s.formaFilter);
     const sortKeyFns = {
       desc: d => d.desc.toLowerCase(),
@@ -2996,6 +3060,7 @@ class Component extends DCLogic {
       pick: () => this.setState(st => ({ despSort: { k: sc[0], dir: st.despSort.k === sc[0] ? -st.despSort.dir : (sc[0] === 'desc' ? 1 : -1) } }))
     }));
     vals.emptyDesp = despFiltered.length === 0;
+    this.buscaVals(vals, 'desp', s.despBusca, s.despBuscaTodos, despFiltered.length, despFiltered.reduce((t, d) => t + d.valor, 0), 'despesa', 'despesas');
     vals.hasDesp = despFiltered.length > 0;
     vals.addDespesa = () => this.openModal('despesa', null);
     vals.addMassa = () => this.openModal('massa', null);
@@ -3013,7 +3078,7 @@ class Component extends DCLogic {
       stBg: d.paga ? 'var(--green-soft)' : 'var(--amber-soft)', stFg: d.paga ? 'var(--green)' : 'var(--amber)',
       chkBc: d.paga ? 'var(--green)' : 'var(--border2)', chkBg: d.paga ? 'var(--green)' : 'transparent',
       toggle: () => this.toggleDespesa(d.id), toggleTip: d.paga ? 'Marcar como pendente' : 'Marcar como paga',
-      edit: () => this.openModal('despesa', { ...d, forma: d.cartaoId ? 'k:' + d.cartaoId : 'a:' + (d.contaId || '') }),
+      edit: () => this.editDespesa(d),
       del: () => this.delDespesa(d)
     }));
 

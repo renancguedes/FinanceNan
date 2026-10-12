@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.9.0 - 2026-10-12
+- despesas e receitas: nova barra de pesquisa por nome. Não diferencia maiúsculas nem acentos, aceita várias palavras em qualquer ordem e funciona junto com os filtros existentes; mostra quantos lançamentos foram encontrados e o total em R$
+- despesas e receitas: botão "Todos os meses" ao lado da pesquisa para procurar fora da competência atual (nas receitas, a data passa a exibir o ano nesse modo)
+- parcelas: na edição de uma parcela, o campo "Descrição" mostra só o nome da compra (ex.: "Otica da Gente"), e o número da parcela aparece no rótulo do campo. Ao salvar, o "Parcela X/N" de cada despesa é recolocado automaticamente — mesmo que o número seja digitado de novo por engano, ele não é duplicado
+
 ## v1.8.0 - 2026-10-12
 - lançamento em massa: a opção "Dividir o valor entre as parcelas" agora começa **ligada** por padrão
 - lançamento em massa: novo campo "Começar da parcela" para lançar uma compra já em andamento (ex.: da 6ª de 12). Informando a data original da compra, cada parcela cai na fatura/mês correto e só as parcelas a partir da escolhida são criadas; o valor dividido continua sendo o total ÷ número de parcelas
