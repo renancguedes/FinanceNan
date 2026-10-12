@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.1.0"></script>
+<script src="./fn-supabase.js?v=1.2.0"></script>
 </head>
 <body>
 <x-dc>
@@ -676,7 +676,8 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                 </sc-for>
               </div>
             </div>
-            <div style="display:flex;gap:8px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button onClick="{{importExtrato}}" title="Importar lançamentos de um arquivo OFX ou CSV do banco" style="padding:11px 16px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="border-color:var(--accent);color:var(--accent);transform:translateY(-1px)">Importar OFX / CSV</button>
               <button onClick="{{addMassa}}" style="padding:11px 16px;border-radius:11px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="background:var(--accent);color:var(--on-accent);transform:translateY(-1px)">Lançar em massa</button>
               <button onClick="{{addDespesa}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Nova despesa</button>
             </div>
@@ -710,6 +711,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                         </sc-if>
                         <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{d.desc}}</span>
                         <sc-if value="{{d.deFixo}}" hint-placeholder-val="{{false}}"><span style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--accent-soft);color:var(--accent);flex:none">Fixo</span></sc-if>
+                        <sc-if value="{{d.parcLabel}}" hint-placeholder-val="{{false}}"><span title="Compra parcelada — editar ou excluir permite aplicar a todas as parcelas" style="padding:2px 8px;border-radius:99px;font-size:10px;font-weight:800;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);flex:none">{{d.parcLabel}}</span></sc-if>
                       </div>
                       <div style="font-size:11.5px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{d.meta}}</div>
                     </div>
@@ -1103,15 +1105,18 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
 <!-- ===== CONFIRM ===== -->
 <sc-if value="{{confirmOpen}}" hint-placeholder-val="{{false}}">
   <div onClick="{{confirmCancel}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
-    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:380px;padding:26px;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
+    <div onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:26px;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
       <div style="width:42px;height:42px;border-radius:12px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg>
       </div>
       <h3 style="font-family:Sora;font-weight:600;font-size:16px;margin:0 0 6px">Confirmar exclusão</h3>
       <p style="color:var(--text2);font-size:13.5px;margin:0 0 20px">{{confirmMsg}}</p>
-      <div style="display:flex;gap:10px;justify-content:flex-end">
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
         <button onClick="{{confirmCancel}}" style="padding:10px 16px;border-radius:11px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="color:var(--text)">Cancelar</button>
-        <button onClick="{{confirmOk}}" style="padding:10px 18px;border-radius:11px;border:none;background:var(--red);color:#fff;font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">Excluir</button>
+        <sc-if value="{{confirmAltLabel}}" hint-placeholder-val="{{false}}">
+          <button onClick="{{confirmAlt}}" style="padding:10px 16px;border-radius:11px;border:1px solid var(--red);background:var(--red-soft);color:var(--red);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.05)">{{confirmAltLabel}}</button>
+        </sc-if>
+        <button onClick="{{confirmOk}}" style="padding:10px 18px;border-radius:11px;border:none;background:var(--red);color:#fff;font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">{{confirmOkLabel}}</button>
       </div>
     </div>
   </div>
@@ -1470,6 +1475,22 @@ class Component extends DCLogic {
     const mExtra = (this.state.modal && this.state.modal.extra) || {};
     const cartaoFat = mExtra.cardId ? db.cartoes.find(k => k.id === mExtra.cardId) : null;
     const totalFat = mExtra.total || 0;
+    // edição de uma parcela de compra parcelada: quantas parcelas o grupo tem
+    const mDraft = (this.state.modal && this.state.modal.type === 'despesa' && this.state.modal.id && this.state.modal.draft) || {};
+    const grupoQtd = mDraft.grupoId ? db.despesas.filter(x => x.grupoId === mDraft.grupoId).length : 0;
+    // lançamento em massa: prévia de onde cai a primeira parcela lançada
+    let massaPrev = '';
+    if (this.state.modal && this.state.modal.type === 'massa') {
+      const md = { forma: (formaOpts[0] || {}).v || '', data: hoje, parcelas: 12, inicio: 1, ...this.state.modal.draft };
+      const pn = Math.max(1, Math.round(this.parseNum(md.parcelas))), pi = Math.round(this.parseNum(md.inicio));
+      const fk = String(md.forma || '');
+      const kk = fk.startsWith('k:') ? db.cartoes.find(x => x.id === fk.slice(2)) : null;
+      if (pi >= 1 && pi <= pn && md.data) {
+        const qt = pn - pi + 1;
+        const quando = kk ? 'fatura ' + this.fmtData(this.shiftDateMonths(this.calcVenc(kk, md.data), pi - 1)) : this.fmtData(this.shiftDateMonths(md.data, pi - 1));
+        massaPrev = ' → Serão lançadas ' + qt + ' parcela(s), da ' + pi + '/' + pn + ' (' + quando + ') até a ' + pn + '/' + pn + '.';
+      } else if (md.inicio !== '' && md.inicio != null) massaPrev = ' → A parcela inicial deve estar entre 1 e ' + pn + '.';
+    }
     const reservaIdsM = (db.config && db.config.reservaIds) || [];
     const tagConta = a => (reservaIdsM.includes(a.id) ? ' · Reserva de emergência' : '') + (a.tipo === 'Investimento' ? ' · Investimento' : '');
     const contaDebOpts = db.contas.filter(a => a.ativo).sort((a, b) => (b.saldo - a.saldo) || a.nome.localeCompare(b.nome, 'pt-BR'))
@@ -1521,17 +1542,19 @@ class Component extends DCLogic {
         { k: 'venc', label: 'Vencimento (opcional)', t: 'date', span: 1 },
         { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
         { k: 'paga', label: 'Já paga', t: 'toggle', span: 1 },
-        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
-      ], defaults: { desc: '', cat: despCatOpts.length ? despCatOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: hoje, venc: null, valor: 0, obs: '', paga: false } },
-      massa: { title: () => 'Lançamento em massa', submitLabel: 'Lançar parcelas', hint: 'Cria uma despesa por parcela. No cartão, cada parcela cai na fatura correta conforme o fechamento; sem cartão, cada parcela é lançada no mês seguinte.', fields: [
+        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 },
+        ...(grupoQtd > 1 ? [{ k: 'aplicarGrupo', label: 'Aplicar descrição, categoria e observações às ' + grupoQtd + ' parcelas', t: 'toggle', span: 2 }] : [])
+      ], defaults: { desc: '', cat: despCatOpts.length ? despCatOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: hoje, venc: null, valor: 0, obs: '', paga: false, aplicarGrupo: true } },
+      massa: { title: () => 'Lançamento em massa', submitLabel: 'Lançar parcelas', hint: 'Cria uma despesa por parcela. No cartão, cada parcela cai na fatura correta conforme o fechamento; sem cartão, cada parcela é lançada no mês seguinte. Para uma compra já em andamento, informe a data original da compra e a parcela de onde quer começar.' + massaPrev, fields: [
         { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Notebook', span: 2 },
         { k: 'cat', label: 'Categoria', t: 'select', options: despCatOpts, span: 1 },
         { k: 'forma', label: 'Conta / Cartão', t: 'select', options: formaOpts, span: 1 },
         { k: 'data', label: 'Data da compra', t: 'date', span: 1 },
         { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
         { k: 'parcelas', label: 'Parcelas (meses)', t: 'number', span: 1 },
-        { k: 'dividir', label: 'Dividir o valor entre as parcelas', t: 'toggle', span: 1 }
-      ], defaults: { desc: '', cat: despCatOpts.length ? despCatOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: hoje, valor: 0, parcelas: 12, dividir: false } },
+        { k: 'inicio', label: 'Começar da parcela', t: 'number', span: 1 },
+        { k: 'dividir', label: 'Dividir o valor entre as parcelas', t: 'toggle', span: 2 }
+      ], defaults: { desc: '', cat: despCatOpts.length ? despCatOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: hoje, valor: 0, parcelas: 12, inicio: 1, dividir: true } },
       fonte: { title: n => n ? 'Editar fonte de renda' : 'Nova fonte de renda', fields: [
         { k: 'nome', label: 'Nome', t: 'text', ph: 'Ex: Salário', span: 1 },
         { k: 'valor', label: 'Valor mensal (R$)', t: 'number', span: 1 }
@@ -1565,8 +1588,211 @@ class Component extends DCLogic {
           { k: 'contaId', label: 'Debitar da conta', t: 'select', options: contaDebOpts, span: 2 }
         ],
         defaults: { contaId: contaDebDefault }
-      }
+      },
+      importExtrato: (() => {
+        const imp = mExtra.txs ? mExtra : { txs: [], arquivo: '', ignorados: 0 };
+        return {
+          title: () => 'Importar extrato' + (imp.arquivo ? ' · ' + imp.arquivo : ''),
+          submitLabel: 'Importar selecionados',
+          hint: imp.txs.length + ' gasto(s) encontrado(s)' + (imp.ignorados ? ' · ' + imp.ignorados + ' entrada(s)/estorno(s) ignorado(s)' : '') +
+            '. No cartão, o vencimento de cada compra é calculado pelo fechamento da fatura. Lançamentos que já existem ficam desmarcados.' +
+            (imp.futuras ? ' Há ' + imp.parceladas + ' compra(s) parcelada(s) com ' + imp.futuras + ' parcela(s) ainda por vir: deseja lançá-las agora? Elas ficam ligadas à compra, para renomear ou excluir todas de uma vez.' : ''),
+          fields: [
+            { k: 'forma', label: 'Conta / Cartão', t: 'select', options: formaOpts, span: 1 },
+            { k: 'cat', label: 'Categoria', t: 'select', options: despCatOpts, span: 1 },
+            { k: 'paga', label: 'Marcar como pagas (só conta)', t: 'toggle', span: imp.futuras ? 1 : 2 },
+            ...(imp.futuras ? [{ k: 'futuras', label: 'Lançar parcelas futuras (' + imp.futuras + ')', t: 'toggle', span: 1 }] : []),
+            { k: 'sel', label: 'Lançamentos', t: 'checklist', span: 2, items: draft => {
+              const sel = draft.sel || {};
+              const f = draft.forma || '';
+              const cartao = f.startsWith('k:') ? db.cartoes.find(x => x.id === f.slice(2)) : null;
+              return imp.txs.map(t => {
+                const dup = this.importDup(db, t, f);
+                const on = sel[t.id] !== undefined ? sel[t.id] : !dup;
+                const venc = cartao ? this.calcVenc(cartao, t.data) : null;
+                return {
+                  nome: t.desc, valorFmt: this.fmt(t.valor), on,
+                  tag: this.fmtData(t.data) + (venc ? ' · fatura ' + this.fmtData(venc) : '') + (dup ? ' · já lançada' : '') +
+                    (on && draft.futuras && t.parc && t.parc.n > t.parc.x ? ' · +' + (t.parc.n - t.parc.x) + ' futura(s)' : ''),
+                  bc: on ? 'var(--accent)' : 'var(--border)', bg: on ? 'var(--accent-soft)' : 'var(--surface2)',
+                  chkBc: on ? 'var(--accent)' : 'var(--border2)', chkBg: on ? 'var(--accent)' : 'transparent',
+                  toggle: () => this.setDraft('sel', { ...sel, [t.id]: !on })
+                };
+              });
+            } }
+          ],
+          defaults: { forma: imp.forma || (formaOpts[0] || {}).v || '', cat: imp.cat || (despCatOpts[0] || {}).v || '', paga: true, futuras: true, sel: {} }
+        };
+      })()
     };
+  }
+
+  // ---------- compras parceladas (grupo de parcelas) ----------
+  // Sufixo de parcela no fim da descrição: "- Parcela 4/12", "Parcela 4/12" ou "(4/12)"
+  PARC_RE = /\s*(?:[-–]\s*)?(?:parcela\s*\d+\s*\/\s*\d+|\(\s*\d+\s*\/\s*\d+\s*\))\s*$/i;
+  parcInfo(desc) {
+    const m = String(desc || '').match(this.PARC_RE); if (!m) return null;
+    const nums = m[0].match(/(\d+)\s*\/\s*(\d+)/);
+    const x = +nums[1], n = +nums[2];
+    return x >= 1 && n >= x && n <= 360 ? { x, n } : null;
+  }
+  parcBase(desc) { return String(desc || '').replace(this.PARC_RE, '').trim(); }
+  // troca o número da parcela mantendo o mesmo formato do sufixo (importante para não duplicar
+  // quando a próxima fatura for importada com a mesma descrição)
+  parcDesc(desc, i) { return String(desc).replace(/(\d+)(\s*\/\s*\d+\s*\)?\s*)$/, i + '$2'); }
+  // Exclui despesas (devolvendo à conta o valor das que já estavam pagas)
+  removerDespesas(db, ids) {
+    db.despesas.filter(x => ids.includes(x.id)).forEach(item => {
+      if (item.paga && item.contaId) { const a = db.contas.find(x => x.id === item.contaId); if (a) a.saldo += item.valor; }
+    });
+    db.despesas = db.despesas.filter(x => !ids.includes(x.id));
+  }
+  delDespesa(d) {
+    const grupo = d.grupoId ? this.state.db.despesas.filter(x => x.grupoId === d.grupoId) : [];
+    if (grupo.length < 2) {
+      this.del('despesas', d.id, 'Excluir a despesa "' + d.desc + '"?' + (d.fixoId ? ' O gasto fixo correspondente voltará para "Em aberto".' : ''));
+      return;
+    }
+    const exec = ids => {
+      const db = JSON.parse(JSON.stringify(this.state.db));
+      this.removerDespesas(db, ids);
+      this.commit(db);
+      this.setState({ confirm: null });
+      this.toast(ids.length > 1 ? ids.length + ' parcelas excluídas.' : 'Parcela excluída.');
+    };
+    this.setState({ confirm: {
+      msg: 'A despesa "' + d.desc + '" faz parte de uma compra parcelada com ' + grupo.length + ' parcelas lançadas. Excluir só esta ou todas?',
+      okLabel: 'Só esta', fn: () => exec([d.id]),
+      alt: { label: 'Todas as ' + grupo.length + ' parcelas', fn: () => exec(grupo.map(x => x.id)) }
+    } });
+  }
+
+  // ---------- importação de extrato (OFX / CSV) ----------
+  // Já existe despesa igual (mesma data, valor, descrição e conta/cartão)?
+  importDup(db, t, forma) {
+    const contaId = forma.startsWith('a:') ? forma.slice(2) : null;
+    const cartaoId = forma.startsWith('k:') ? forma.slice(2) : null;
+    const desc = t.desc.trim().toLowerCase();
+    // Parcela ("Parcela 2/3"): o número já a torna única, e o banco costuma lançá-la em data
+    // diferente da que o app previu (ex.: no início do ciclo da fatura) — tolera até 45 dias.
+    const parc = !!this.parcInfo(t.desc);
+    const perto = d => d.data === t.data || (parc && d.data && Math.abs(new Date(d.data) - new Date(t.data)) <= 45 * 864e5);
+    return db.despesas.some(d => perto(d) && this.toCents(d.valor) === this.toCents(t.valor) &&
+      String(d.desc || '').trim().toLowerCase() === desc && (d.contaId || null) === contaId && (d.cartaoId || null) === cartaoId);
+  }
+  importarExtrato() {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.ofx,.csv,.txt';
+    inp.onchange = () => {
+      const file = inp.files && inp.files[0]; if (!file) return;
+      const rd = new FileReader();
+      rd.onload = () => {
+        let txt;
+        // tenta UTF-8; se tiver caractere inválido, cai para Windows-1252 (padrão de muitos bancos)
+        try { txt = new TextDecoder('utf-8', { fatal: true }).decode(rd.result); }
+        catch (e) { txt = new TextDecoder('windows-1252').decode(rd.result); }
+        let res;
+        try { res = /<OFX>/i.test(txt) || /OFXHEADER/i.test(txt) ? this.parseOFX(txt) : this.parseCSV(txt); }
+        catch (e) { res = null; }
+        if (!res || !res.txs.length) { this.toast('Nenhum gasto encontrado no arquivo. Verifique se é um OFX ou CSV de extrato/fatura.', 'err'); return; }
+        this.abrirImportacao(res, file.name);
+      };
+      rd.onerror = () => this.toast('Não foi possível ler o arquivo.', 'err');
+      rd.readAsArrayBuffer(file);
+    };
+    inp.click();
+  }
+  abrirImportacao(res, arquivo) {
+    const db = this.state.db;
+    const nomeArq = (arquivo + ' ' + (res.banco || '')).toLowerCase();
+    const casa = x => x.nome && nomeArq.includes(x.nome.toLowerCase());
+    let forma = '';
+    if (res.isCard) {
+      const ks = db.cartoes.filter(k => k.ativo);
+      const k = ks.find(casa) || ks[0];
+      if (k) forma = 'k:' + k.id;
+    }
+    if (!forma) {
+      const as = db.contas.filter(a => a.ativo);
+      const a = as.find(casa) || [...as].sort((x, y) => x.nome.localeCompare(y.nome, 'pt-BR'))[0];
+      if (a) forma = 'a:' + a.id;
+    }
+    const catsDesp = db.catalogo.filter(c => c.tipo === 'Despesa').sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    const outros = catsDesp.find(c => /^outr/i.test(c.nome)) || catsDesp[0];
+    res.txs.forEach(t => { t.parc = this.parcInfo(t.desc); });
+    const comFuturas = res.txs.filter(t => t.parc && t.parc.n > t.parc.x);
+    const extra = { txs: res.txs, ignorados: res.ignorados, arquivo, forma, cat: outros ? outros.nome : '',
+      parceladas: comFuturas.length, futuras: comFuturas.reduce((s, t) => s + t.parc.n - t.parc.x, 0) };
+    this.setState({ modal: { type: 'importExtrato', id: null, draft: {}, extra } });
+  }
+  // dd/mm/aaaa, dd/mm/aa, aaaa-mm-dd ou aaaammdd -> aaaa-mm-dd
+  impData(s) {
+    s = String(s || '').trim();
+    let m = s.match(/^(\d{4})-?(\d{2})-?(\d{2})/);
+    if (m) return m[1] + '-' + m[2] + '-' + m[3];
+    m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/);
+    if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); }
+    return null;
+  }
+  // aceita "1.450,21", "- 1.450,21", "-7.95", "R$ 10,00"
+  impValor(s) {
+    let v = String(s || '').replace(/R\$|\s/g, '');
+    const neg = /^-|^\(.*\)$|-$/.test(v);
+    v = v.replace(/[()\-+]/g, '');
+    const lc = v.lastIndexOf(','), lp = v.lastIndexOf('.');
+    if (lc > lp) v = v.replace(/\./g, '').replace(',', '.');
+    else v = v.replace(/,/g, '');
+    const n = parseFloat(v);
+    return isNaN(n) ? null : (neg ? -n : n);
+  }
+  parseOFX(txt) {
+    const tag = (blk, t) => { const m = blk.match(new RegExp('<' + t + '>([^<\\r\\n]*)', 'i')); return m ? m[1].trim() : ''; };
+    const isCard = /<CREDITCARDMSGSRSV1>|<CCSTMTRS>/i.test(txt);
+    const banco = tag(txt, 'ORG');
+    const txs = []; let ignorados = 0;
+    txt.split(/<STMTTRN>/i).slice(1).forEach((blk, i) => {
+      blk = blk.split(/<\/STMTTRN>/i)[0];
+      const valor = this.impValor(tag(blk, 'TRNAMT'));
+      const data = this.impData(tag(blk, 'DTPOSTED'));
+      const desc = tag(blk, 'MEMO') || tag(blk, 'NAME') || 'Lançamento importado';
+      if (valor == null || !data) return;
+      if (valor >= 0) { ignorados++; return; } // entradas, pagamentos de fatura e estornos
+      txs.push({ id: 't' + i, data, desc, valor: Math.round(-valor * 100) / 100 });
+    });
+    return { txs, ignorados, isCard, banco };
+  }
+  parseCSV(txt) {
+    const linhas = txt.replace(/^﻿/, '').split(/\r?\n/).filter(l => l.trim());
+    if (linhas.length < 2) return { txs: [], ignorados: 0 };
+    const sep = (linhas[0].split(';').length > linhas[0].split(',').length) ? ';' : ',';
+    const split = l => {
+      const out = []; let cur = '', q = false;
+      for (let i = 0; i < l.length; i++) {
+        const c = l[i];
+        if (c === '"') { if (q && l[i + 1] === '"') { cur += '"'; i++; } else q = !q; }
+        else if (c === sep && !q) { out.push(cur); cur = ''; }
+        else cur += c;
+      }
+      out.push(cur); return out.map(x => x.trim());
+    };
+    const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+    const head = split(linhas[0]).map(norm);
+    const idx = names => head.findIndex(h => names.includes(h));
+    const iData = idx(['date', 'data', 'data lancamento', 'data da compra', 'data de lancamento']);
+    const iDesc = idx(['title', 'descricao', 'description', 'historico', 'memo', 'lancamento', 'estabelecimento']);
+    const iVal = idx(['amount', 'valor', 'value', 'valor (r$)', 'valor r$']);
+    if (iData < 0 || iVal < 0) return { txs: [], ignorados: 0 };
+    const rows = linhas.slice(1).map(split).map((c, i) => ({
+      id: 't' + i, data: this.impData(c[iData]), desc: (iDesc >= 0 ? c[iDesc] : '') || 'Lançamento importado', valor: this.impValor(c[iVal])
+    })).filter(r => r.data && r.valor != null && r.valor !== 0);
+    // Fatura de cartão (ex.: Nubank "date,title,amount"): gasto é positivo, pagamento é negativo.
+    // Extrato de conta: gasto é negativo. Sem a coluna "title", decide pela maioria dos sinais.
+    const pos = rows.filter(r => r.valor > 0).length;
+    const isCard = head.includes('title') || pos > rows.length - pos;
+    const sinal = isCard ? 1 : -1;
+    const txs = []; let ignorados = 0;
+    rows.forEach(r => { const v = r.valor * sinal; if (v > 0) txs.push({ ...r, valor: Math.round(v * 100) / 100 }); else ignorados++; });
+    return { txs, ignorados, isCard, banco: '' };
   }
 
   submitModal = () => {
@@ -1617,28 +1843,90 @@ class Component extends DCLogic {
       return;
     }
 
+    if (m.type === 'importExtrato') {
+      const txs = (m.extra && m.extra.txs) || [];
+      const f = d.forma || '';
+      const contaId = f.startsWith('a:') ? f.slice(2) : null;
+      const cartaoId = f.startsWith('k:') ? f.slice(2) : null;
+      const cartao = cartaoId ? db.cartoes.find(x => x.id === cartaoId) : null;
+      const conta = contaId ? db.contas.find(x => x.id === contaId) : null;
+      if (!cartao && !conta) { this.toast('Escolha a conta ou o cartão dos lançamentos.', 'err'); return; }
+      if (!d.cat) { this.toast('Escolha a categoria.', 'err'); return; }
+      const sel = d.sel || {};
+      const escolhidos = txs.filter(t => sel[t.id] !== undefined ? sel[t.id] : !this.importDup(db, t, f));
+      if (!escolhidos.length) { this.toast('Nenhum lançamento selecionado.', 'err'); return; }
+      // cartão: vencimento pela regra de fechamento e fica em aberto até pagar a fatura.
+      // conta: sem vencimento; se marcada como paga, debita o saldo da conta.
+      const paga = !cartao && !!d.paga;
+      let totalC = 0, nFut = 0;
+      escolhidos.forEach(t => {
+        const venc0 = cartao ? this.calcVenc(cartao, t.data) : null;
+        // compra parcelada com parcelas por vir: se o usuário optou, lança as futuras ligadas pelo grupoId
+        const fut = d.futuras && t.parc && t.parc.n > t.parc.x;
+        // parcelas anteriores da mesma compra já lançadas (importações passadas) entram no mesmo grupo
+        const base = this.parcBase(t.desc).toLowerCase();
+        const irmas = fut ? db.despesas.filter(x => (x.contaId || null) === contaId && (x.cartaoId || null) === cartaoId &&
+          this.toCents(x.valor) === this.toCents(t.valor) && this.parcBase(x.desc).toLowerCase() === base &&
+          ((this.parcInfo(x.desc) || {}).n === t.parc.n)) : [];
+        const grupoId = fut ? ((irmas.find(x => x.grupoId) || {}).grupoId || 'g' + this.uid() + this.uid()) : null;
+        irmas.forEach(x => { if (!x.grupoId) { x.grupoId = grupoId; x.parcela = this.parcInfo(x.desc).x; x.parcelas = t.parc.n; } });
+        db.despesas.push({
+          id: this.uid(), desc: t.desc, cat: d.cat, contaId, cartaoId,
+          data: t.data, venc: venc0,
+          valor: t.valor, obs: '', paga, fixoId: null,
+          grupoId, parcela: fut ? t.parc.x : null, parcelas: fut ? t.parc.n : null
+        });
+        totalC += this.toCents(t.valor);
+        if (!fut) return;
+        for (let i = t.parc.x + 1; i <= t.parc.n; i++) {
+          const k = i - t.parc.x;
+          const pf = { desc: this.parcDesc(t.desc, i), data: this.shiftDateMonths(t.data, k), valor: t.valor };
+          if (this.importDup(db, pf, f)) continue; // já lançada antes (ex.: importação anterior)
+          db.despesas.push({
+            id: this.uid(), desc: pf.desc, cat: d.cat, contaId, cartaoId,
+            data: pf.data, venc: cartao ? this.shiftDateMonths(venc0, k) : null,
+            valor: t.valor, obs: '', paga: false, fixoId: null,
+            grupoId, parcela: i, parcelas: t.parc.n
+          });
+          nFut++;
+        }
+      });
+      if (paga) conta.saldo = this.fromCents(this.toCents(conta.saldo) - totalC);
+      this.commit(db);
+      this.setState({ modal: null });
+      this.toast(escolhidos.length + ' despesa(s) importada(s) · ' + this.fmt(this.fromCents(totalC)) + (cartao ? ' no cartão ' + cartao.nome : ' em ' + conta.nome) +
+        (nFut ? ' · ' + nFut + ' parcela(s) futura(s) lançada(s).' : '.'));
+      return;
+    }
+
     if (m.type === 'massa') {
-      num('valor'); num('parcelas');
+      num('valor'); num('parcelas'); num('inicio');
       if (!String(d.desc || '').trim() || d.valor <= 0) { this.toast('Preencha descrição e valor.', 'err'); return; }
       const n = Math.max(1, Math.round(d.parcelas));
+      const ini = Math.round(d.inicio) || 1; // parcela de onde o lançamento começa (ex.: 6 de 12)
+      if (ini < 1 || ini > n) { this.toast('A parcela inicial deve estar entre 1 e ' + n + '.', 'err'); return; }
       const val = Math.round((d.dividir ? d.valor / n : d.valor) * 100) / 100;
       const f = d.forma || '';
       const contaId = f.startsWith('a:') ? f.slice(2) : null;
       const cartaoId = f.startsWith('k:') ? f.slice(2) : null;
       const cartao = cartaoId ? db.cartoes.find(x => x.id === cartaoId) : null;
       const venc0 = cartao ? this.calcVenc(cartao, d.data) : null;
-      for (let i = 0; i < n; i++) {
+      const grupoId = n > 1 ? 'g' + this.uid() + this.uid() : null; // liga as parcelas da mesma compra
+      // i = índice da parcela (0 = 1ª). A data da compra é a original, então a parcela i
+      // cai i meses depois da 1ª — começar da 6ª lança só da 6ª em diante, na fatura certa.
+      for (let i = ini - 1; i < n; i++) {
         db.despesas.push({
           id: this.uid(), desc: d.desc + (n > 1 ? ' (' + (i + 1) + '/' + n + ')' : ''), cat: d.cat,
           contaId, cartaoId,
           data: cartao ? d.data : this.shiftDateMonths(d.data, i),
           venc: cartao ? this.shiftDateMonths(venc0, i) : null,
-          valor: val, obs: '', paga: false, fixoId: null
+          valor: val, obs: '', paga: false, fixoId: null,
+          grupoId, parcela: grupoId ? i + 1 : null, parcelas: grupoId ? n : null
         });
       }
       this.commit(db);
       this.setState({ modal: null });
-      this.toast(n + ' parcela(s) de ' + this.fmt(val) + ' lançada(s)' + (cartao ? ' no cartão ' + cartao.nome + '.' : '.'));
+      this.toast((n - ini + 1) + ' parcela(s) de ' + this.fmt(val) + ' lançada(s)' + (ini > 1 ? ' (da ' + ini + '/' + n + ' à ' + n + '/' + n + ')' : '') + (cartao ? ' no cartão ' + cartao.nome + '.' : '.'));
       return;
     }
 
@@ -1658,6 +1946,9 @@ class Component extends DCLogic {
       if (!d.venc) d.venc = null;
       delete d.forma;
     }
+    // edição de parcela: opcionalmente replica descrição, categoria e observações para todo o grupo
+    const aplicarGrupo = m.type === 'despesa' && m.id && d.grupoId && d.aplicarGrupo;
+    delete d.aplicarGrupo;
     const req = { conta: 'nome', cartao: 'nome', fixo: 'desc', receita: 'desc', despesa: 'desc', fonte: 'nome', categoria: 'nome', catalogo: 'nome', plano: 'nome' }[m.type];
     if (!String(d[req] || '').trim()) { this.toast('Preencha a descrição/nome.', 'err'); return; }
     const coll = db[collMap[m.type]];
@@ -1677,6 +1968,17 @@ class Component extends DCLogic {
         if (m.type === 'receita') applySaldo(coll[idx], 1, false);
         if (m.type === 'despesa') applySaldo(coll[idx], -1, false);
       }
+      if (aplicarGrupo) {
+        const novoBase = this.parcBase(d.desc);
+        let nGrp = 0;
+        coll.forEach(x => {
+          if (x.grupoId !== d.grupoId || x.id === m.id) return;
+          const suf = (String(x.desc).match(this.PARC_RE) || [''])[0] || (x.parcela && x.parcelas ? ' - Parcela ' + x.parcela + '/' + x.parcelas : '');
+          x.desc = novoBase + suf; x.cat = d.cat; x.obs = d.obs || '';
+          nGrp++;
+        });
+        this.toast('Alterações salvas nesta e em mais ' + nGrp + ' parcela(s).');
+      } else
       this.toast('Alterações salvas.');
     } else {
       const item = { id: this.uid(), ...d };
@@ -2254,6 +2556,9 @@ class Component extends DCLogic {
       toasts: s.toasts.map(t => ({ ...t, color: t.kind === 'err' ? 'var(--red)' : t.kind === 'warn' ? 'var(--amber)' : 'var(--green)', icon: t.kind === 'ok' ? this.ICONS.check : this.ICONS.alert })),
       confirmOpen: !!s.confirm, confirmMsg: s.confirm ? s.confirm.msg : '',
       confirmOk: () => { if (s.confirm) s.confirm.fn(); },
+      confirmOkLabel: (s.confirm && s.confirm.okLabel) || 'Excluir',
+      confirmAltLabel: (s.confirm && s.confirm.alt) ? s.confirm.alt.label : false,
+      confirmAlt: () => { if (s.confirm && s.confirm.alt) s.confirm.alt.fn(); },
       confirmCancel: () => this.setState({ confirm: null }),
       detailOpen: !!s.detail,
       detailClose: () => this.setState({ detail: null }),
@@ -2694,9 +2999,11 @@ class Component extends DCLogic {
     vals.hasDesp = despFiltered.length > 0;
     vals.addDespesa = () => this.openModal('despesa', null);
     vals.addMassa = () => this.openModal('massa', null);
+    vals.importExtrato = () => this.importarExtrato();
     vals.despTotalFmt = this.fmt(despFiltered.reduce((t, d) => t + d.valor, 0));
     vals.despList = despFiltered.map((d, i) => ({
       desc: d.desc, paga: d.paga, deFixo: !!d.fixoId, isCard: !!d.cartaoId, dl: this.dl(i),
+      parcLabel: d.grupoId && d.parcela && d.parcelas && !this.parcInfo(d.desc) ? d.parcela + '/' + d.parcelas : (d.grupoId ? 'Parcelada' : false),
       meta: d.cat + ' · ' + (d.cartaoId ? cartaoNome(d.cartaoId) : contaNome(d.contaId)) + (d.obs ? ' · ' + d.obs : ''),
       compra: this.fmtData(d.data),
       venc: d.venc ? this.fmtData(d.venc) : '—',
@@ -2707,7 +3014,7 @@ class Component extends DCLogic {
       chkBc: d.paga ? 'var(--green)' : 'var(--border2)', chkBg: d.paga ? 'var(--green)' : 'transparent',
       toggle: () => this.toggleDespesa(d.id), toggleTip: d.paga ? 'Marcar como pendente' : 'Marcar como paga',
       edit: () => this.openModal('despesa', { ...d, forma: d.cartaoId ? 'k:' + d.cartaoId : 'a:' + (d.contaId || '') }),
-      del: () => this.del('despesas', d.id, 'Excluir a despesa "' + d.desc + '"?' + (d.fixoId ? ' O gasto fixo correspondente voltará para "Em aberto".' : ''))
+      del: () => this.delDespesa(d)
     }));
 
     // ---- Cartões ----
@@ -2845,6 +3152,7 @@ class Component extends DCLogic {
         } else if (f.t === 'checklist') {
           field.isChecklist = true;
           const sel = draft.sel || {};
+          if (typeof f.items === 'function') { field.items = f.items(draft); return field; }
           field.items = (s.db.fixos || []).filter(g => g.ativo).map(g => {
             const on = sel[g.id] !== false;
             return {

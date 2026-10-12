@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.8.0 - 2026-10-12
+- lançamento em massa: a opção "Dividir o valor entre as parcelas" agora começa **ligada** por padrão
+- lançamento em massa: novo campo "Começar da parcela" para lançar uma compra já em andamento (ex.: da 6ª de 12). Informando a data original da compra, cada parcela cai na fatura/mês correto e só as parcelas a partir da escolhida são criadas; o valor dividido continua sendo o total ÷ número de parcelas
+- lançamento em massa: o pop-up mostra uma prévia de quantas parcelas serão lançadas e em qual fatura (ou mês) cai a primeira delas
+- despesas: novo botão "Importar OFX / CSV" para lançar gastos a partir do extrato ou da fatura do banco (testado com OFX e CSV do Nubank)
+- importação: entradas, pagamentos de fatura e estornos são ignorados; só os gastos viram despesas
+- importação: o app sugere o cartão ou a conta pelo tipo do arquivo (OFX de cartão / CSV de fatura) e pelo nome do arquivo/banco, e permite trocar antes de confirmar
+- importação: no cartão, cada compra segue a mesma regra do lançamento manual — o vencimento é calculado pela data da compra e pelo fechamento da fatura, e a despesa fica em aberto até "Pagar fatura"
+- importação: na conta, as despesas podem entrar como já pagas (debitando o saldo) ou em aberto
+- importação: a lista mostra data, fatura prevista e valor de cada lançamento, e os que já existem (mesma data, valor, descrição e conta/cartão) vêm desmarcados para não duplicar
+- importação: quando o extrato traz compras parceladas (ex.: "Parcela 4/12"), o app pergunta se deseja lançar as parcelas futuras (opção "Lançar parcelas futuras", ligada por padrão). No cartão, cada parcela futura cai na fatura seguinte; na conta, entra em aberto no mês seguinte
+- importação: parcelas já lançadas antes (por importação anterior) são reconhecidas mesmo que o banco use outra data, evitando duplicar ao importar a próxima fatura; parcelas antigas da mesma compra passam a fazer parte do mesmo grupo
+- parcelas: as parcelas de uma mesma compra agora ficam ligadas entre si (grupo de parcelamento), tanto na importação quanto no "Lançamento em massa", e aparecem com a etiqueta "Parcelada" na lista de despesas
+- parcelas: ao editar uma parcela, a opção "Aplicar descrição, categoria e observações às N parcelas" renomeia todas de uma vez, mantendo o "Parcela X/N" de cada uma
+- parcelas: ao excluir uma parcela, o app pergunta se é para excluir só aquela ou todas as parcelas da compra (devolvendo ao saldo da conta o que já estava pago)
+- banco de dados: novas colunas "grupoId", parcela e parcelas em fn_despesas (trecho "Parcelamento" do supabase-schema.sql). Enquanto não forem criadas, as despesas continuam sendo salvas normalmente, só sem a ligação entre parcelas
+
 ## v1.7.0 - 2026-08-08
 - análise: a tela passa a agrupar as despesas pela **data da compra**, e não mais pela data de vencimento da fatura. Uma compra feita em agosto no cartão aparece na análise de agosto, mesmo que a fatura só vença em setembro. O comparativo com o mês anterior segue a mesma regra
 - análise: o resto do app (dashboard, despesas, faturas) continua usando o vencimento da fatura para o cartão — a mudança é exclusiva da tela de Análise

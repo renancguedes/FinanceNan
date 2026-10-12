@@ -120,6 +120,13 @@ create table if not exists public.fn_despesas (
   updated_at timestamptz not null default now()
 );
 
+-- ---- Parcelamento (v1.8.0): liga as parcelas de uma mesma compra ------------
+-- Seguro para rodar em bancos já existentes.
+alter table public.fn_despesas add column if not exists "grupoId"  text;
+alter table public.fn_despesas add column if not exists parcela    integer;
+alter table public.fn_despesas add column if not exists parcelas   integer;
+create index if not exists fn_despesas_grupo_idx on public.fn_despesas ("grupoId");
+
 -- ---- Configurações (1 linha por usuário) -----------------------------------
 create table if not exists public.fn_settings (
   user_id        uuid primary key default auth.uid() references auth.users(id) on delete cascade,

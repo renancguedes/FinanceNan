@@ -55,8 +55,8 @@
       to: function (x) { return { id: x.id, desc: x.desc, cat: x.cat, contaId: nn(x.contaId), data: x.data, valor: C(x.valor), recorrente: !!x.recorrente, recebida: !!x.recebida, obs: nn(x.obs) }; },
       from: function (r) { return { id: r.id, desc: r.desc, cat: r.cat, contaId: r.contaId, data: r.data, valor: R(r.valor), recorrente: !!r.recorrente, recebida: !!r.recebida, obs: r.obs || '' }; } },
     despesas: { table: 'fn_despesas',
-      to: function (x) { return { id: x.id, desc: x.desc, cat: x.cat, contaId: nn(x.contaId), cartaoId: nn(x.cartaoId), data: x.data, venc: nn(x.venc), valor: C(x.valor), paga: !!x.paga, obs: nn(x.obs), fixoId: nn(x.fixoId) }; },
-      from: function (r) { return { id: r.id, desc: r.desc, cat: r.cat, contaId: r.contaId || null, cartaoId: r.cartaoId || null, data: r.data, venc: r.venc || null, valor: R(r.valor), paga: !!r.paga, obs: r.obs || '', fixoId: r.fixoId || null }; } }
+      to: function (x) { return { id: x.id, desc: x.desc, cat: x.cat, contaId: nn(x.contaId), cartaoId: nn(x.cartaoId), data: x.data, venc: nn(x.venc), valor: C(x.valor), paga: !!x.paga, obs: nn(x.obs), fixoId: nn(x.fixoId), grupoId: nn(x.grupoId), parcela: x.parcela ? N(x.parcela) : null, parcelas: x.parcelas ? N(x.parcelas) : null }; },
+      from: function (r) { return { id: r.id, desc: r.desc, cat: r.cat, contaId: r.contaId || null, cartaoId: r.cartaoId || null, data: r.data, venc: r.venc || null, valor: R(r.valor), paga: !!r.paga, obs: r.obs || '', fixoId: r.fixoId || null, grupoId: r.grupoId || null, parcela: r.parcela || null, parcelas: r.parcelas || null }; } }
   };
   var ORDER = ['contas', 'catalogo', 'cartoes', 'categorias', 'fontes', 'planejamentos', 'fixos', 'receitas', 'despesas'];
 
@@ -91,6 +91,23 @@
   }
 
   // ---- syncDiff: grava as diferenças (upsert/delete) por coleção -------------
+  // Compatibilidade: se o banco ainda nao tiver as colunas de parcelamento
+  // (grupoId/parcela/parcelas — ver supabase-schema.sql), grava sem elas em vez de perder a despesa.
+  var GRP_COLS = ['grupoId', 'parcela', 'parcelas'], semGrp = false;
+  function upsertSafe(table, coll, ups) {
+    var strip = function (arr) { return arr.map(function (o) { var c = {}; Object.keys(o).forEach(function (k) { if (GRP_COLS.indexOf(k) < 0) c[k] = o[k]; }); return c; }); };
+    var isDesp = table === 'fn_despesas';
+    return sb.from(table).upsert(isDesp && semGrp ? strip(ups) : ups).then(function (r) {
+      if (!r.error) return;
+      if (isDesp && !semGrp && /grupoId|parcela/i.test(r.error.message || '')) {
+        semGrp = true;
+        console.warn('[FinanceNan] fn_despesas sem as colunas de parcelamento. Rode o trecho "parcelamento" do supabase-schema.sql para manter a ligacao entre parcelas.');
+        return sb.from(table).upsert(strip(ups)).then(function (r2) { if (r2.error) log('upsert falhou', coll, r2.error.message); });
+      }
+      log('upsert falhou', coll, r.error.message);
+    });
+  }
+
   function collDiff(coll, oldArr, newArr) {
     var table = MAP[coll].table, m = MAP[coll];
     var oldById = {}; (oldArr || []).forEach(function (o) { oldById[o.id] = o; });
@@ -102,7 +119,7 @@
     });
     (oldArr || []).forEach(function (o) { if (!newById[o.id]) dels.push(o.id); });
     var jobs = [];
-    if (ups.length) jobs.push(sb.from(table).upsert(ups).then(function (r) { if (r.error) log('upsert falhou', coll, r.error.message); }));
+    if (ups.length) jobs.push(upsertSafe(table, coll, ups));
     if (dels.length) jobs.push(sb.from(table).delete().in('id', dels).then(function (r) { if (r.error) log('delete falhou', coll, r.error.message); }));
     return Promise.all(jobs);
   }
