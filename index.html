@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.5.0"></script>
+<script src="./fn-supabase.js?v=1.14.0"></script>
 </head>
 <body>
 <x-dc>
@@ -986,6 +986,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               </div>
             </sc-for>
           </div>
+          <sc-if value="{{estTemFora}}" hint-placeholder-val="{{false}}"><div style="margin-top:-10px;font-size:12px;color:var(--text3);font-weight:600">{{estForaMsg}}</div></sc-if>
 
           <div class="fn-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
             <div class="fn-chips" style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1028,6 +1029,7 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:4px 2px 0">
                 <span style="font-family:Sora;font-weight:600;font-size:15px">{{g.nome}}</span>
                 <span style="font-size:12px;color:var(--text3);font-weight:700">{{g.info}}</span>
+                <sc-if value="{{g.fora}}" hint-placeholder-val="{{false}}"><span title="Não entra nos totais dos cards (Configurações › Lista de compras)" style="font-size:10.5px;font-weight:800;color:var(--text3);background:var(--surface2);border:1px solid var(--border2);border-radius:99px;padding:2px 8px;text-transform:uppercase;letter-spacing:.03em">fora dos totais</span></sc-if>
                 <span style="flex:1"></span>
                 <span style="font-size:12px;font-weight:800;color:{{g.faltaFg}}">{{g.faltaFmt}}</span>
                 <span style="font-size:12px;color:var(--text3);font-weight:700">· total {{g.totFmt}}</span>
@@ -1086,6 +1088,23 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
             <p style="color:var(--text2);font-size:13px;margin:0 0 16px">Escolha quais contas e investimentos contam como reserva alcançada — normalmente apenas os de alta liquidez.</p>
             <div style="display:flex;flex-direction:column;gap:8px">
               <sc-for list="{{cfgReserva}}" as="i" hint-placeholder-count="0">
+                <button onClick="{{i.toggle}}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;border:1px solid {{i.bc}};background:{{i.bg}};cursor:pointer;text-align:left;width:100%" style-hover="border-color:var(--accent)">
+                  <span style="width:22px;height:22px;flex:none;border-radius:7px;border:2px solid {{i.chkBc}};background:{{i.chkBg}};color:#fff;display:flex;align-items:center;justify-content:center">
+                    <sc-if value="{{i.on}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation:pillPop .25s ease"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
+                  </span>
+                  <span style="flex:1;font-weight:700;font-size:13.5px;color:var(--text)">{{i.nome}}</span>
+                  <span class="fn-cfg-tipo" style="font-size:11.5px;color:var(--text3);font-weight:600">{{i.tipo}}</span>
+                  <span style="font-family:Sora;font-weight:600;font-size:13px;color:var(--text2)">{{i.saldoFmt}}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)">
+            <div style="font-family:Sora;font-weight:600;font-size:16px;margin-bottom:4px">Lista de compras</div>
+            <p style="color:var(--text2);font-size:13px;margin:0 0 16px">Escolha quais categorias da lista de compras entram nos cards "Custo mensal da lista", "Falta comprar" e "Já em casa". Os produtos das categorias desmarcadas continuam aparecendo na lista. Categorias novas já entram marcadas.</p>
+            <sc-if value="{{cfgEstVazio}}" hint-placeholder-val="{{false}}"><div style="color:var(--text3);font-size:12.5px">Nenhum produto cadastrado na lista de compras.</div></sc-if>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{cfgEstoque}}" as="i" hint-placeholder-count="0">
                 <button onClick="{{i.toggle}}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:11px;border:1px solid {{i.bc}};background:{{i.bg}};cursor:pointer;text-align:left;width:100%" style-hover="border-color:var(--accent)">
                   <span style="width:22px;height:22px;flex:none;border-radius:7px;border:2px solid {{i.chkBc}};background:{{i.chkBg}};color:#fff;display:flex;align-items:center;justify-content:center">
                     <sc-if value="{{i.on}}" hint-placeholder-val="{{false}}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation:pillPop .25s ease"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
@@ -1175,9 +1194,9 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
               <input type="{{f.itype}}" value="{{f.value}}" onChange="{{f.on}}" placeholder="{{f.ph}}" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent);background:var(--surface)"/>
             </sc-if>
             <sc-if value="{{f.hasSugs}}" hint-placeholder-val="{{false}}">
-              <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <div style="display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;align-items:center">
                 <sc-for list="{{f.sugs}}" as="sg" hint-placeholder-count="0">
-                  <button onClick="{{sg.pick}}" style="padding:4px 10px;border-radius:99px;border:1px solid {{sg.bc}};background:{{sg.bg}};color:{{sg.fg}};font-weight:700;font-size:11.5px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--accent);color:var(--accent)">{{sg.c}}</button>
+                  <button onClick="{{sg.pick}}" style="flex:none;white-space:nowrap;padding:5px 11px;border-radius:99px;border:1px solid {{sg.bc}};background:{{sg.bg}};color:{{sg.fg}};font-weight:700;font-size:11.5px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--accent);color:var(--accent)">{{sg.c}}</button>
                 </sc-for>
               </div>
             </sc-if>
@@ -1458,7 +1477,7 @@ class Component extends DCLogic {
     return {
       contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], estoque: [],
       catalogo: this.defaultCatalogo(),
-      config: { patrimonioExcl: [], reservaIds: [] },
+      config: { patrimonioExcl: [], reservaIds: [], estoqueExcl: [] },
       categorias: [
         { id: 'c1', nome: 'Liberdade Financeira', pct: 25, abs: 0 },
         { id: 'c2', nome: 'Custos Fixos', pct: 30, abs: 0 },
@@ -1474,6 +1493,7 @@ class Component extends DCLogic {
     if (!db.catalogo) db.catalogo = this.defaultCatalogo();
     if (!Array.isArray(db.estoque)) db.estoque = [];
     if (!db.config) db.config = { patrimonioExcl: [], reservaIds: db.contas.filter(a => a.tipo === 'Investimento').map(a => a.id) };
+    if (!Array.isArray(db.config.estoqueExcl)) db.config.estoqueExcl = [];
     const c1 = db.contas.find(a => a.ativo);
     db.fixos.forEach(g => { if (!g.contaId) g.contaId = c1 ? c1.id : null; });
     db.despesas.forEach(d => {
@@ -1497,7 +1517,7 @@ class Component extends DCLogic {
       { id: 'a5', nome: 'Tesouro Selic', tipo: 'Investimento', saldo: 6400, cor: '#c2703d', ativo: true },
       { id: 'a6', nome: 'Carteira de Ações', tipo: 'Investimento', saldo: 3900, cor: '#c94f6d', ativo: true }
     ];
-    db.config = { patrimonioExcl: [], reservaIds: ['a4', 'a5'] };
+    db.config = { patrimonioExcl: [], reservaIds: ['a4', 'a5'], estoqueExcl: [] };
     db.cartoes = [
       { id: 'k1', nome: 'Ametista', bandeira: 'Mastercard', cor: '#6d4fa1', fecha: 28, vence: 7, ativo: true },
       { id: 'k2', nome: 'Safira', bandeira: 'Visa', cor: '#3f5bb5', fecha: 15, vence: 22, ativo: true },
@@ -1815,11 +1835,11 @@ class Component extends DCLogic {
           hint: 'Total do produto (preço unitário × quantidade recomendada): ' + this.fmt(this.fromCents(tot)) + '. A quantidade em casa também pode ser ajustada direto na lista, com os botões − e +.',
           fields: [
             { k: 'nome', label: 'Nome do produto', t: 'text', ph: 'Ex: Arroz 5kg', span: 2 },
-            { k: 'categoria', label: 'Categoria', t: 'suggest', ph: 'Ex: Alimentação', span: 1, sugs: this.estoqueCategorias(db) },
+            { k: 'categoria', label: 'Categoria', t: 'suggest', ph: 'Ex: Alimentação', span: 2, sugs: this.estoqueCategorias(db) },
             { k: 'marca', label: 'Marca', t: 'text', ph: 'Opcional', span: 1 },
             { k: 'preco', label: 'Preço unitário (R$)', t: 'number', span: 1 },
             { k: 'qtdRec', label: 'Quantidade recomendada', t: 'number', span: 1 },
-            { k: 'qtdAtual', label: 'Quantidade em casa (atual)', t: 'number', span: 2 }
+            { k: 'qtdAtual', label: 'Quantidade em casa (atual)', t: 'number', span: 1 }
           ], defaults: { nome: '', categoria: '', marca: '', preco: 0, qtdRec: 1, qtdAtual: 0 } };
       })(),
       senha: { title: () => 'Alterar minha senha', submitLabel: 'Salvar nova senha', fields: [
@@ -2450,6 +2470,14 @@ class Component extends DCLogic {
     this.commit(db);
     this.setState({ distDraft: null, distDirty: false });
     this.toast('Metas padrão aplicadas.');
+  }
+  // categorias da lista de compras fora dos cards (guardadas em minúsculas; categoria nova entra por padrão)
+  estoqueCatKey(c) { return ((c || '').trim() || 'Sem categoria').toLowerCase(); }
+  toggleEstoqueCat(nome) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const k = this.estoqueCatKey(nome), arr = db.config.estoqueExcl || [];
+    db.config.estoqueExcl = arr.includes(k) ? arr.filter(x => x !== k) : [...arr, k];
+    this.commit(db);
   }
   toggleCfg(listKey, id) {
     const db = JSON.parse(JSON.stringify(this.state.db));
@@ -3298,16 +3326,23 @@ class Component extends DCLogic {
       const falta = Math.max(0, rec - at);
       return { e, pc, rec, at, falta, totC: pc * rec, faltaC: pc * falta };
     });
-    const estTotalC = est.reduce((t, x) => t + x.totC, 0);
-    const estFaltaC = est.reduce((t, x) => t + x.faltaC, 0);
+    const estExcl = (db.config && db.config.estoqueExcl) || [];
+    const estFora = x => estExcl.includes(this.estoqueCatKey(x.e.categoria));
+    const estConta = est.filter(x => !estFora(x)); // só as categorias marcadas em Configurações entram nos cards
+    const estTotalC = estConta.reduce((t, x) => t + x.totC, 0);
+    const estFaltaC = estConta.reduce((t, x) => t + x.faltaC, 0);
     const estNFalta = est.filter(x => x.falta > 0).length;
     const estNOk = est.length - estNFalta;
+    const estCNFalta = estConta.filter(x => x.falta > 0).length, estCNOk = estConta.length - estCNFalta;
+    const estNCatFora = new Set(est.filter(estFora).map(x => this.estoqueCatKey(x.e.categoria))).size;
+    vals.estTemFora = estNCatFora > 0;
+    vals.estForaMsg = estNCatFora + (estNCatFora === 1 ? ' categoria está fora' : ' categorias estão fora') + ' dos totais acima. Para mudar, vá em Configurações › Lista de compras.';
     vals.estVazio = est.length === 0;
     vals.estTemItens = est.length > 0;
     vals.estCards = [
-      { label: 'Custo mensal da lista', value: this.fmt(this.fromCents(estTotalC)), sub: est.length + (est.length === 1 ? ' produto' : ' produtos') + ' · preço × quantidade recomendada', fg: 'var(--text)', iconBg: 'var(--accent-soft)', iconFg: 'var(--accent)', icon: this.ICONS.cart, dl: '0ms' },
-      { label: 'Falta comprar', value: this.fmt(this.fromCents(estFaltaC)), sub: estNFalta ? estNFalta + (estNFalta === 1 ? ' produto abaixo do recomendado' : ' produtos abaixo do recomendado') : 'Nada faltando', fg: estFaltaC > 0 ? 'var(--red)' : 'var(--green)', iconBg: 'var(--red-soft)', iconFg: 'var(--red)', icon: this.ICONS.desp, dl: '60ms' },
-      { label: 'Já em casa', value: this.fmt(this.fromCents(estTotalC - estFaltaC)), sub: estNOk + ' de ' + est.length + ' completo' + (estNOk === 1 ? '' : 's'), fg: 'var(--green)', iconBg: 'var(--green-soft)', iconFg: 'var(--green)', icon: this.ICONS.check, dl: '120ms' }
+      { label: 'Custo mensal da lista', value: this.fmt(this.fromCents(estTotalC)), sub: estConta.length + (estConta.length === 1 ? ' produto' : ' produtos') + ' · preço × quantidade recomendada', fg: 'var(--text)', iconBg: 'var(--accent-soft)', iconFg: 'var(--accent)', icon: this.ICONS.cart, dl: '0ms' },
+      { label: 'Falta comprar', value: this.fmt(this.fromCents(estFaltaC)), sub: estCNFalta ? estCNFalta + (estCNFalta === 1 ? ' produto abaixo do recomendado' : ' produtos abaixo do recomendado') : 'Nada faltando', fg: estFaltaC > 0 ? 'var(--red)' : 'var(--green)', iconBg: 'var(--red-soft)', iconFg: 'var(--red)', icon: this.ICONS.desp, dl: '60ms' },
+      { label: 'Já em casa', value: this.fmt(this.fromCents(estTotalC - estFaltaC)), sub: estCNOk + ' de ' + estConta.length + ' completo' + (estCNOk === 1 ? '' : 's'), fg: 'var(--green)', iconBg: 'var(--green-soft)', iconFg: 'var(--green)', icon: this.ICONS.check, dl: '120ms' }
     ];
     const estFilterDefs = [['todos', 'Todos', est.length], ['falta', 'Falta comprar', estNFalta], ['ok', 'Completos', estNOk]];
     vals.estFilters = estFilterDefs.map(fd => ({ label: fd[1] + ' (' + fd[2] + ')', pick: () => this.setState({ estFilter: fd[0] }),
@@ -3340,6 +3375,7 @@ class Component extends DCLogic {
       const gTot = lista.reduce((t, x) => t + x.totC, 0), gFalta = lista.reduce((t, x) => t + x.faltaC, 0);
       return {
         nome: cat, info: lista.length + (lista.length === 1 ? ' item' : ' itens'),
+        fora: estExcl.includes(this.estoqueCatKey(cat)),
         totFmt: this.fmt(this.fromCents(gTot)),
         faltaFmt: gFalta > 0 ? 'falta ' + this.fmt(this.fromCents(gFalta)) : 'completo',
         faltaFg: gFalta > 0 ? 'var(--red)' : 'var(--green)',
@@ -3492,6 +3528,23 @@ class Component extends DCLogic {
     vals.cfgPatVazio = invAtivos.length === 0;
     vals.cfgPatrimonio = invAtivos.map(a => mkCfg(a, 'patrimonioExcl', !(db.config.patrimonioExcl || []).includes(a.id)));
     vals.cfgReserva = db.contas.filter(a => a.ativo).map(a => mkCfg(a, 'reservaIds', (db.config.reservaIds || []).includes(a.id)));
+    const cfgEstCats = {};
+    (db.estoque || []).forEach(e => {
+      const nome = (e.categoria || '').trim() || 'Sem categoria', k = this.estoqueCatKey(nome);
+      const g = cfgEstCats[k] = cfgEstCats[k] || { nome, n: 0, totC: 0 };
+      g.n++; g.totC += this.toCents(e.preco) * Math.max(0, e.qtdRec || 0);
+    });
+    const cfgEstExcl = db.config.estoqueExcl || [];
+    vals.cfgEstVazio = Object.keys(cfgEstCats).length === 0;
+    vals.cfgEstoque = Object.keys(cfgEstCats).map(k => cfgEstCats[k])
+      .sort((a, b) => (a.nome === 'Sem categoria') - (b.nome === 'Sem categoria') || a.nome.localeCompare(b.nome, 'pt-BR'))
+      .map(g => {
+        const on = !cfgEstExcl.includes(this.estoqueCatKey(g.nome));
+        return { nome: g.nome, tipo: g.n + (g.n === 1 ? ' item' : ' itens'), saldoFmt: this.fmt(this.fromCents(g.totC)), on,
+          bc: on ? 'var(--accent)' : 'var(--border)', bg: on ? 'var(--accent-soft)' : 'var(--surface2)',
+          chkBc: on ? 'var(--accent)' : 'var(--border2)', chkBg: on ? 'var(--accent)' : 'transparent',
+          toggle: () => this.toggleEstoqueCat(g.nome) };
+      });
 
     // ---- Admin ----
     vals.adminLoading = !!s.adminLoading;

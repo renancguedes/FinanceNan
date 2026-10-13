@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.14.0 - 2026-10-12
+- configurações: novo bloco "Lista de compras" para escolher quais categorias entram nos cards "Custo mensal da lista", "Falta comprar" e "Já em casa". Cada categoria mostra a quantidade de itens e o total; categorias novas já entram marcadas
+- lista de compras: os produtos das categorias desmarcadas continuam na lista, com a etiqueta "fora dos totais" no título da categoria, e um aviso abaixo dos cards informa quantas categorias estão fora
+- lista de compras: no cadastro do produto, o campo Categoria ocupa a largura toda e as categorias sugeridas aparecem lado a lado, em vez de uma embaixo da outra
+- banco de dados: nova coluna "estoqueExcl" em fn_settings (trecho "v1.14.0" do supabase-schema.sql). Enquanto ela não for criada, as demais configurações continuam sendo salvas e a escolha das categorias fica só no aparelho
+
 ## v1.13.0 - 2026-10-12
 - lista de compras: ordenando por "Maior valor" ou "Menor valor", os produtos continuam agrupados por categoria, e a ordem vale dentro de cada categoria (ex.: maior valor dentro de Alimentação), igual à ordenação por nome
 - lista de compras: as categorias sugeridas no cadastro passam a ser só Alimentação, Cuidados Pessoais e Produtos de Limpeza; categorias criadas pelo usuário continuam aparecendo nas sugestões

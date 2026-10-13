@@ -149,6 +149,9 @@ create table if not exists public.fn_settings (
   updated_at timestamptz not null default now()
 );
 
+-- v1.14.0: categorias da lista de compras que NÃO entram nos cards (nomes em minúsculas)
+alter table public.fn_settings add column if not exists "estoqueExcl" text[] not null default '{}';
+
 -- ---- RLS + políticas (cada usuário só enxerga/edita as próprias linhas) -----
 do $$
 declare t text;

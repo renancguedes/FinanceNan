@@ -68,7 +68,28 @@
   var K_WHO = 'fn_sb_who';
 
   // ---- hydrate: baixa todas as coleções do Supabase para o estado do app ----
-  function emptyDb() { return { contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], catalogo: [], categorias: [], estoque: [], config: { patrimonioExcl: [], reservaIds: [] } }; }
+  function emptyDb() { return { contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], catalogo: [], categorias: [], estoque: [], config: { patrimonioExcl: [], reservaIds: [], estoqueExcl: [] } }; }
+  // v1.14.0: "estoqueExcl" = categorias da lista de compras fora dos cards. Se a coluna ainda
+  // não existir no fn_settings, mantém o valor local e grava só as colunas antigas.
+  var settingsSemEstoque = false;
+  function settingsFrom(row, atual) {
+    var temCol = Object.prototype.hasOwnProperty.call(row, 'estoqueExcl');
+    if (!temCol) settingsSemEstoque = true;
+    return { patrimonioExcl: row.patrimonioExcl || [], reservaIds: row.reservaIds || [],
+      estoqueExcl: temCol ? (row.estoqueExcl || []) : ((atual && atual.estoqueExcl) || []) };
+  }
+  function saveSettings(cf) {
+    var row = { user_id: currentUid, patrimonioExcl: (cf.patrimonioExcl || []), reservaIds: (cf.reservaIds || []) };
+    if (!settingsSemEstoque) row.estoqueExcl = (cf.estoqueExcl || []);
+    return sb.from('fn_settings').upsert(row).then(function (r) {
+      if (r.error && row.estoqueExcl && /estoqueExcl/i.test(r.error.message || '')) {
+        settingsSemEstoque = true;
+        console.warn('[FinanceNan] Coluna "estoqueExcl" nao encontrada em fn_settings. Rode o trecho "v1.14.0" do supabase-schema.sql para salvar as categorias da lista de compras.');
+        return saveSettings(cf);
+      }
+      if (r.error) log('settings falhou', r.error.message);
+    });
+  }
 
   function hydrate(email) {
     var db = emptyDb();
@@ -83,7 +104,7 @@
       });
     });
     jobs.push(sb.from('fn_settings').select('*').limit(1).then(function (res) {
-      if (!res.error && res.data && res.data[0]) db.config = { patrimonioExcl: res.data[0].patrimonioExcl || [], reservaIds: res.data[0].reservaIds || [] };
+      if (!res.error && res.data && res.data[0]) db.config = settingsFrom(res.data[0], db.config);
     }));
     return Promise.all(jobs).then(function () {
       prev = JSON.parse(JSON.stringify(db));
@@ -144,7 +165,7 @@
       });
     });
     var cf = next.config || {};
-    jobs.push(sb.from('fn_settings').upsert({ user_id: currentUid, patrimonioExcl: (cf.patrimonioExcl || []), reservaIds: (cf.reservaIds || []) }).then(function (r) { if (r.error) log('settings falhou', r.error.message); }));
+    jobs.push(saveSettings(cf));
     return Promise.all(jobs).then(function () {
       prev.config = JSON.parse(JSON.stringify(next.config || {}));
     }).catch(function (e) { log('sync erro', e && e.message); }).then(function () {
@@ -206,7 +227,7 @@
         });
       });
       jobs.push(sb.from('fn_settings').select('*').limit(1).then(function (res) {
-        if (!res.error && res.data && res.data[0]) db.config = { patrimonioExcl: res.data[0].patrimonioExcl || [], reservaIds: res.data[0].reservaIds || [] };
+        if (!res.error && res.data && res.data[0]) db.config = settingsFrom(res.data[0], db.config);
       }));
       return Promise.all(jobs).then(function () {
         // usuário editou algo enquanto buscava, ou trocou de conta: descarta este resultado
