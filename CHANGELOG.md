@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.12.0 - 2026-10-12
+- sincronização: ao trocar de tela pelo menu (ou tocar de novo na tela atual), o app busca os dados mais recentes no Supabase. Alterações feitas em outro aparelho aparecem sem precisar sair e entrar de novo
+- sincronização: o app também atualiza os dados quando volta a ficar visível (trocar de aba, desbloquear o celular, voltar de outro aplicativo)
+- sincronização: a atualização nunca descarta alterações locais. Ela espera a gravação em andamento terminar, reenvia o que ficou pendente e ignora o resultado se algo for editado durante a busca
+- sincronização: se a gravação de uma coleção falhar (ex.: sem internet), ela deixa de ser marcada como salva e é reenviada depois. Antes, a falha passava despercebida e a alteração podia se perder
+- lista de compras: nova opção "Ordenar" com "Nome (A–Z)", "Maior valor" e "Menor valor" (valor = preço unitário × quantidade recomendada). Ordenando por valor, os produtos aparecem numa lista única com a categoria indicada em cada um; por nome, continuam agrupados por categoria
+- lista de compras: a ordenação escolhida fica salva no aparelho
+
 ## v1.11.0 - 2026-10-12
 - lista de compras: nova tela "Lista de compras" no menu, para controlar o estoque de casa. Cada produto guarda categoria, nome, marca, preço unitário, quantidade recomendada e quantidade em casa; o total do produto é preço unitário × quantidade recomendada
 - lista de compras: botões − e + em cada produto ajustam a quantidade em casa de 1 em 1, sem abrir janela

@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.4.0"></script>
+<script src="./fn-supabase.js?v=1.5.0"></script>
 </head>
 <body>
 <x-dc>
@@ -1004,6 +1004,12 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
                   <button onClick="{{estBuscaLimpar}}" title="Limpar pesquisa" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;border-radius:7px;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px" style-hover="color:var(--red)">✕</button>
                 </sc-if>
               </div>
+              <div class="fn-es-sort" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:12px;font-weight:700;color:var(--text3)">Ordenar:</span>
+                <sc-for list="{{estSorts}}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{o.pick}}" style="padding:7px 13px;border-radius:99px;border:1px solid {{o.bc}};background:{{o.bg}};color:{{o.fg}};font-weight:700;font-size:11.5px;cursor:pointer;white-space:nowrap;font-family:inherit" style-hover="transform:translateY(-1px)">{{o.label}}</button>
+                </sc-for>
+              </div>
             </div>
           </sc-if>
 
@@ -1348,7 +1354,7 @@ class Component extends DCLogic {
       recBusca: '', despBusca: '', recBuscaTodos: false, despBuscaTodos: false,
       despSort: { k: 'data', dir: -1 },
       anaExp: [], anaSoCartao: false,
-      estFilter: 'todos', estBusca: '',
+      estFilter: 'todos', estBusca: '', estSort: (() => { try { return localStorage.getItem('fn_est_sort') || 'nome'; } catch (e) { return 'nome'; } })(),
       modal: null, confirm: null, detail: null, exportPngs: null, toasts: [], adminUsers: [], adminLoading: false
     };
   })();
@@ -1553,7 +1559,13 @@ class Component extends DCLogic {
     return this.emptyDB();
   }
 
-  componentDidMount() { this.applyTweaks(); }
+  componentDidMount() {
+    this.applyTweaks();
+    // ao voltar para o app (trocar de aba, desbloquear o celular), atualiza os dados
+    this._onVis = () => { if (document.visibilityState === 'visible') this.refreshDB(); };
+    document.addEventListener('visibilitychange', this._onVis);
+  }
+  componentWillUnmount() { if (this._onVis) document.removeEventListener('visibilitychange', this._onVis); }
   componentDidUpdate() { this.applyTweaks(); }
   applyTweaks() {
     const el = this.rootRef.current; if (!el) return;
@@ -1611,7 +1623,20 @@ class Component extends DCLogic {
     } catch (e) {}
   };
 
+  // Busca de novo os dados no Supabase (alterações feitas em outro aparelho).
+  // Não faz nada no modo visitante; alterações locais pendentes nunca são descartadas.
+  refreshDB() {
+    const u = this.state.user;
+    if (!u || u.visitor || !window.FNData || !window.FNData.refresh) return;
+    window.FNData.refresh(this.state.db).then(db => {
+      const cu = this.state.user;
+      if (!db || !cu || cu.email !== u.email) return;
+      const novo = this.migrate(db);
+      if (JSON.stringify(novo) !== JSON.stringify(this.state.db)) this.setState({ db: novo });
+    }).catch(() => {});
+  }
   go(screen) {
+    this.refreshDB();
     if (screen === this.state.screen) return;
     this.setState({ screen, loading: true });
     if (screen === 'admin') this.loadAdminUsers();
@@ -3292,14 +3317,27 @@ class Component extends DCLogic {
     vals.estBuscaOn = e => this.setState({ estBusca: e.target.value });
     vals.estBuscaLimpar = () => this.setState({ estBusca: '' });
     vals.addEstoque = () => this.openModal('estoque', null);
+    const estSort = ['nome', 'maior', 'menor'].includes(s.estSort) ? s.estSort : 'nome';
+    vals.estSorts = [['nome', 'Nome (A–Z)'], ['maior', 'Maior valor'], ['menor', 'Menor valor']].map(o => ({
+      label: o[1], on: estSort === o[0],
+      pick: () => { this.setState({ estSort: o[0] }); try { localStorage.setItem('fn_est_sort', o[0]); } catch (e) {} },
+      bg: estSort === o[0] ? 'var(--accent-soft)' : 'var(--surface)', fg: estSort === o[0] ? 'var(--accent)' : 'var(--text2)', bc: estSort === o[0] ? 'var(--accent)' : 'var(--border2)'
+    }));
+    // valor = total do produto (preço unitário × quantidade recomendada); empate desempata pelo nome
+    const porNome = (a, b) => a.e.nome.localeCompare(b.e.nome, 'pt-BR');
+    const estCmp = estSort === 'maior' ? (a, b) => (b.totC - a.totC) || porNome(a, b)
+      : estSort === 'menor' ? (a, b) => (a.totC - b.totC) || porNome(a, b) : porNome;
     const estFilt = est.filter(x => this.bateBusca([x.e.nome, x.e.marca, x.e.categoria].join(' '), s.estBusca))
       .filter(x => s.estFilter === 'todos' || (s.estFilter === 'falta' && x.falta > 0) || (s.estFilter === 'ok' && x.falta === 0));
     vals.estSemResultado = est.length > 0 && estFilt.length === 0;
+    // por nome: agrupado por categoria; por valor: lista única para a ordem valer entre todos os produtos
+    const estPorValor = estSort !== 'nome';
     const estGrupos = {};
-    estFilt.forEach(x => { const c = (x.e.categoria || '').trim() || 'Sem categoria'; (estGrupos[c] = estGrupos[c] || []).push(x); });
+    estFilt.forEach(x => { const c = estPorValor ? 'Todos os produtos' : ((x.e.categoria || '').trim() || 'Sem categoria'); (estGrupos[c] = estGrupos[c] || []).push(x); });
     let estI = 0;
-    vals.estGrupos = Object.keys(estGrupos).sort((a, b) => (a === 'Sem categoria') - (b === 'Sem categoria') || a.localeCompare(b, 'pt-BR')).map(cat => {
-      const lista = estGrupos[cat].sort((a, b) => a.e.nome.localeCompare(b.e.nome, 'pt-BR'));
+    const catNome = (a, b) => (a === 'Sem categoria') - (b === 'Sem categoria') || a.localeCompare(b, 'pt-BR');
+    vals.estGrupos = Object.keys(estGrupos).sort(catNome).map(cat => {
+      const lista = estGrupos[cat].sort(estCmp);
       const gTot = lista.reduce((t, x) => t + x.totC, 0), gFalta = lista.reduce((t, x) => t + x.faltaC, 0);
       return {
         nome: cat, info: lista.length + (lista.length === 1 ? ' item' : ' itens'),
@@ -3310,7 +3348,7 @@ class Component extends DCLogic {
           const e = x.e, ok = x.falta === 0;
           return {
             nome: e.nome, dl: this.dl(estI++),
-            meta: [e.marca, this.fmt(this.fromCents(x.pc)) + ' / un.'].filter(Boolean).join(' · '),
+            meta: [estPorValor ? ((e.categoria || '').trim() || 'Sem categoria') : '', e.marca, this.fmt(this.fromCents(x.pc)) + ' / un.'].filter(Boolean).join(' · '),
             atual: String(x.at), rec: 'de ' + x.rec,
             totalFmt: this.fmt(this.fromCents(x.totC)),
             stLabel: ok ? 'Completo' : 'Falta ' + x.falta,

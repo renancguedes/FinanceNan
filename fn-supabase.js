@@ -1,5 +1,5 @@
 /*!
- * fn-supabase.js - Camada de dados do FinanceNan via Supabase (v1.1.0)
+ * fn-supabase.js - Camada de dados do FinanceNan via Supabase (v1.5.0)
  * ---------------------------------------------------------------------------
  * Substitui o backend Fastify: o front fala DIRETO com o Supabase
  * (supabase-js + Supabase Auth + RLS). Sem API própria.
@@ -106,13 +106,14 @@
     var strip = function (arr) { return arr.map(function (o) { var c = {}; Object.keys(o).forEach(function (k) { if (GRP_COLS.indexOf(k) < 0) c[k] = o[k]; }); return c; }); };
     var isDesp = table === 'fn_despesas';
     return sb.from(table).upsert(isDesp && semGrp ? strip(ups) : ups).then(function (r) {
-      if (!r.error) return;
+      if (!r.error) return true;
       if (isDesp && !semGrp && /grupoId|parcela/i.test(r.error.message || '')) {
         semGrp = true;
         console.warn('[FinanceNan] fn_despesas sem as colunas de parcelamento. Rode o trecho "parcelamento" do supabase-schema.sql para manter a ligacao entre parcelas.');
-        return sb.from(table).upsert(strip(ups)).then(function (r2) { if (r2.error) log('upsert falhou', coll, r2.error.message); });
+        return sb.from(table).upsert(strip(ups)).then(function (r2) { if (r2.error) { log('upsert falhou', coll, r2.error.message); return false; } return true; });
       }
       log('upsert falhou', coll, r.error.message);
+      return false;
     });
   }
 
@@ -128,23 +129,98 @@
     (oldArr || []).forEach(function (o) { if (!newById[o.id]) dels.push(o.id); });
     var jobs = [];
     if (ups.length) jobs.push(upsertSafe(table, coll, ups));
-    if (dels.length) jobs.push(sb.from(table).delete().in('id', dels).then(function (r) { if (r.error) log('delete falhou', coll, r.error.message); }));
-    return Promise.all(jobs);
+    if (dels.length) jobs.push(sb.from(table).delete().in('id', dels).then(function (r) { if (r.error) { log('delete falhou', coll, r.error.message); return false; } return true; }));
+    // resolve true só se tudo da coleção foi gravado (senão a coleção fica pendente e é reenviada depois)
+    return Promise.all(jobs).then(function (rs) { return rs.every(function (x) { return x !== false; }); }, function () { return false; });
   }
 
   function syncDiff(email, next) {
     if (syncing) { pendingNext = next; return Promise.resolve(); }
     syncing = true;
-    var jobs = ORDER.map(function (coll) { return collDiff(coll, prev[coll] || [], next[coll] || []); });
+    var jobs = ORDER.map(function (coll) {
+      return collDiff(coll, prev[coll] || [], next[coll] || []).then(function (ok) {
+        // avança o "último estado gravado" só das coleções que foram salvas com sucesso
+        if (ok) prev[coll] = JSON.parse(JSON.stringify(next[coll] || []));
+      });
+    });
     var cf = next.config || {};
     jobs.push(sb.from('fn_settings').upsert({ user_id: currentUid, patrimonioExcl: (cf.patrimonioExcl || []), reservaIds: (cf.reservaIds || []) }).then(function (r) { if (r.error) log('settings falhou', r.error.message); }));
     return Promise.all(jobs).then(function () {
-      prev = JSON.parse(JSON.stringify(next));
+      prev.config = JSON.parse(JSON.stringify(next.config || {}));
     }).catch(function (e) { log('sync erro', e && e.message); }).then(function () {
       syncing = false;
       if (pendingNext) { var p = pendingNext; pendingNext = null; return syncDiff(email, p); }
     });
   }
+
+  // ---- refresh (v1.12.0): busca de novo os dados do Supabase -----------------
+  // Chamado pelo app a cada troca de tela e quando o app volta a ficar visível,
+  // para refletir alterações feitas em outro aparelho sem precisar sair e entrar.
+  // Nunca descarta alterações locais: espera a gravação em andamento terminar,
+  // reenvia o que estiver pendente e, se algo for editado durante a busca, ignora o resultado.
+  var editSeq = 0, refreshing = null;
+  // coleções cujo estado local ainda não foi gravado no Supabase
+  function dirtyColls(cur) {
+    return ORDER.filter(function (c) {
+      return JSON.stringify((cur[c] || []).map(MAP[c].to)) !== JSON.stringify((prev[c] || []).map(MAP[c].to));
+    });
+  }
+  function waitIdle(maxMs) {
+    return new Promise(function (res) {
+      var t0 = Date.now();
+      (function chk() {
+        if (!syncing && !pendingNext) return res(true);
+        if (Date.now() - t0 > maxMs) return res(false);
+        setTimeout(chk, 120);
+      })();
+    });
+  }
+  function refresh(current) {
+    if (!currentUid || !currentEmail || og.get(K_WHO) !== currentEmail) return Promise.resolve(null);
+    if (refreshing) return refreshing;
+    var email = currentEmail;
+    var cur = null, keep = [];
+    // estado local mais recente = o último que o app gravou (lido só depois que a gravação em andamento termina,
+    // para nunca reenviar uma versão antiga por cima de uma edição mais nova)
+    var lerLocal = function () { try { var raw = og.get('fn_db_' + email); return raw ? JSON.parse(raw) : null; } catch (e) { return null; } };
+    refreshing = waitIdle(8000).then(function (idle) {
+      if (!idle) return false;
+      cur = lerLocal() || (current ? JSON.parse(JSON.stringify(current)) : null);
+      // alterações locais ainda não gravadas (ex.: falha de rede): tenta gravar antes
+      if (cur && dirtyColls(cur).length) {
+        return syncDiff(email, cur).then(function () { return waitIdle(8000); }).then(function (ok) {
+          if (ok) keep = dirtyColls(cur); // o que continuar sem gravar é mantido como está no aparelho
+          return ok;
+        });
+      }
+      return true;
+    }).then(function (ok) {
+      if (!ok) return null;
+      var seq = editSeq;
+      var db = JSON.parse(JSON.stringify(cur || prev || emptyDb()));
+      var fresh = {};
+      var jobs = ORDER.filter(function (c) { return keep.indexOf(c) < 0; }).map(function (coll) {
+        return sb.from(MAP[coll].table).select('*').then(function (res) {
+          if (res.error) { log('refresh: select falhou', coll, res.error.message); return; } // mantém o que já estava
+          db[coll] = (res.data || []).map(MAP[coll].from); fresh[coll] = true;
+        });
+      });
+      jobs.push(sb.from('fn_settings').select('*').limit(1).then(function (res) {
+        if (!res.error && res.data && res.data[0]) db.config = { patrimonioExcl: res.data[0].patrimonioExcl || [], reservaIds: res.data[0].reservaIds || [] };
+      }));
+      return Promise.all(jobs).then(function () {
+        // usuário editou algo enquanto buscava, ou trocou de conta: descarta este resultado
+        if (seq !== editSeq || syncing || pendingNext || currentEmail !== email) return null;
+        Object.keys(fresh).forEach(function (c) { prev[c] = JSON.parse(JSON.stringify(db[c])); });
+        prev.config = JSON.parse(JSON.stringify(db.config || {}));
+        og.set('fn_db_' + email, JSON.stringify(db));
+        if (keep.length) log('refresh: mantidas alteracoes locais pendentes em', keep.join(', '));
+        return db;
+      });
+    }).catch(function (e) { log('refresh falhou', e && e.message); return null; }).then(function (r) { refreshing = null; return r; });
+    return refreshing;
+  }
+  window.FNData = { refresh: refresh };
 
   // ---- espelhamento automatico das gravacoes do app -------------------------
   Storage.prototype.setItem = function (key, val) {
@@ -152,7 +228,7 @@
       if (String(key).indexOf('fn_db_') === 0) {
         og.set(key, val);
         var email = key.slice(6); var data = null; try { data = JSON.parse(val); } catch (e) {}
-        if (data && currentUid && og.get(K_WHO) === email) { syncDiff(email, data); }
+        if (data && currentUid && og.get(K_WHO) === email) { editSeq++; syncDiff(email, data); }
         return;
       }
     } catch (e) { log('setItem err', e && e.message); }
@@ -396,6 +472,6 @@
   document.addEventListener('scroll', function () { requestAnimationFrame(placeHamb); }, true);
   try { new MutationObserver(queueSync).observe(HTML, { childList: true, subtree: true }); } catch (e) {}
 
-  window.__FN_SUPABASE_VER = '1.3.0';
-  log('carregado v1.1.0, url=', URL);
+  window.__FN_SUPABASE_VER = '1.5.0';
+  log('carregado v1.5.0, url=', URL);
 })();
