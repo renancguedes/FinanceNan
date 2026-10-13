@@ -1531,13 +1531,13 @@ class Component extends DCLogic {
     const dPres = this.dateFor(cur, 24);
     db.despesas.push({ id: this.uid(), desc: 'Presente de aniversário', cat: 'Lazer', contaId: null, cartaoId: 'k1', data: dPres, venc: this.calcVenc(k1, dPres), valor: 180, obs: '', paga: false, fixoId: null });
     db.estoque = [
-      { id: 'e1', categoria: 'Mercearia', nome: 'Arroz 5kg', marca: 'Tio João', preco: 27.9, qtdRec: 2, qtdAtual: 1 },
-      { id: 'e2', categoria: 'Mercearia', nome: 'Feijão carioca 1kg', marca: 'Camil', preco: 8.49, qtdRec: 3, qtdAtual: 3 },
-      { id: 'e3', categoria: 'Mercearia', nome: 'Café 500g', marca: 'Pilão', preco: 18.9, qtdRec: 2, qtdAtual: 0 },
-      { id: 'e4', categoria: 'Limpeza', nome: 'Detergente', marca: 'Ypê', preco: 2.79, qtdRec: 4, qtdAtual: 2 },
-      { id: 'e5', categoria: 'Limpeza', nome: 'Sabão em pó 1,6kg', marca: 'Omo', preco: 24.9, qtdRec: 1, qtdAtual: 1 },
-      { id: 'e6', categoria: 'Higiene', nome: 'Papel higiênico (12 rolos)', marca: 'Neve', preco: 21.5, qtdRec: 2, qtdAtual: 1 },
-      { id: 'e7', categoria: 'Higiene', nome: 'Creme dental', marca: 'Colgate', preco: 4.99, qtdRec: 3, qtdAtual: 1 }
+      { id: 'e1', categoria: 'Alimentação', nome: 'Arroz 5kg', marca: 'Tio João', preco: 27.9, qtdRec: 2, qtdAtual: 1 },
+      { id: 'e2', categoria: 'Alimentação', nome: 'Feijão carioca 1kg', marca: 'Camil', preco: 8.49, qtdRec: 3, qtdAtual: 3 },
+      { id: 'e3', categoria: 'Alimentação', nome: 'Café 500g', marca: 'Pilão', preco: 18.9, qtdRec: 2, qtdAtual: 0 },
+      { id: 'e4', categoria: 'Produtos de Limpeza', nome: 'Detergente', marca: 'Ypê', preco: 2.79, qtdRec: 4, qtdAtual: 2 },
+      { id: 'e5', categoria: 'Produtos de Limpeza', nome: 'Sabão em pó 1,6kg', marca: 'Omo', preco: 24.9, qtdRec: 1, qtdAtual: 1 },
+      { id: 'e6', categoria: 'Cuidados Pessoais', nome: 'Papel higiênico (12 rolos)', marca: 'Neve', preco: 21.5, qtdRec: 2, qtdAtual: 1 },
+      { id: 'e7', categoria: 'Cuidados Pessoais', nome: 'Creme dental', marca: 'Colgate', preco: 4.99, qtdRec: 3, qtdAtual: 1 }
     ];
     db.planejamentos = [
       { id: 'p1', catId: 'c5', nome: 'Cinema', valor: 80 }, { id: 'p2', catId: 'c5', nome: 'Restaurantes', valor: 320 }, { id: 'p3', catId: 'c5', nome: 'Show', valor: 450 },
@@ -1815,7 +1815,7 @@ class Component extends DCLogic {
           hint: 'Total do produto (preço unitário × quantidade recomendada): ' + this.fmt(this.fromCents(tot)) + '. A quantidade em casa também pode ser ajustada direto na lista, com os botões − e +.',
           fields: [
             { k: 'nome', label: 'Nome do produto', t: 'text', ph: 'Ex: Arroz 5kg', span: 2 },
-            { k: 'categoria', label: 'Categoria', t: 'suggest', ph: 'Ex: Mercearia', span: 1, sugs: this.estoqueCategorias(db) },
+            { k: 'categoria', label: 'Categoria', t: 'suggest', ph: 'Ex: Alimentação', span: 1, sugs: this.estoqueCategorias(db) },
             { k: 'marca', label: 'Marca', t: 'text', ph: 'Opcional', span: 1 },
             { k: 'preco', label: 'Preço unitário (R$)', t: 'number', span: 1 },
             { k: 'qtdRec', label: 'Quantidade recomendada', t: 'number', span: 1 },
@@ -2346,7 +2346,7 @@ class Component extends DCLogic {
   }
   // ---------- lista de compras / estoque (não mexe em contas nem despesas) ----------
   estoqueCategorias(db) {
-    const base = ['Mercearia', 'Hortifruti', 'Açougue', 'Laticínios', 'Padaria', 'Bebidas', 'Limpeza', 'Higiene', 'Pet'];
+    const base = ['Alimentação', 'Cuidados Pessoais', 'Produtos de Limpeza'];
     const usadas = (db.estoque || []).map(x => (x.categoria || '').trim()).filter(Boolean);
     const out = [];
     [...usadas, ...base].forEach(c => { if (!out.some(o => o.toLowerCase() === c.toLowerCase())) out.push(c); });
@@ -3330,10 +3330,9 @@ class Component extends DCLogic {
     const estFilt = est.filter(x => this.bateBusca([x.e.nome, x.e.marca, x.e.categoria].join(' '), s.estBusca))
       .filter(x => s.estFilter === 'todos' || (s.estFilter === 'falta' && x.falta > 0) || (s.estFilter === 'ok' && x.falta === 0));
     vals.estSemResultado = est.length > 0 && estFilt.length === 0;
-    // por nome: agrupado por categoria; por valor: lista única para a ordem valer entre todos os produtos
-    const estPorValor = estSort !== 'nome';
+    // sempre agrupado por categoria; a ordenação escolhida vale dentro de cada categoria
     const estGrupos = {};
-    estFilt.forEach(x => { const c = estPorValor ? 'Todos os produtos' : ((x.e.categoria || '').trim() || 'Sem categoria'); (estGrupos[c] = estGrupos[c] || []).push(x); });
+    estFilt.forEach(x => { const c = (x.e.categoria || '').trim() || 'Sem categoria'; (estGrupos[c] = estGrupos[c] || []).push(x); });
     let estI = 0;
     const catNome = (a, b) => (a === 'Sem categoria') - (b === 'Sem categoria') || a.localeCompare(b, 'pt-BR');
     vals.estGrupos = Object.keys(estGrupos).sort(catNome).map(cat => {
@@ -3348,7 +3347,7 @@ class Component extends DCLogic {
           const e = x.e, ok = x.falta === 0;
           return {
             nome: e.nome, dl: this.dl(estI++),
-            meta: [estPorValor ? ((e.categoria || '').trim() || 'Sem categoria') : '', e.marca, this.fmt(this.fromCents(x.pc)) + ' / un.'].filter(Boolean).join(' · '),
+            meta: [e.marca, this.fmt(this.fromCents(x.pc)) + ' / un.'].filter(Boolean).join(' · '),
             atual: String(x.at), rec: 'de ' + x.rec,
             totalFmt: this.fmt(this.fromCents(x.totC)),
             stLabel: ok ? 'Completo' : 'Falta ' + x.falta,

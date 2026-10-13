@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.13.0 - 2026-10-12
+- lista de compras: ordenando por "Maior valor" ou "Menor valor", os produtos continuam agrupados por categoria, e a ordem vale dentro de cada categoria (ex.: maior valor dentro de Alimentação), igual à ordenação por nome
+- lista de compras: as categorias sugeridas no cadastro passam a ser só Alimentação, Cuidados Pessoais e Produtos de Limpeza; categorias criadas pelo usuário continuam aparecendo nas sugestões
+- lista de compras: os produtos de exemplo do modo visitante usam as novas categorias
+
 ## v1.12.0 - 2026-10-12
 - sincronização: ao trocar de tela pelo menu (ou tocar de novo na tela atual), o app busca os dados mais recentes no Supabase. Alterações feitas em outro aparelho aparecem sem precisar sair e entrar de novo
 - sincronização: o app também atualiza os dados quando volta a ficar visível (trocar de aba, desbloquear o celular, voltar de outro aplicativo)
