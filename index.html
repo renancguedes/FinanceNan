@@ -10,7 +10,7 @@
   window.FN_SUPABASE_URL = 'https://oiisxujdnxyazdmqtdgf.supabase.co';
   window.FN_SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9paXN4dWpkbnh5YXpkbXF0ZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4Nzg2MDcsImV4cCI6MjA5OTQ1NDYwN30.1YrNZfKZDMs9TCUoOKiHChRDjN8p3GLRAN4euEf29L0'; /* <-- Supabase > Settings > API Keys > "anon public" */
 </script>
-<script src="./fn-supabase.js?v=1.3.0"></script>
+<script src="./fn-supabase.js?v=1.4.0"></script>
 </head>
 <body>
 <x-dc>
@@ -145,6 +145,21 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
   .fn-fx-st{grid-area:st;min-width:0 !important;align-self:center;}
   .fn-fx-pay{grid-area:pay;padding:6px 14px !important;}
   .fn-fx-acts{grid-area:acts;margin-right:-6px;}
+
+  /* lista de compras: nome + total em cima, quantidade + status + ações embaixo */
+  .fn-es-row{display:grid !important;grid-template-columns:auto minmax(0,1fr) auto;
+    grid-template-areas:"info info val" "step st acts";gap:10px 12px !important;padding:13px 14px !important;}
+  .fn-es-info{grid-area:info;}
+  .fn-es-val{grid-area:val;min-width:0 !important;align-self:start;}
+  .fn-es-step{grid-area:step;}
+  .fn-es-step > button{width:40px !important;height:40px !important;}
+  .fn-es-st{grid-area:st;justify-self:start;min-width:0 !important;}
+  .fn-es-acts{grid-area:acts;margin-right:-6px;}
+  .fn-es-cards{grid-template-columns:1fr 1fr !important;gap:10px !important;}
+  .fn-es-cards > :first-child{grid-column:1 / -1;}
+  .fn-es-cards > *{padding:14px 15px !important;}
+  .fn-es-cardval{font-size:19px !important;}
+  .fn-es-cards > :first-child .fn-es-cardval{font-size:23px !important;}
 
   /* janelas: abrem como painel inferior, com campos em coluna única */
   .fn-modal-ov{align-items:flex-end !important;padding:0 !important;}
@@ -954,6 +969,93 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
         </div>
       </sc-if>
 
+      <!-- ===== LISTA DE COMPRAS / ESTOQUE ===== -->
+      <sc-if value="{{showEstoque}}" hint-placeholder-val="{{false}}">
+        <div data-screen-label="Lista de Compras" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1)">
+          <div class="fn-es-cards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+            <sc-for list="{{estCards}}" as="c" hint-placeholder-count="3">
+              <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);animation:fadeUp .45s cubic-bezier(.3,.7,.3,1) both;animation-delay:{{c.dl}};min-width:0">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                  <div style="width:30px;height:30px;border-radius:9px;background:{{c.iconBg}};color:{{c.iconFg}};display:flex;align-items:center;justify-content:center;flex:none">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="{{c.icon}}"></path></svg>
+                  </div>
+                  <div style="font-size:12.5px;font-weight:700;color:var(--text2)">{{c.label}}</div>
+                </div>
+                <div class="fn-es-cardval" style="font-family:Sora;font-weight:600;font-size:24px;letter-spacing:-.02em;color:{{c.fg}};white-space:nowrap">{{c.value}}</div>
+                <div style="font-size:12px;color:var(--text3);margin-top:2px">{{c.sub}}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div class="fn-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+            <div class="fn-chips" style="display:flex;gap:6px;flex-wrap:wrap">
+              <sc-for list="{{estFilters}}" as="f" hint-placeholder-count="3">
+                <button onClick="{{f.pick}}" style="padding:8px 15px;border-radius:99px;border:1px solid {{f.bc}};background:{{f.bg}};color:{{f.fg}};font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap" style-hover="transform:translateY(-1px)">{{f.label}}</button>
+              </sc-for>
+            </div>
+            <button class="fn-primary" onClick="{{addEstoque}}" style="padding:11px 18px;border-radius:11px;border:none;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1);transform:translateY(-1px)">+ Novo produto</button>
+          </div>
+          <sc-if value="{{estTemItens}}" hint-placeholder-val="{{false}}">
+            <div class="fn-search-row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div class="fn-search" style="position:relative;flex:1;min-width:220px;max-width:440px">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none"><path d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm10 3-5.2-5.2"></path></svg>
+                <input type="text" value="{{estBusca}}" onChange="{{estBuscaOn}}" placeholder="Pesquisar por produto, marca ou categoria..." style="width:100%;padding:10px 36px 10px 37px;border-radius:11px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent)"/>
+                <sc-if value="{{estBuscaAtiva}}" hint-placeholder-val="{{false}}">
+                  <button onClick="{{estBuscaLimpar}}" title="Limpar pesquisa" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;border-radius:7px;background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px" style-hover="color:var(--red)">✕</button>
+                </sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{estVazio}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:48px 20px;text-align:center;color:var(--text3)">
+              <div style="font-family:Sora;font-weight:600;font-size:15px;color:var(--text2);margin-bottom:6px">Sua lista de compras está vazia</div>
+              <div style="font-size:13px">Cadastre os produtos que você costuma ter em casa e a quantidade ideal de cada um.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{estSemResultado}}" hint-placeholder-val="{{false}}">
+            <div style="background:var(--surface);border:1px dashed var(--border2);border-radius:var(--radius);padding:36px 20px;text-align:center;color:var(--text3);font-size:13px">Nenhum produto encontrado com esse filtro.</div>
+          </sc-if>
+
+          <sc-for list="{{estGrupos}}" as="g" hint-placeholder-count="0">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:4px 2px 0">
+                <span style="font-family:Sora;font-weight:600;font-size:15px">{{g.nome}}</span>
+                <span style="font-size:12px;color:var(--text3);font-weight:700">{{g.info}}</span>
+                <span style="flex:1"></span>
+                <span style="font-size:12px;font-weight:800;color:{{g.faltaFg}}">{{g.faltaFmt}}</span>
+                <span style="font-size:12px;color:var(--text3);font-weight:700">· total {{g.totFmt}}</span>
+              </div>
+              <sc-for list="{{g.itens}}" as="it" hint-placeholder-count="0">
+                <div class="fn-es-row" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px 12px 20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:16px;animation:fadeUp .4s ease both;animation-delay:{{it.dl}}">
+                  <div class="fn-es-info" style="flex:1;min-width:0">
+                    <div style="font-weight:800;font-size:14px;overflow-wrap:anywhere">{{it.nome}}</div>
+                    <div style="font-size:12px;color:var(--text3)">{{it.meta}}</div>
+                  </div>
+                  <div class="fn-es-step" style="display:flex;align-items:center;gap:6px;flex:none">
+                    <button onClick="{{it.menos}}" title="Retirar 1" aria-label="Retirar 1" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;opacity:{{it.menosOp}};touch-action:manipulation;user-select:none" style-hover="border-color:var(--red);color:var(--red)">−</button>
+                    <div style="min-width:52px;text-align:center;line-height:1.1">
+                      <div style="font-family:Sora;font-weight:600;font-size:17px">{{it.atual}}</div>
+                      <div style="font-size:10.5px;color:var(--text3);font-weight:700">{{it.rec}}</div>
+                    </div>
+                    <button onClick="{{it.mais}}" title="Adicionar 1" aria-label="Adicionar 1" style="width:34px;height:34px;border-radius:10px;border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);cursor:pointer;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;touch-action:manipulation;user-select:none" style-hover="background:var(--accent);color:var(--on-accent)">+</button>
+                  </div>
+                  <button class="fn-es-st" onClick="{{it.completar}}" title="{{it.stTip}}" style="padding:5px 12px;border-radius:99px;border:none;font-size:11.5px;font-weight:800;background:{{it.stBg}};color:{{it.stFg}};min-width:86px;text-align:center;cursor:{{it.stCursor}};white-space:nowrap;font-family:inherit">{{it.stLabel}}</button>
+                  <div class="fn-es-val" style="font-family:Sora;font-weight:600;font-size:15px;min-width:96px;text-align:right;white-space:nowrap">{{it.totalFmt}}</div>
+                  <div class="fn-es-acts" style="display:flex;gap:4px;flex:none">
+                    <button onClick="{{it.edit}}" title="Editar" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--accent);background:var(--accent-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"></path></svg></button>
+                    <button onClick="{{it.del}}" title="Excluir" style="width:30px;height:30px;border:none;background:none;border-radius:8px;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center" style-hover="color:var(--red);background:var(--red-soft)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+          <sc-if value="{{estTemItens}}" hint-placeholder-val="{{false}}">
+            <p style="font-size:12px;color:var(--text3);margin:0">Use − e + para registrar o que você tem em casa. "Falta comprar" soma o preço dos itens abaixo da quantidade recomendada; toque no status "Falta" para marcar o item como comprado. A lista é só um controle e não gera despesas nem altera saldos.</p>
+          </sc-if>
+        </div>
+      </sc-if>
+
       <!-- ===== CONFIGURAÇÕES ===== -->
       <sc-if value="{{showConfig}}" hint-placeholder-val="{{false}}">
         <div data-screen-label="Configurações" style="display:flex;flex-direction:column;gap:20px;animation:fadeUp .4s cubic-bezier(.3,.7,.3,1);max-width:760px">
@@ -1065,6 +1167,13 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
             <label style="font-size:11.5px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.04em">{{f.label}}</label>
             <sc-if value="{{f.isInput}}" hint-placeholder-val="{{false}}">
               <input type="{{f.itype}}" value="{{f.value}}" onChange="{{f.on}}" placeholder="{{f.ph}}" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13.5px;outline:none" style-focus="border-color:var(--accent);background:var(--surface)"/>
+            </sc-if>
+            <sc-if value="{{f.hasSugs}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;gap:5px;flex-wrap:wrap">
+                <sc-for list="{{f.sugs}}" as="sg" hint-placeholder-count="0">
+                  <button onClick="{{sg.pick}}" style="padding:4px 10px;border-radius:99px;border:1px solid {{sg.bc}};background:{{sg.bg}};color:{{sg.fg}};font-weight:700;font-size:11.5px;cursor:pointer;font-family:inherit" style-hover="border-color:var(--accent);color:var(--accent)">{{sg.c}}</button>
+                </sc-for>
+              </div>
             </sc-if>
             <sc-if value="{{f.isSelect}}" hint-placeholder-val="{{false}}">
               <select value="{{f.value}}" onChange="{{f.on}}" style="width:100%;padding:11px 13px;border-radius:11px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:13.5px;outline:none;cursor:pointer">
@@ -1239,6 +1348,7 @@ class Component extends DCLogic {
       recBusca: '', despBusca: '', recBuscaTodos: false, despBuscaTodos: false,
       despSort: { k: 'data', dir: -1 },
       anaExp: [], anaSoCartao: false,
+      estFilter: 'todos', estBusca: '',
       modal: null, confirm: null, detail: null, exportPngs: null, toasts: [], adminUsers: [], adminLoading: false
     };
   })();
@@ -1299,7 +1409,8 @@ class Component extends DCLogic {
     pie: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 3v9h9',
     check: 'M5 13l4 4L19 7',
     alert: 'M12 8v4m0 4h.01M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z',
-    coin: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5h-2.5a1.75 1.75 0 0 0 0 3.5H15'
+    coin: 'M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18ZM12 7v10M9.5 9.5h3.75a1.75 1.75 0 0 1 0 3.5h-2.5a1.75 1.75 0 0 0 0 3.5H15',
+    cart: 'M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6.2M10 21h.01M17 21h.01'
   };
   CATICONS = {
     casa: 'M3 11l9-8 9 8M5 10v10h14V10',
@@ -1339,7 +1450,7 @@ class Component extends DCLogic {
 
   emptyDB() {
     return {
-      contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [],
+      contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], estoque: [],
       catalogo: this.defaultCatalogo(),
       config: { patrimonioExcl: [], reservaIds: [] },
       categorias: [
@@ -1355,6 +1466,7 @@ class Component extends DCLogic {
 
   migrate(db) {
     if (!db.catalogo) db.catalogo = this.defaultCatalogo();
+    if (!Array.isArray(db.estoque)) db.estoque = [];
     if (!db.config) db.config = { patrimonioExcl: [], reservaIds: db.contas.filter(a => a.tipo === 'Investimento').map(a => a.id) };
     const c1 = db.contas.find(a => a.ativo);
     db.fixos.forEach(g => { if (!g.contaId) g.contaId = c1 ? c1.id : null; });
@@ -1412,6 +1524,15 @@ class Component extends DCLogic {
     }
     const dPres = this.dateFor(cur, 24);
     db.despesas.push({ id: this.uid(), desc: 'Presente de aniversário', cat: 'Lazer', contaId: null, cartaoId: 'k1', data: dPres, venc: this.calcVenc(k1, dPres), valor: 180, obs: '', paga: false, fixoId: null });
+    db.estoque = [
+      { id: 'e1', categoria: 'Mercearia', nome: 'Arroz 5kg', marca: 'Tio João', preco: 27.9, qtdRec: 2, qtdAtual: 1 },
+      { id: 'e2', categoria: 'Mercearia', nome: 'Feijão carioca 1kg', marca: 'Camil', preco: 8.49, qtdRec: 3, qtdAtual: 3 },
+      { id: 'e3', categoria: 'Mercearia', nome: 'Café 500g', marca: 'Pilão', preco: 18.9, qtdRec: 2, qtdAtual: 0 },
+      { id: 'e4', categoria: 'Limpeza', nome: 'Detergente', marca: 'Ypê', preco: 2.79, qtdRec: 4, qtdAtual: 2 },
+      { id: 'e5', categoria: 'Limpeza', nome: 'Sabão em pó 1,6kg', marca: 'Omo', preco: 24.9, qtdRec: 1, qtdAtual: 1 },
+      { id: 'e6', categoria: 'Higiene', nome: 'Papel higiênico (12 rolos)', marca: 'Neve', preco: 21.5, qtdRec: 2, qtdAtual: 1 },
+      { id: 'e7', categoria: 'Higiene', nome: 'Creme dental', marca: 'Colgate', preco: 4.99, qtdRec: 3, qtdAtual: 1 }
+    ];
     db.planejamentos = [
       { id: 'p1', catId: 'c5', nome: 'Cinema', valor: 80 }, { id: 'p2', catId: 'c5', nome: 'Restaurantes', valor: 320 }, { id: 'p3', catId: 'c5', nome: 'Show', valor: 450 },
       { id: 'p4', catId: 'c4', nome: 'Viagem de fim de ano', valor: 900 },
@@ -1662,6 +1783,20 @@ class Component extends DCLogic {
         { k: 'nome', label: 'Descrição', t: 'text', ph: 'Ex: Cinema', span: 1 },
         { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 }
       ], defaults: { nome: '', valor: 0 } },
+      estoque: (() => {
+        const ed = (this.state.modal && this.state.modal.type === 'estoque' && this.state.modal.draft) || {};
+        const tot = this.toCents(this.parseNum(ed.preco)) * Math.max(0, Math.round(this.parseNum(ed.qtdRec)));
+        return { title: n => n ? 'Editar produto' : 'Novo produto',
+          hint: 'Total do produto (preço unitário × quantidade recomendada): ' + this.fmt(this.fromCents(tot)) + '. A quantidade em casa também pode ser ajustada direto na lista, com os botões − e +.',
+          fields: [
+            { k: 'nome', label: 'Nome do produto', t: 'text', ph: 'Ex: Arroz 5kg', span: 2 },
+            { k: 'categoria', label: 'Categoria', t: 'suggest', ph: 'Ex: Mercearia', span: 1, sugs: this.estoqueCategorias(db) },
+            { k: 'marca', label: 'Marca', t: 'text', ph: 'Opcional', span: 1 },
+            { k: 'preco', label: 'Preço unitário (R$)', t: 'number', span: 1 },
+            { k: 'qtdRec', label: 'Quantidade recomendada', t: 'number', span: 1 },
+            { k: 'qtdAtual', label: 'Quantidade em casa (atual)', t: 'number', span: 2 }
+          ], defaults: { nome: '', categoria: '', marca: '', preco: 0, qtdRec: 1, qtdAtual: 0 } };
+      })(),
       senha: { title: () => 'Alterar minha senha', submitLabel: 'Salvar nova senha', fields: [
         { k: 'pwd', label: 'Nova senha', t: 'password', ph: 'mínimo 6 caracteres', span: 2 }
       ], defaults: { pwd: '' } },
@@ -2061,7 +2196,14 @@ class Component extends DCLogic {
       return;
     }
 
-    const collMap = { conta: 'contas', cartao: 'cartoes', fixo: 'fixos', receita: 'receitas', despesa: 'despesas', fonte: 'fontes', categoria: 'categorias', catalogo: 'catalogo', plano: 'planejamentos' };
+    const collMap = { conta: 'contas', cartao: 'cartoes', fixo: 'fixos', receita: 'receitas', despesa: 'despesas', fonte: 'fontes', categoria: 'categorias', catalogo: 'catalogo', plano: 'planejamentos', estoque: 'estoque' };
+    if (m.type === 'estoque') {
+      if (!Array.isArray(db.estoque)) db.estoque = [];
+      num('preco'); d.preco = Math.max(0, d.preco);
+      const qi = k => { d[k] = Math.max(0, Math.round(this.parseNum(d[k]))); };
+      qi('qtdRec'); qi('qtdAtual');
+      d.nome = String(d.nome || '').trim(); d.marca = String(d.marca || '').trim(); d.categoria = String(d.categoria || '').trim();
+    }
     if (m.type === 'conta') num('saldo');
     if (m.type === 'cartao') { num('fecha'); num('vence'); }
     if (m.type === 'fixo') { num('valor'); num('venc'); }
@@ -2084,7 +2226,7 @@ class Component extends DCLogic {
     // (parcBase também remove um número que tenha sido digitado de novo por engano)
     if (m.type === 'despesa' && d._suf) { const base = this.parcBase(d.desc); d.desc = base ? base + d._suf : ''; }
     delete d._suf;
-    const req = { conta: 'nome', cartao: 'nome', fixo: 'desc', receita: 'desc', despesa: 'desc', fonte: 'nome', categoria: 'nome', catalogo: 'nome', plano: 'nome' }[m.type];
+    const req = { conta: 'nome', cartao: 'nome', fixo: 'desc', receita: 'desc', despesa: 'desc', fonte: 'nome', categoria: 'nome', catalogo: 'nome', plano: 'nome', estoque: 'nome' }[m.type];
     if (!String(d[req] || '').trim()) { this.toast('Preencha a descrição/nome.', 'err'); return; }
     const coll = db[collMap[m.type]];
     const applySaldo = (item, sign, revert) => {
@@ -2176,6 +2318,29 @@ class Component extends DCLogic {
     if (!db.contas.some(a => a.ativo)) { this.toast('Cadastre uma conta ativa antes de pagar a fatura.', 'err'); return; }
     // abre o modal para o usuário escolher de qual conta o valor será debitado
     this.openModal('pagarFatura', null, { cardId, total: total || 0 });
+  }
+  // ---------- lista de compras / estoque (não mexe em contas nem despesas) ----------
+  estoqueCategorias(db) {
+    const base = ['Mercearia', 'Hortifruti', 'Açougue', 'Laticínios', 'Padaria', 'Bebidas', 'Limpeza', 'Higiene', 'Pet'];
+    const usadas = (db.estoque || []).map(x => (x.categoria || '').trim()).filter(Boolean);
+    const out = [];
+    [...usadas, ...base].forEach(c => { if (!out.some(o => o.toLowerCase() === c.toLowerCase())) out.push(c); });
+    return out.slice(0, 14);
+  }
+  ajustarEstoque(id, delta) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const it = (db.estoque || []).find(x => x.id === id); if (!it) return;
+    const novo = Math.max(0, (Number(it.qtdAtual) || 0) + delta);
+    if (novo === it.qtdAtual) return;
+    it.qtdAtual = novo;
+    this.commit(db);
+  }
+  completarEstoque(id) {
+    const db = JSON.parse(JSON.stringify(this.state.db));
+    const it = (db.estoque || []).find(x => x.id === id); if (!it) return;
+    it.qtdAtual = Math.max(it.qtdAtual || 0, it.qtdRec || 0);
+    this.commit(db);
+    this.toast(it.nome + ': estoque completo.');
   }
   toggleAtivo(collName, id) {
     const db = JSON.parse(JSON.stringify(this.state.db));
@@ -2726,20 +2891,21 @@ class Component extends DCLogic {
         authMainLabel: s.authTab === 'cadastro' ? 'Criar minha conta' : 'Entrar',
         doAuthMain: s.authTab === 'cadastro' ? this.doCadastro : this.doLogin,
         doRecuperar: this.doRecuperar, doVisitante: this.doVisitante,
-        isVisitor: false, loading: false, showDash: false, showAna: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showConfig: false, showAdmin: false, modalOpen: false, exportModalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
+        isVisitor: false, loading: false, showDash: false, showAna: false, showPlan: false, showFixos: false, showRec: false, showDesp: false, showCart: false, showContas: false, showCatalogo: false, showEstoque: false, showConfig: false, showAdmin: false, modalOpen: false, exportModalOpen: false, navItems: [], sbOpen: true, sbWidth: '236px'
       };
     }
 
     // ===== APP =====
     const db = s.db;
     const comp = s.comp;
-    const titles = { dashboard: 'Dashboard', analise: 'Análise por Categoria', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio', categorias: 'Categorias', config: 'Configurações', admin: 'Admin' };
+    const titles = { dashboard: 'Dashboard', analise: 'Análise por Categoria', planejamento: 'Planejamento Financeiro', fixos: 'Gastos Fixos', receitas: 'Receitas', despesas: 'Despesas', cartoes: 'Cartões de Crédito', contas: 'Contas & Patrimônio', categorias: 'Categorias', estoque: 'Lista de Compras', config: 'Configurações', admin: 'Admin' };
     const navDefs = [
       ['dashboard', 'Dashboard', this.ICONS.dash], ['analise', 'Análise', this.ICONS.pie],
       ['planejamento', 'Planejamento', this.ICONS.plan],
       ['fixos', 'Gastos Fixos', this.ICONS.fixo], ['receitas', 'Receitas', this.ICONS.rec],
       ['despesas', 'Despesas', this.ICONS.desp], ['cartoes', 'Cartões', this.ICONS.card],
       ['contas', 'Contas', this.ICONS.conta], ['categorias', 'Categorias', this.ICONS.tag],
+      ['estoque', 'Lista de compras', this.ICONS.cart],
       ['config', 'Configurações', this.ICONS.cfg]
     ];
     const rcTotal = this.rendaCents(db.fontes);
@@ -2798,6 +2964,7 @@ class Component extends DCLogic {
       showCart: !s.loading && s.screen === 'cartoes',
       showContas: !s.loading && s.screen === 'contas',
       showCatalogo: !s.loading && s.screen === 'categorias',
+      showEstoque: !s.loading && s.screen === 'estoque',
       showConfig: !s.loading && s.screen === 'config',
       showAdmin: !s.loading && s.screen === 'admin',
       custoFixoFmt: this.fmt(custoFixo), patrimonioFmt: this.fmt(patrimonio),
@@ -3099,6 +3266,69 @@ class Component extends DCLogic {
       del: () => this.del('receitas', r.id, 'Excluir a receita "' + r.desc + '"?')
     }));
 
+    // ---- Lista de compras / estoque ----
+    // Tudo em centavos para somar sem erro de arredondamento. Não entra em nenhum cálculo financeiro.
+    const est = (db.estoque || []).map(e => {
+      const pc = this.toCents(e.preco), rec = Math.max(0, e.qtdRec || 0), at = Math.max(0, e.qtdAtual || 0);
+      const falta = Math.max(0, rec - at);
+      return { e, pc, rec, at, falta, totC: pc * rec, faltaC: pc * falta };
+    });
+    const estTotalC = est.reduce((t, x) => t + x.totC, 0);
+    const estFaltaC = est.reduce((t, x) => t + x.faltaC, 0);
+    const estNFalta = est.filter(x => x.falta > 0).length;
+    const estNOk = est.length - estNFalta;
+    vals.estVazio = est.length === 0;
+    vals.estTemItens = est.length > 0;
+    vals.estCards = [
+      { label: 'Custo mensal da lista', value: this.fmt(this.fromCents(estTotalC)), sub: est.length + (est.length === 1 ? ' produto' : ' produtos') + ' · preço × quantidade recomendada', fg: 'var(--text)', iconBg: 'var(--accent-soft)', iconFg: 'var(--accent)', icon: this.ICONS.cart, dl: '0ms' },
+      { label: 'Falta comprar', value: this.fmt(this.fromCents(estFaltaC)), sub: estNFalta ? estNFalta + (estNFalta === 1 ? ' produto abaixo do recomendado' : ' produtos abaixo do recomendado') : 'Nada faltando', fg: estFaltaC > 0 ? 'var(--red)' : 'var(--green)', iconBg: 'var(--red-soft)', iconFg: 'var(--red)', icon: this.ICONS.desp, dl: '60ms' },
+      { label: 'Já em casa', value: this.fmt(this.fromCents(estTotalC - estFaltaC)), sub: estNOk + ' de ' + est.length + ' completo' + (estNOk === 1 ? '' : 's'), fg: 'var(--green)', iconBg: 'var(--green-soft)', iconFg: 'var(--green)', icon: this.ICONS.check, dl: '120ms' }
+    ];
+    const estFilterDefs = [['todos', 'Todos', est.length], ['falta', 'Falta comprar', estNFalta], ['ok', 'Completos', estNOk]];
+    vals.estFilters = estFilterDefs.map(fd => ({ label: fd[1] + ' (' + fd[2] + ')', pick: () => this.setState({ estFilter: fd[0] }),
+      bg: s.estFilter === fd[0] ? 'var(--accent)' : 'var(--surface)', fg: s.estFilter === fd[0] ? 'var(--on-accent)' : 'var(--text2)', bc: s.estFilter === fd[0] ? 'var(--accent)' : 'var(--border2)' }));
+    vals.estBusca = s.estBusca;
+    vals.estBuscaAtiva = !!String(s.estBusca || '').trim();
+    vals.estBuscaOn = e => this.setState({ estBusca: e.target.value });
+    vals.estBuscaLimpar = () => this.setState({ estBusca: '' });
+    vals.addEstoque = () => this.openModal('estoque', null);
+    const estFilt = est.filter(x => this.bateBusca([x.e.nome, x.e.marca, x.e.categoria].join(' '), s.estBusca))
+      .filter(x => s.estFilter === 'todos' || (s.estFilter === 'falta' && x.falta > 0) || (s.estFilter === 'ok' && x.falta === 0));
+    vals.estSemResultado = est.length > 0 && estFilt.length === 0;
+    const estGrupos = {};
+    estFilt.forEach(x => { const c = (x.e.categoria || '').trim() || 'Sem categoria'; (estGrupos[c] = estGrupos[c] || []).push(x); });
+    let estI = 0;
+    vals.estGrupos = Object.keys(estGrupos).sort((a, b) => (a === 'Sem categoria') - (b === 'Sem categoria') || a.localeCompare(b, 'pt-BR')).map(cat => {
+      const lista = estGrupos[cat].sort((a, b) => a.e.nome.localeCompare(b.e.nome, 'pt-BR'));
+      const gTot = lista.reduce((t, x) => t + x.totC, 0), gFalta = lista.reduce((t, x) => t + x.faltaC, 0);
+      return {
+        nome: cat, info: lista.length + (lista.length === 1 ? ' item' : ' itens'),
+        totFmt: this.fmt(this.fromCents(gTot)),
+        faltaFmt: gFalta > 0 ? 'falta ' + this.fmt(this.fromCents(gFalta)) : 'completo',
+        faltaFg: gFalta > 0 ? 'var(--red)' : 'var(--green)',
+        itens: lista.map(x => {
+          const e = x.e, ok = x.falta === 0;
+          return {
+            nome: e.nome, dl: this.dl(estI++),
+            meta: [e.marca, this.fmt(this.fromCents(x.pc)) + ' / un.'].filter(Boolean).join(' · '),
+            atual: String(x.at), rec: 'de ' + x.rec,
+            totalFmt: this.fmt(this.fromCents(x.totC)),
+            stLabel: ok ? 'Completo' : 'Falta ' + x.falta,
+            stBg: ok ? 'var(--green-soft)' : (x.at === 0 ? 'var(--red-soft)' : 'var(--amber-soft)'),
+            stFg: ok ? 'var(--green)' : (x.at === 0 ? 'var(--red)' : 'var(--amber)'),
+            stTip: ok ? 'Quantidade recomendada atingida' : 'Clique para marcar como comprado (completa até ' + x.rec + ')',
+            stCursor: ok ? 'default' : 'pointer',
+            menosOp: x.at > 0 ? '1' : '.35',
+            menos: () => this.ajustarEstoque(e.id, -1),
+            mais: () => this.ajustarEstoque(e.id, 1),
+            completar: () => { if (!ok) this.completarEstoque(e.id); },
+            edit: () => this.openModal('estoque', e),
+            del: () => this.del('estoque', e.id, 'Excluir "' + e.nome + '" da lista de compras?')
+          };
+        })
+      };
+    });
+
     // ---- Despesas ----
     const despFilterDefs = [['todas', 'Todas'], ['pagas', 'Pagas'], ['pendentes', 'Pendentes'], ['fixas', 'De gastos fixos']];
     vals.despFilters = despFilterDefs.map(fd => ({ label: fd[1], pick: () => this.setState({ despFilter: fd[0] }),
@@ -3299,6 +3529,17 @@ class Component extends DCLogic {
               toggle: () => this.setDraft('sel', { ...sel, [g.id]: !on })
             };
           });
+        } else if (f.t === 'suggest') {
+          field.isInput = true; field.itype = 'text';
+          field.value = v == null ? '' : v; field.ph = f.ph || '';
+          field.on = e => this.setDraft(f.k, e.target.value);
+          const cur = String(v || '').trim().toLowerCase();
+          field.sugs = (f.sugs || []).map(c => ({ c, on: c.toLowerCase() === cur,
+            bc: c.toLowerCase() === cur ? 'var(--accent)' : 'var(--border2)',
+            bg: c.toLowerCase() === cur ? 'var(--accent-soft)' : 'var(--surface)',
+            fg: c.toLowerCase() === cur ? 'var(--accent)' : 'var(--text2)',
+            pick: () => this.setDraft(f.k, c) }));
+          field.hasSugs = field.sugs.length > 0;
         } else {
           field.isInput = true; field.itype = f.t === 'number' ? 'number' : f.t === 'date' ? 'date' : f.t === 'password' ? 'password' : 'text';
           field.value = v == null ? '' : v; field.ph = f.ph || '';

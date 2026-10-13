@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.11.0 - 2026-10-12
+- lista de compras: nova tela "Lista de compras" no menu, para controlar o estoque de casa. Cada produto guarda categoria, nome, marca, preço unitário, quantidade recomendada e quantidade em casa; o total do produto é preço unitário × quantidade recomendada
+- lista de compras: botões − e + em cada produto ajustam a quantidade em casa de 1 em 1, sem abrir janela
+- lista de compras: painel com o custo mensal da lista (soma dos totais), quanto falta comprar (preço × quantidade que falta para chegar ao recomendado) e quanto já está em casa
+- lista de compras: produtos agrupados por categoria com subtotal, filtros "Todos", "Falta comprar" e "Completos", e pesquisa por produto, marca ou categoria
+- lista de compras: tocar no status "Falta N" marca o produto como comprado, completando até a quantidade recomendada
+- lista de compras: no cadastro, a categoria é livre e o app sugere as já usadas e algumas comuns (Mercearia, Limpeza, Higiene...); o total do produto aparece em tempo real
+- lista de compras: no celular, cada produto vira um cartão com nome e total em cima e quantidade, status e ações embaixo, com botões − e + maiores para o toque
+- lista de compras: não gera despesas nem altera saldos, orçamentos ou o dashboard
+- banco de dados: nova tabela fn_estoque (trecho "Lista de compras" do supabase-schema.sql). Enquanto ela não for criada, a lista não é salva no Supabase
+
 ## v1.10.1 - 2026-10-12
 - celular: a tabela de despesas virou uma lista de cartões (nome e valor em cima; data da compra, vencimento, status e ações embaixo), sem rolagem lateral e sem esconder o valor
 - celular: receitas e gastos fixos reorganizados no mesmo padrão (nome e valor na 1ª linha, status, "Pagar" e ações na 2ª)

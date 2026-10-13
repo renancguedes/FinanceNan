@@ -127,6 +127,20 @@ alter table public.fn_despesas add column if not exists parcela    integer;
 alter table public.fn_despesas add column if not exists parcelas   integer;
 create index if not exists fn_despesas_grupo_idx on public.fn_despesas ("grupoId");
 
+-- ---- Lista de compras / estoque (v1.11.0) ---------------------------------
+-- Não interfere nas finanças. preco em CENTAVOS; quantidades inteiras.
+create table if not exists public.fn_estoque (
+  id         text primary key,
+  user_id    uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  categoria  text,
+  nome       text not null,
+  marca      text,
+  preco      integer not null default 0,
+  "qtdRec"   integer not null default 0,
+  "qtdAtual" integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
 -- ---- Configurações (1 linha por usuário) -----------------------------------
 create table if not exists public.fn_settings (
   user_id        uuid primary key default auth.uid() references auth.users(id) on delete cascade,
@@ -141,7 +155,8 @@ declare t text;
 begin
   foreach t in array array[
     'fn_contas','fn_catalogo','fn_cartoes','fn_categorias','fn_fontes',
-    'fn_planejamentos','fn_fixos','fn_receitas','fn_despesas','fn_settings'
+    'fn_planejamentos','fn_fixos','fn_receitas','fn_despesas','fn_settings',
+    'fn_estoque'
   ] loop
     execute format('alter table public.%I enable row level security;', t);
     execute format('drop policy if exists "own_select" on public.%I;', t);

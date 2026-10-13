@@ -56,21 +56,29 @@
       from: function (r) { return { id: r.id, desc: r.desc, cat: r.cat, contaId: r.contaId, data: r.data, valor: R(r.valor), recorrente: !!r.recorrente, recebida: !!r.recebida, obs: r.obs || '' }; } },
     despesas: { table: 'fn_despesas',
       to: function (x) { return { id: x.id, desc: x.desc, cat: x.cat, contaId: nn(x.contaId), cartaoId: nn(x.cartaoId), data: x.data, venc: nn(x.venc), valor: C(x.valor), paga: !!x.paga, obs: nn(x.obs), fixoId: nn(x.fixoId), grupoId: nn(x.grupoId), parcela: x.parcela ? N(x.parcela) : null, parcelas: x.parcelas ? N(x.parcelas) : null }; },
-      from: function (r) { return { id: r.id, desc: r.desc, cat: r.cat, contaId: r.contaId || null, cartaoId: r.cartaoId || null, data: r.data, venc: r.venc || null, valor: R(r.valor), paga: !!r.paga, obs: r.obs || '', fixoId: r.fixoId || null, grupoId: r.grupoId || null, parcela: r.parcela || null, parcelas: r.parcelas || null }; } }
+      from: function (r) { return { id: r.id, desc: r.desc, cat: r.cat, contaId: r.contaId || null, cartaoId: r.cartaoId || null, data: r.data, venc: r.venc || null, valor: R(r.valor), paga: !!r.paga, obs: r.obs || '', fixoId: r.fixoId || null, grupoId: r.grupoId || null, parcela: r.parcela || null, parcelas: r.parcelas || null }; } },
+    // Lista de compras / estoque (v1.11.0) — não interfere nas finanças
+    estoque: { table: 'fn_estoque',
+      to: function (x) { return { id: x.id, categoria: nn(x.categoria), nome: x.nome, marca: nn(x.marca), preco: C(x.preco), qtdRec: Math.max(0, N(x.qtdRec)), qtdAtual: Math.max(0, N(x.qtdAtual)) }; },
+      from: function (r) { return { id: r.id, categoria: r.categoria || '', nome: r.nome, marca: r.marca || '', preco: R(r.preco), qtdRec: r.qtdRec || 0, qtdAtual: r.qtdAtual || 0 }; } }
   };
-  var ORDER = ['contas', 'catalogo', 'cartoes', 'categorias', 'fontes', 'planejamentos', 'fixos', 'receitas', 'despesas'];
+  var ORDER = ['contas', 'catalogo', 'cartoes', 'categorias', 'fontes', 'planejamentos', 'fixos', 'receitas', 'despesas', 'estoque'];
 
   var currentEmail = null, currentUid = null, currentRole = 'user', prev = {}, syncing = false, pendingNext = null;
   var K_WHO = 'fn_sb_who';
 
   // ---- hydrate: baixa todas as coleções do Supabase para o estado do app ----
-  function emptyDb() { return { contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], catalogo: [], categorias: [], config: { patrimonioExcl: [], reservaIds: [] } }; }
+  function emptyDb() { return { contas: [], receitas: [], despesas: [], cartoes: [], fixos: [], fontes: [], planejamentos: [], catalogo: [], categorias: [], estoque: [], config: { patrimonioExcl: [], reservaIds: [] } }; }
 
   function hydrate(email) {
     var db = emptyDb();
     var jobs = ORDER.map(function (coll) {
       return sb.from(MAP[coll].table).select('*').then(function (res) {
-        if (res.error) { log('select falhou', coll, res.error.message); return; }
+        if (res.error) {
+          log('select falhou', coll, res.error.message);
+          if (coll === 'estoque') console.warn('[FinanceNan] Tabela fn_estoque nao encontrada. Rode o trecho "Lista de compras" do supabase-schema.sql para salvar a lista de compras.');
+          return;
+        }
         db[coll] = (res.data || []).map(MAP[coll].from);
       });
     });
