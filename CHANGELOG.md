@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.15.0 - 2026-10-24
+- despesas: ao alterar a descrição, a categoria ou as observações de uma compra parcelada, abre um pop-up perguntando se a alteração deve valer para todas as parcelas da compra, antigas e futuras ("Atualizar todas" ou "Só esta"). O "Parcela X/N" de cada uma é mantido
+- despesas: o pop-up considera só as parcelas ligadas à mesma compra (lançamento em massa ou importação com parcelas futuras); despesas soltas com nome parecido nunca são alteradas
+- despesas: sai a opção "Aplicar descrição, categoria e observações às N parcelas" do formulário de edição, substituída pelo pop-up
+- importação OFX/CSV: a opção "Marcar como pagas" passa a vir desmarcada por padrão; se o usuário marcar, as despesas da conta são lançadas como pagas e debitam o saldo, como antes
+- confirmação: o diálogo ganha uma variante de edição (título, ícone e cores próprios), usada no pop-up de atualizar parcelas
+
 ## v1.14.0 - 2026-10-12
 - configurações: novo bloco "Lista de compras" para escolher quais categorias entram nos cards "Custo mensal da lista", "Falta comprar" e "Já em casa". Cada categoria mostra a quantidade de itens e o total; categorias novas já entram marcadas
 - lista de compras: os produtos das categorias desmarcadas continuam na lista, com a etiqueta "fora dos totais" no título da categoria, e um aviso abaixo dos cards informa quantas categorias estão fora

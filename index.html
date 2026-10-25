@@ -1328,17 +1328,20 @@ input[type=range].fn-slider::-moz-range-thumb{width:12px;height:12px;border-radi
 <sc-if value="{{confirmOpen}}" hint-placeholder-val="{{false}}">
   <div class="fn-modal-ov" onClick="{{confirmCancel}}" style="position:fixed;inset:0;background:rgba(15,10,25,.45);backdrop-filter:blur(3px);z-index:110;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .18s ease">
     <div class="fn-modal" onClick="{{stop}}" style="background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);width:100%;max-width:420px;padding:26px;animation:popIn .28s cubic-bezier(.3,.9,.4,1)">
-      <div style="width:42px;height:42px;border-radius:12px;background:var(--red-soft);color:var(--red);display:flex;align-items:center;justify-content:center;margin-bottom:14px">
-        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg>
+      <div style="width:42px;height:42px;border-radius:12px;background:{{confirmSoft}};color:{{confirmColor}};display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+        <sc-if value="{{confirmEdit}}" hint-placeholder-val="{{false}}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></sc-if>
+        <sc-if value="{{confirmDel}}" hint-placeholder-val="{{false}}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"></path></svg></sc-if>
       </div>
-      <h3 style="font-family:Sora;font-weight:600;font-size:16px;margin:0 0 6px">Confirmar exclusão</h3>
+      <h3 style="font-family:Sora;font-weight:600;font-size:16px;margin:0 0 6px">{{confirmTitle}}</h3>
       <p style="color:var(--text2);font-size:13.5px;margin:0 0 20px">{{confirmMsg}}</p>
       <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
-        <button onClick="{{confirmCancel}}" style="padding:10px 16px;border-radius:11px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="color:var(--text)">Cancelar</button>
-        <sc-if value="{{confirmAltLabel}}" hint-placeholder-val="{{false}}">
-          <button onClick="{{confirmAlt}}" style="padding:10px 16px;border-radius:11px;border:1px solid var(--red);background:var(--red-soft);color:var(--red);font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.05)">{{confirmAltLabel}}</button>
+        <sc-if value="{{confirmDel}}" hint-placeholder-val="{{false}}">
+          <button onClick="{{confirmCancel}}" style="padding:10px 16px;border-radius:11px;border:1px solid var(--border2);background:none;color:var(--text2);font-weight:700;font-size:13px;cursor:pointer" style-hover="color:var(--text)">Cancelar</button>
         </sc-if>
-        <button onClick="{{confirmOk}}" style="padding:10px 18px;border-radius:11px;border:none;background:var(--red);color:#fff;font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">{{confirmOkLabel}}</button>
+        <sc-if value="{{confirmAltLabel}}" hint-placeholder-val="{{false}}">
+          <button onClick="{{confirmAlt}}" style="padding:10px 16px;border-radius:11px;border:1px solid {{confirmColor}};background:{{confirmSoft}};color:{{confirmColor}};font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.05)">{{confirmAltLabel}}</button>
+        </sc-if>
+        <button onClick="{{confirmOk}}" style="padding:10px 18px;border-radius:11px;border:none;background:{{confirmColor}};color:{{confirmOkFg}};font-weight:700;font-size:13px;cursor:pointer" style-hover="filter:brightness(1.1)">{{confirmOkLabel}}</button>
       </div>
     </div>
   </div>
@@ -1730,9 +1733,8 @@ class Component extends DCLogic {
     const mExtra = (this.state.modal && this.state.modal.extra) || {};
     const cartaoFat = mExtra.cardId ? db.cartoes.find(k => k.id === mExtra.cardId) : null;
     const totalFat = mExtra.total || 0;
-    // edição de uma parcela de compra parcelada: quantas parcelas o grupo tem
+    // edição de uma parcela de compra parcelada (o rótulo da descrição mostra o "Parcela X/N")
     const mDraft = (this.state.modal && this.state.modal.type === 'despesa' && this.state.modal.id && this.state.modal.draft) || {};
-    const grupoQtd = mDraft.grupoId ? db.despesas.filter(x => x.grupoId === mDraft.grupoId).length : 0;
     // lançamento em massa: prévia de onde cai a primeira parcela lançada
     let massaPrev = '';
     if (this.state.modal && this.state.modal.type === 'massa') {
@@ -1797,9 +1799,8 @@ class Component extends DCLogic {
         { k: 'venc', label: 'Vencimento (opcional)', t: 'date', span: 1 },
         { k: 'valor', label: 'Valor (R$)', t: 'number', span: 1 },
         { k: 'paga', label: 'Já paga', t: 'toggle', span: 1 },
-        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 },
-        ...(grupoQtd > 1 ? [{ k: 'aplicarGrupo', label: 'Aplicar descrição, categoria e observações às ' + grupoQtd + ' parcelas', t: 'toggle', span: 2 }] : [])
-      ], defaults: { desc: '', cat: despCatOpts.length ? despCatOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: hoje, venc: null, valor: 0, obs: '', paga: false, aplicarGrupo: true } },
+        { k: 'obs', label: 'Observações', t: 'textarea', ph: 'Opcional', span: 2 }
+      ], defaults: { desc: '', cat: despCatOpts.length ? despCatOpts[0].v : '', forma: formaOpts.length ? formaOpts[0].v : '', data: hoje, venc: null, valor: 0, obs: '', paga: false } },
       massa: { title: () => 'Lançamento em massa', submitLabel: 'Lançar parcelas', hint: 'Cria uma despesa por parcela. No cartão, cada parcela cai na fatura correta conforme o fechamento; sem cartão, cada parcela é lançada no mês seguinte. Para uma compra já em andamento, informe a data original da compra e a parcela de onde quer começar.' + massaPrev, fields: [
         { k: 'desc', label: 'Descrição', t: 'text', ph: 'Ex: Notebook', span: 2 },
         { k: 'cat', label: 'Categoria', t: 'select', options: despCatOpts, span: 1 },
@@ -1890,7 +1891,7 @@ class Component extends DCLogic {
               });
             } }
           ],
-          defaults: { forma: imp.forma || (formaOpts[0] || {}).v || '', cat: imp.cat || (despCatOpts[0] || {}).v || '', paga: true, futuras: true, sel: {} }
+          defaults: { forma: imp.forma || (formaOpts[0] || {}).v || '', cat: imp.cat || (despCatOpts[0] || {}).v || '', paga: false, futuras: true, sel: {} }
         };
       })()
     };
@@ -1957,6 +1958,37 @@ class Component extends DCLogic {
       if (item.paga && item.contaId) { const a = db.contas.find(x => x.id === item.contaId); if (a) a.saldo += item.valor; }
     });
     db.despesas = db.despesas.filter(x => !ids.includes(x.id));
+  }
+  // Outras parcelas da mesma compra (antigas e futuras): só as ligadas pelo mesmo grupoId
+  parcVinculadas(db, d) {
+    return d.grupoId ? db.despesas.filter(x => x.id !== d.id && x.grupoId === d.grupoId) : [];
+  }
+  // Depois de editar uma parcela: pergunta se descrição, categoria e observações valem para todas as parcelas da compra
+  perguntarAtualizarParcelas(id, irmasIds) {
+    const total = irmasIds.length + 1;
+    const fechar = () => this.setState({ confirm: null });
+    this.setState({ confirm: {
+      tone: 'edit', title: 'Atualizar todas as parcelas?',
+      msg: 'Esta despesa faz parte de uma compra parcelada com ' + total + ' parcelas lançadas. Deseja aplicar a descrição, a categoria e as observações também às outras ' +
+        irmasIds.length + ' parcela(s), antigas e futuras? O número de cada parcela é mantido.',
+      okLabel: 'Atualizar todas (' + total + ')', onClose: fechar,
+      fn: () => {
+        const db = JSON.parse(JSON.stringify(this.state.db));
+        const atual = db.despesas.find(x => x.id === id);
+        if (!atual) { fechar(); return; }
+        const base = this.parcBase(atual.desc);
+        let n = 0;
+        db.despesas.forEach(x => {
+          if (!irmasIds.includes(x.id) || x.grupoId !== atual.grupoId) return;
+          x.desc = base + this.parcSufixo(x); x.cat = atual.cat; x.obs = atual.obs || '';
+          n++;
+        });
+        this.commit(db);
+        fechar();
+        this.toast('Alterações aplicadas nesta e em mais ' + n + ' parcela(s).');
+      },
+      alt: { label: 'Só esta', fn: fechar }
+    } });
   }
   delDespesa(d) {
     const grupo = d.grupoId ? this.state.db.despesas.filter(x => x.grupoId === d.grupoId) : [];
@@ -2264,9 +2296,7 @@ class Component extends DCLogic {
       if (!d.venc) d.venc = null;
       delete d.forma;
     }
-    // edição de parcela: opcionalmente replica descrição, categoria e observações para todo o grupo
-    const aplicarGrupo = m.type === 'despesa' && m.id && d.grupoId && d.aplicarGrupo;
-    delete d.aplicarGrupo;
+    delete d.aplicarGrupo; // opção antiga do formulário, substituída pelo pop-up de atualizar parcelas
     // parcela: o usuário editou só o nome; recoloca o "Parcela X/N" desta despesa
     // (parcBase também remove um número que tenha sido digitado de novo por engano)
     if (m.type === 'despesa' && d._suf) { const base = this.parcBase(d.desc); d.desc = base ? base + d._suf : ''; }
@@ -2280,26 +2310,23 @@ class Component extends DCLogic {
       const a = db.contas.find(x => x.id === item.contaId); if (!a) return;
       a.saldo += (revert ? -1 : 1) * sign * item.valor;
     };
+    let atualizarGrupo = null; // parcela editada: { id, irmas } para o pop-up
     if (m.id) {
       const idx = coll.findIndex(x => x.id === m.id);
       if (idx >= 0) {
         const old = coll[idx];
+        // descrição, categoria ou observações mudaram numa parcela ligada a outras: pergunta depois de salvar
+        if (m.type === 'despesa') {
+          const mudou = this.parcBase(d.desc) !== this.parcBase(old.desc) || (d.cat || '') !== (old.cat || '') || (d.obs || '') !== (old.obs || '');
+          const irmas = mudou ? this.parcVinculadas(db, old) : [];
+          if (irmas.length) atualizarGrupo = { id: m.id, irmas: irmas.map(x => x.id) };
+        }
         if (m.type === 'receita') applySaldo(old, 1, true);
         if (m.type === 'despesa') applySaldo(old, -1, true);
         coll[idx] = { ...old, ...d };
         if (m.type === 'receita') applySaldo(coll[idx], 1, false);
         if (m.type === 'despesa') applySaldo(coll[idx], -1, false);
       }
-      if (aplicarGrupo) {
-        const novoBase = this.parcBase(d.desc);
-        let nGrp = 0;
-        coll.forEach(x => {
-          if (x.grupoId !== d.grupoId || x.id === m.id) return;
-          x.desc = novoBase + this.parcSufixo(x); x.cat = d.cat; x.obs = d.obs || '';
-          nGrp++;
-        });
-        this.toast('Alterações salvas nesta e em mais ' + nGrp + ' parcela(s).');
-      } else
       this.toast('Alterações salvas.');
     } else {
       const item = { id: this.uid(), ...d };
@@ -2311,6 +2338,7 @@ class Component extends DCLogic {
     }
     this.commit(db);
     this.setState({ modal: null });
+    if (atualizarGrupo) this.perguntarAtualizarParcelas(atualizarGrupo.id, atualizarGrupo.irmas);
   };
 
   // ---------- mutations ----------
@@ -2911,7 +2939,12 @@ class Component extends DCLogic {
       confirmOkLabel: (s.confirm && s.confirm.okLabel) || 'Excluir',
       confirmAltLabel: (s.confirm && s.confirm.alt) ? s.confirm.alt.label : false,
       confirmAlt: () => { if (s.confirm && s.confirm.alt) s.confirm.alt.fn(); },
-      confirmCancel: () => this.setState({ confirm: null }),
+      confirmCancel: () => { if (s.confirm && s.confirm.onClose) s.confirm.onClose(); else this.setState({ confirm: null }); },
+      confirmEdit: !!(s.confirm && s.confirm.tone === 'edit'), confirmDel: !(s.confirm && s.confirm.tone === 'edit'),
+      confirmTitle: (s.confirm && s.confirm.title) || 'Confirmar exclusão',
+      confirmColor: s.confirm && s.confirm.tone === 'edit' ? 'var(--accent)' : 'var(--red)',
+      confirmSoft: s.confirm && s.confirm.tone === 'edit' ? 'var(--accent-soft)' : 'var(--red-soft)',
+      confirmOkFg: s.confirm && s.confirm.tone === 'edit' ? 'var(--on-accent)' : '#fff',
       detailOpen: !!s.detail,
       detailClose: () => this.setState({ detail: null }),
       detailTitle: '', detailSub: '', detailItems: [], detailEmpty: false,
